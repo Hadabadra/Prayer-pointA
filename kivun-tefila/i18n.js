@@ -1,6 +1,6 @@
 /* כיוון תפילה 2.1 — ממשק באנגלית: לפי שפת אוצריא, או ידנית בכפתור E/ע. ההלכות ו"מה חדש" נשארים בעברית. */
 const I18N = {
-  "כיוון תפילה": "Prayer Direction", "מיקום אוטומטי": "Auto location", "מיקום ידני": "Manual location", "מיקוד": "Postcode",
+  "כיוון תפילה": "Prayer Direction", "מניינים": "Minyanim", "מיקום משוער": "Approximate location", "מיקום ידני": "Manual location", "מיקוד": "Postcode",
   "כיוון קבוע (מפה)": "Fixed bearing (map)", "קו קצר (כדור)": "Shortest line (globe)", "פתח סידורון": "Open Siduron", "הלכות": "Halacha",
   "✈ טיסה": "✈ Flight", "הדפס": "Print", "מצב תפילה": "Prayer mode", "זיהוי ידני": "No compass", "הגדרות": "Settings", "הארות": "Feedback",
   "סוג:": "Type:", "תקלה": "Bug", "טעות בכיוון או בעיר": "Wrong direction or city", "הצעה או אחר": "Suggestion / other", "שלח": "Send",
@@ -20,7 +20,7 @@ const I18N = {
   "פתח מפת לוויין (דורש אינטרנט)": "Open satellite map (online)", "חשב": "Compute", "חפש": "Search", "✕ סגור": "✕ Close",
   "הרחובות סביבי": "Streets around me", "הסביבה הקרובה": "Nearby", "עד ירושלים": "To Jerusalem", "כדור הארץ": "Globe", "מצא": "Find", "✕ סגור מסך מלא": "✕ Exit full screen",
   "הבנתי": "Got it", "מקומות שמורים…": "Saved places…", "שמור מיקום זה": "Save this location", "מחק מהרשימה": "Remove",
-  "בחר עיר, הזן קואורדינטות או לחץ על מיקום אוטומטי": "Choose a city, enter coordinates or press Auto location",
+  "בחר עיר, הזן קואורדינטות או לחץ על מיקום משוער": "Choose a city, enter coordinates or press Approximate location",
   "סיבוב ידני של החוגה": "Rotate dial manually", "איפוס": "Reset", "איפוס תצוגה": "Reset view", "⛶ מסך מלא": "⛶ Full screen", "ירושלים ↑": "Jerusalem ↑", "צפון ↑": "North ↑",
   "סמן את מקומי": "Mark my spot", "הקרוב": "Nearest", "עבור אליו (בלי אינטרנט)": "Go there (offline)", "הורד את האזור (פעם אחת, עם אינטרנט)": "Download the area (once, online)",
   "פתח בדפדפן": "Open in browser", "טען קובץ": "Load file", "העתק כתובת": "Copy address",

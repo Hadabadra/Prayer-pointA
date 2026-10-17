@@ -328,3 +328,23 @@ function wayExtra(t, b, s) {
 }
 const SID_URL = "https://github.com/e0548433917-gif/otzaria/raw/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/siduron/com.moshenahari.siduron-3.7.1.otzplugin";
 $("sidDl").onclick = () => { copyText(SID_URL); let w = null; try { w = window.open(SID_URL, "_blank", "noopener") } catch (x) {} if (!w && O) O.call("app.openUrl", { url: SID_URL }).catch(() => {}); $("sidMsg").textContent = "הכתובת הועתקה ללוח. אחרי ההורדה: התקנה מקובץ בחנות התוספים של אוצריא." };
+
+/* ---- מיקום מדויק (GPS): ממתין לאוצריא ---- */
+const GPS_ISSUE = "https://github.com/Otzaria/otzaria/issues/2185#issuecomment-6119579891";
+$("bGps").onclick = () => {
+  const t = $("txt");
+  t.textContent = "מיקום מדויק (GPS): בפיתוח. אוצריא עדיין לא מאפשרת לתוספים לבקש מיקום מהמכשיר, וצוות אוצריא השיב שההצעה תיבחן אחרי גרסה 1. בינתיים אפשר ללחוץ על ״מיקום משוער״ (לפי הרשת), לבחור עיר או רחוב, או להזין קואורדינטות. ";
+  const b = document.createElement("button");
+  b.type = "button"; b.textContent = "לתגובת צוות אוצריא";
+  b.onclick = () => {
+    const fail = () => { let w = null; try { w = window.open(GPS_ISSUE, "_blank", "noopener") } catch (e) {} if (!w) { copyText(GPS_ISSUE); t.textContent = "הכתובת הועתקה ללוח. אפשר להדביק אותה בדפדפן: " + GPS_ISSUE } };
+    (O ? O.call("app.openUrl", { url: GPS_ISSUE }) : Promise.reject()).then(r => { if (r && r.success === false) fail() }).catch(fail);
+  };
+  t.appendChild(b);
+};
+
+/* ---- מניינים קרובים: קו טלפוני של צד שלישי, מציגים את המספר בלבד ---- */
+const MIN_TEL = "0776935494";
+$("bMin").onclick = () => pop("bMin", "minyan", $("minyan").hidden);
+$("minCopy").onclick = () => copyText(MIN_TEL).then(ok => { $("minMsg").textContent = ok ? "המספר 077-693-5494 הועתק ללוח." : "ההעתקה לא הצליחה. המספר: 077-693-5494" });
+$("minTel").onclick = () => { $("minMsg").textContent = "אם החיוג לא נפתח, אפשר להעתיק את המספר ולחייג מהטלפון." };

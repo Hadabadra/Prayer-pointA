@@ -15,6 +15,7 @@ h1{font-size:1.3rem;margin:0 0 .35rem}
 button,select,input{font:inherit;padding:.35rem .6rem;border:1px solid var(--color-outline);background:var(--color-surface);color:var(--color-on-surface);border-radius:var(--radius-sm)}
 button{cursor:pointer}
 button.on{background:var(--color-primary);color:var(--color-on-primary);border-color:var(--color-primary)}
+button.dis{opacity:.55;cursor:not-allowed;filter:grayscale(1)}
 button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--color-primary)}
 input.c{width:7em}
 #dial{display:block;margin:.5rem auto;width:100%;max-width:14rem;height:auto}
@@ -113,13 +114,15 @@ body.mapfull #stRotRow .sep{display:none}
 <script src="kotel.js"></script>
 <header id="bar">
   <strong>כיוון תפילה</strong>
-  <button id="bOn">מיקום אוטומטי</button>
+  <button id="bOn">מיקום משוער</button>
+  <button id="bGps" class="dis" aria-disabled="true" title="מיקום מדויק (GPS): בפיתוח, ממתין לאוצריא">GPS</button>
   <select id="city" aria-label="בחירת עיר"></select>
   <button id="bManT" aria-expanded="false" aria-controls="manBox">מיקום ידני</button>
   <button id="bPcT" aria-expanded="false" aria-controls="pcBox">מיקוד</button>
   <select id="meth" aria-label="שיטת חישוב"><option value="rh" title="כיוון קבוע על המפה" selected>כיוון קבוע (מפה)</option><option value="gc" title="הקו הקצר על הכדור">קו קצר (כדור)</option></select>
   <button id="bSid" hidden>פתח סידורון</button>
   <button id="bHal" aria-expanded="false" aria-controls="hal">הלכות</button>
+  <button id="bMin" aria-expanded="false" aria-controls="minyan" title="קו טלפוני למציאת מניינים קרובים">מניינים</button>
   <button id="bFly" aria-expanded="false" aria-controls="fly" title="הכיוון לירושלים וזמני היום בזמן טיסה">✈ טיסה</button>
   <button id="bPrint" title="הדפסת דף כיוון למקום הנוכחי">הדפס</button>
   <button id="bPray" title="חץ גדול לירושלים בלבד" hidden>מצב תפילה</button>
@@ -325,6 +328,14 @@ body.mapfull #stRotRow .sep{display:none}
     <div id="flyGlobe"></div>
     <div id="flyOut"></div>
   </div>
+  <div id="minyan" class="pop" hidden>
+    <h2 style="font-size:1.1rem;margin:.25rem 0">מניינים קרובים</h2>
+    <p>קו טלפוני שמוצא מניינים קרובים בכל אזור. מחייגים, אומרים או מקישים עיר ורחוב, ומקבלים את המניינים הסמוכים: ב-1 לפי שעה, ב-2 לפי שם בית הכנסת. אפשר גם לשמור עד שני אזורי מגורים ולחזור אליהם בלחיצה.</p>
+    <p id="minNum" dir="ltr" style="font-size:1.6rem;font-weight:700;text-align:center;margin:.5rem 0;letter-spacing:.05em">077-693-5494</p>
+    <div class="row"><button id="minCopy">העתק מספר</button><a id="minTel" href="tel:0776935494" style="text-decoration:none"><button type="button" tabindex="-1">חייג (בטלפון)</button></a></div>
+    <p id="minMsg" style="font-size:.85rem;min-height:1.2em" aria-live="polite"></p>
+    <p style="font-size:.8rem;color:var(--color-on-surface-dim)">הקו הוא שירות של אחרים, שפורסם בפורום מתמחים על ידי יוצרו, והתוסף רק מפנה אליו. אם החיוג לא נפתח מתוך אוצריא, אפשר להעתיק את המספר ולחייג ממכשיר הטלפון. התוסף אינו שולח לקו שום מידע על המיקום שלך.</p>
+  </div>
   <div id="hal" class="pop" hidden>
     <h2 style="font-size:1.1rem;margin:.25rem 0">הלכות כיוון התפילה</h2>
     <details class="hsec"><summary><h3>א. המקור</h3></summary>
@@ -415,12 +426,9 @@ body.mapfull #stRotRow .sep{display:none}
 <div id="printHead"></div>
 <main>
 <div id="news" class="newsbox" hidden><strong>מה חדש בגרסה <span id="newsVer"></span></strong><ul>
-  <li><b>כדור הארץ:</b> תצוגת מפה חדשה עם שני קווי החישוב זה לצד זה; גרירה מסובבת את הכדור; בטיסה — המסלול והמטוס על הכדור.</li>
-  <li><b>נהרות, אגמים וכבישים ראשיים</b> במפות; פירוט נוסף בהורדה אחת מההגדרות.</li>
-  <li><b>English:</b> ממשק באנגלית לפי שפת אוצריא, או בכפתור E/ע בשורה העליונה.</li>
-  <li><b>הלכות מורחבות:</b> ציטוטים מהגמרא, הרמב״ם, השולחן ערוך, שולחן ערוך הרב והמשנה ברורה, עם פתיחת הספר באוצריא.</li>
-  <li><b>זיהוי ידני:</b> כל דרך במסגרת נפתחת, עם איור שמתעדכן לפי השעה והמיקום.</li>
-  <li>הגדרות מתקפלות; הורדת סידורון עם כפתור לכיוון תפילה; הבהרה על המיקודים.</li>
+  <li><b>מניינים קרובים:</b> כפתור חדש בשורה העליונה עם הקו הטלפוני 077-693-5494 (שירות של אחרים): העתקת המספר והסבר קצר.</li>
+  <li><b>מצפן בטלפון:</b> המצפן מופעל מיד, בלי תלות במיקום, כך שגם באנדרואיד הוא מתחבר כשהמכשיר מעביר נתוני חיישן.</li>
+  <li><b>GPS:</b> מיקום מדויק ממתין לאוצריא (הכפתור אפור); בינתיים "מיקום משוער" לפי הרשת, עיר, רחוב או קואורדינטות.</li>
   <li>הפירוט המלא, וכל היכולות: בכפתור "הגדרות".</li></ul>
  <button id="newsOk">הבנתי</button></div>
 <p id="loc"></p>
@@ -440,7 +448,7 @@ body.mapfull #stRotRow .sep{display:none}
   </g>
 </svg>
 <p id="big">—</p>
-<p id="txt">בחר עיר, הזן קואורדינטות או לחץ על מיקום אוטומטי</p>
+<p id="txt">בחר עיר, הזן קואורדינטות או לחץ על מיקום משוער</p>
 <div class="row"><label class="grow">סיבוב ידני של החוגה<input id="rot" type="range" min="0" max="359" value="0"></label><button id="rotReset" title="החזר את החוגה למצב צפון למעלה">איפוס</button></div>
 </div>
 <div><select id="mapMode" aria-label="תצוגת מפה"><option value="street" selected>הרחובות סביבי</option><option value="near">הסביבה הקרובה</option><option value="far">עד ירושלים</option><option value="globe">כדור הארץ</option></select>
@@ -448,7 +456,7 @@ body.mapfull #stRotRow .sep{display:none}
 <svg id="map" viewBox="0 0 400 320" aria-label="מפה"></svg>
  <div class="row tight" id="stRotRow" hidden><button id="stRL" title="סובב נגד כיוון השעון" aria-label="סובב 15 מעלות נגד כיוון השעון">⟲</button><button id="stRR" title="סובב עם כיוון השעון" aria-label="סובב 15 מעלות עם כיוון השעון">⟳</button><button id="stR90" title="סובב 90°">90°</button><button id="stJup" title="סובב את המפה כך שירושלים למעלה">ירושלים ↑</button><button id="stN" title="צפון למעלה">צפון ↑</button><button id="stHere" title="סמן במפה את המקום שבו אתה עומד">סמן את מקומי</button><span class="sep"></span><label><input type="checkbox" id="stSyn" checked> ✡</label><button id="stSynNear" title="בית הכנסת הקרוב">הקרוב</button></div>
 </div>
-<p id="noCompass" class="nocomp" hidden>במחשב אין מצפן: החוגה מצוירת כשהצפון למעלה, ואינה מצביעה בחדר שלך. כדי לדעת לאן לפנות — לחץ במפה על הרחוב שלידך ותקבל הוראה ביחס אליו, או השתמש ב"זיהוי ידני" (שמש, צל, מקום מוכר).</p>
+<p id="noCompass" class="nocomp" hidden>אין מצפן זמין (במחשב, או שהמכשיר לא מעביר נתוני חיישן לתוסף): החוגה מצוירת כשהצפון למעלה, ואינה מצביעה בחדר שלך. כדי לדעת לאן לפנות — לחץ במפה על הרחוב שלידך ותקבל הוראה ביחס אליו, או השתמש ב"זיהוי ידני" (שמש, צל, מקום מוכר).</p>
 <div id="stPanel" hidden>
  <p id="stTxt" style="font-weight:600;margin:.4rem 0"></p>
  <div id="stNone" hidden>
@@ -463,7 +471,7 @@ body.mapfull #stRotRow .sep{display:none}
 </main>
 <script src="world.js"></script>
 <script src="geo.js"></script>
-<script>const VER="2.1.2"</script>
+<script>const VER="2.2.0"</script>
 <script>
 const J=[31.7781,35.2359],R=Math.PI/180,O=window.Otzaria;
 const C=[["ירושלים – גאולה",31.7885,35.2188],["ירושלים – רמות",31.8156,35.1955],["ירושלים – הר נוף",31.7858,35.1742],["ירושלים – רמת שלמה",31.8111,35.2175],["ירושלים – בית וגן",31.7641,35.1867],["ירושלים – נווה יעקב",31.8395,35.242],["ירושלים – גבעת שאול",31.79,35.193],["ירושלים – סנהדריה",31.8,35.224],["ירושלים – קרית משה",31.7848,35.2003],["בני ברק",32.0874,34.8324],["בית שמש",31.7462,34.9887],["רמת בית שמש",31.71,34.98],["מודיעין עילית",31.9324,35.0433],["ביתר עילית",31.7019,35.1073],["אלעד",32.0501,34.9522],["אשדוד",31.7977,34.653],["פתח תקווה",32.0878,34.886],["צפת",32.9646,35.5025],["טבריה",32.7939,35.5329],["חיפה",32.8191,34.9984],["רכסים",32.751,35.1014],["עמנואל",32.161,35.137],["נתיבות",31.4214,34.5884],["ערד",31.2612,35.2146],["קרית גת",31.6094,34.7712],["כוכב יעקב",31.8814,35.2453],["חריש",32.463,35.044],["טלזסטון",31.805,35.102],["אופקים",31.314,34.62],["קרית אתא",32.806,35.106],["ברוקלין – בורו פארק",40.634,-73.9968],["ברוקלין – וויליאמסבורג",40.7146,-73.9535],["לייקווד",40.0941,-74.215],["מונסי",41.118,-74.0594],["קרית יואל",41.342,-74.1679],["בולטימור",39.36,-76.7],["שיקגו",42.0,-87.7],["לוס אנג'לס",34.0792,-118.3523],["טורונטו",43.73,-79.43],["מונטריאול",45.5186,-73.6069],["מקסיקו סיטי",19.4335,-99.1909],["בואנוס איירס",-34.6092,-58.406],["מונטווידאו",-34.909,-56.15],["לונדון – סטמפורד היל",51.5707,-0.069],["מנצ'סטר",53.5143,-2.2593],["גייטסהד",54.9617,-1.6044],["אנטוורפן",51.21,4.42],["פריז",48.8589,2.32],["ציריך",47.3744,8.541],["שטרסבורג",48.5846,7.7507],["וינה",48.2006,16.4269],["פראג",50.09,14.419],["מוסקבה",55.75,37.62],["יוהנסבורג",-26.14,28.1008],["מלבורן",-37.8708,145.0218],["מירון",32.98,35.44],["ספסופה",33.002,35.432],["ראש פינה",32.969,35.542],["קצרין",32.99,35.69],["נהריה",33.008,35.095],["ים המלח – עין בוקק",31.2,35.362],["אילת",29.556,34.952],["הקטסקילס – סאות' פולסבורג",41.72,-74.635],["נתניה – קרית צאנז",32.327,34.864],["רחובות",31.8928,34.8113],["אשקלון",31.6688,34.5743],["קרית מלאכי",31.73,34.744],["ירושלים – רוממה",31.792,35.208],["גבעת זאב",31.864,35.17],["ברוקלין – פלטבוש",40.625,-73.96],["ברוקלין – קראון הייטס",40.669,-73.942],["פאר רוקוויי",40.605,-73.755],["פסאיק",40.857,-74.128],["קליבלנד",41.49,-81.54],["לונדון – גולדרס גרין",51.572,-0.194],["סרסל",48.995,2.38],["סידני",-33.891,151.26],["חספין",32.846,35.79],["עין גב",32.78,35.64],["מעלות",33.016,35.272],["שלומי",33.075,35.145],["מטולה",33.28,35.58],["נווה אטי\"ב",33.267,35.738],["עין גדי",31.46,35.39],["מצפה רמון",30.61,34.8],["ארוזה (שווייץ)",46.778,9.678],["דאבוס",46.8,9.836],["לוגאנו",46.005,8.952],["מיאמי ביץ'",25.79,-80.13],["דיל (ניו ג'רזי)",40.252,-73.998],["מונטיצ'לו (הקטסקילס)",41.655,-74.69],["בית שאן",32.497,35.498],["נוף הגליל",32.71,35.325],["כרמיאל",32.918,35.296],["עכו",32.927,35.083],["זכרון יעקב",32.572,34.954],["באר שבע",31.252,34.791],["ירוחם",30.988,34.929],["דימונה",31.069,35.033],["יסוד המעלה",33.059,35.6],["גינוסר",32.848,35.52],["אמירים",32.938,35.447],["יבנאל",32.708,35.505],["כפר חב\"ד",31.989,34.852],["בית לחם הגלילית",32.735,35.19],["ביריה",32.985,35.505],["אור הגנוז",33.007,35.418],["דלתון",33.017,35.488],["כרם בן זמרה",33.038,35.477],["כפר שמאי",32.957,35.459],["אבני איתן",32.818,35.762],["נוב",32.83,35.783],["אודם",33.196,35.756],["חד נס",32.928,35.643],["רמות (גולן)",32.85,35.668],["אלוני הבשן",33.048,35.832],["מגדל",32.837,35.508],["כנרת (המושבה)",32.721,35.565],["כפר תבור",32.688,35.42],["נווה זוהר",31.152,35.364],["קרית שמונה",33.207,35.571],["סנט מוריץ",46.498,9.838],["אנגלברג",46.821,8.405],["צרמט",46.02,7.749],["מריאנסקה לאזנה (מרינבאד)",49.964,12.701],["קרלובי וארי (קרלסבאד)",50.231,12.872],["אומן",48.749,30.214],["מז'יבוז'",49.442,27.414],["ליז'נסק",50.249,22.42],["בורנמות'",50.72,-1.88],["ווסטקליף-און-סי",51.54,0.69],["בית חלקיה",31.7927,34.8108]];
@@ -578,9 +586,7 @@ $("bMan").onclick=()=>{const a=parseFloat($("lat").value),b=parseFloat($("lon").
  if(!(Math.abs(a)<=90&&Math.abs(b)<=180)){$("txt").textContent="יש להזין קו רוחב בין ‎-90 ל-90 וקו אורך בין ‎-180 ל-180.";return}
  $("city").value="";setPos([a,b],"קואורדינטות ידניות",null,false);mode="m:"+a+","+b;save(mode)};
 $("meth").onchange=draw;$("mapMode").onchange=map;
-$("bOn").onclick=()=>{$("txt").textContent="מאתר מיקום…";
- if(!navigator.geolocation)return ipLoc();
- navigator.geolocation.getCurrentPosition(p=>{setPos([p.coords.latitude,p.coords.longitude],"מיקום מזוהה",p.coords.accuracy,true);startCompass();rev()},ipLoc,{timeout:8000})};
+$("bOn").onclick=()=>{$("txt").textContent="מאתר מיקום…";ipLoc()}; /* אוצריא אינה מאפשרת לתוספים geolocation, לכן ישר לפי רשת (IP) */
 $("bSat").onclick=()=>{if(!pos)return;const url=`https://www.google.com/maps/@${pos[0].toFixed(6)},${pos[1].toFixed(6)},19z/data=!3m1!1e3`;
  try{copyText(url)}catch(e){}$("satUrl").textContent="הכתובת הועתקה ללוח. אפשר להדביק אותה בדפדפן.";
  const fail=()=>{let w=null;try{w=window.open(url,"_blank")}catch(e){}if(!w)$("satUrl").textContent="המפה לא נפתחה. אפשר להעתיק את הכתובת לדפדפן: "+url};
@@ -591,7 +597,7 @@ const Z=f=>{zoom=Math.max(.25,Math.min(60,zoom*f));if(pos)map()};
 $("zIn").onclick=()=>Z(1.5);$("zOut").onclick=()=>Z(1/1.5);$("zReset").onclick=()=>{zoom=1;if(pos)map()};
 $("map").addEventListener("wheel",e=>{e.preventDefault();Z(e.deltaY<0?1.25:.8)},{passive:false});
 $("rotReset").onclick=()=>{manual=null;$("rot").value=0;if(pos)draw();else $("rose").removeAttribute("transform")};
-const PANELS={help:"bHelp",set:"bSet",fb:"bFb",hal:"bHal",fly:"bFly"};
+const PANELS={help:"bHelp",set:"bSet",fb:"bFb",hal:"bHal",fly:"bFly",minyan:"bMin"};
 function pop(btn,id,show){if(show)for(const k in PANELS)if(k!==id&&!$(k).hidden){$(k).hidden=true;$(PANELS[k]).setAttribute("aria-expanded","false");$(PANELS[k]).classList.remove("on")}const h=$(id);h.hidden=!show;$(btn).setAttribute("aria-expanded",String(show));$(btn).classList.toggle("on",show);if(id in PANELS)document.body.classList.toggle("side",show)}
 $("bHelp").onclick=()=>{const o=$("help").hidden;pop("bFb","fb",false);pop("bSet","set",false);pop("bHelp","help",o)};
 $("bFb").onclick=()=>{const o=$("fb").hidden;pop("bHelp","help",false);pop("bSet","set",false);pop("bFb","fb",o);if(o)$("fbText").focus()};
@@ -604,9 +610,13 @@ $("fbSend").onclick=async()=>{const t=$("fbText").value.trim(),m=$("fbMsg");if(!
  $("fbSend").disabled=false;
  if(v==="sent"||v==="queued"){m.textContent=v==="sent"?"נשלח. תודה!":"נשמר ויישלח כשיהיה חיבור. תודה!";$("fbText").value=""}
  else m.textContent=v==="cancelled"?"השליחה בוטלה.":"השליחה נכשלה. נסה שוב מאוחר יותר."};
-let compassOn=false;function startCompass(){if(compassOn)return;compassOn=true;const h=e=>{const v=e.webkitCompassHeading??(e.absolute&&e.alpha!=null?360-e.alpha:null);if(v!=null){const f=heading==null;heading=v;draw();if(f&&typeof prayBtn==="function")prayBtn()}};
+let compassOn=false,lastH=0;function startCompass(){if(compassOn)return;compassOn=true;const h=e=>{const v=e.webkitCompassHeading??(e.absolute&&e.alpha!=null?360-e.alpha:null);if(v!=null){const t=performance.now(),f=heading==null;if(!f&&t-lastH<120)return;lastH=t;heading=v;draw();if(f&&typeof prayBtn==="function")prayBtn()}};
  try{if(typeof DeviceOrientationEvent!=="undefined"&&DeviceOrientationEvent.requestPermission)DeviceOrientationEvent.requestPermission().then(r=>{if(r==="granted")addEventListener("deviceorientation",h);else compassOn=false}).catch(()=>{compassOn=false});
  else{addEventListener("deviceorientationabsolute",h);addEventListener("deviceorientation",h)}}catch(e){}}
+/* המצפן אינו תלוי במיקום: אוצריא דוחה geolocation, ובעבר המצפן הופעל רק אחרי הצלחתו, ולכן באנדרואיד לא התחבר.
+   ב-iOS הפעלת החיישן דורשת מחוות משתמש, ולכן שם מופעל בלחיצה הראשונה. */
+(function(){const ios=typeof DeviceOrientationEvent!=="undefined"&&DeviceOrientationEvent.requestPermission;
+ if(!ios)startCompass();else addEventListener("pointerdown",()=>startCompass(),{once:true})})();
 
 /* ---- ערכת נושא ושחזור ---- */
 function applyTheme(t){if(!t)return;const c=t.colorScheme||{},r=document.documentElement,m={primary:c.primary,"on-primary":c.onPrimary,surface:c.surface,"on-surface":c.onSurface,"surface-container-highest":c.surfaceContainerHighest,outline:c.outline,bg:c.surface};
