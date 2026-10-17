@@ -16,6 +16,7 @@ button,select,input{font:inherit;padding:.35rem .6rem;border:1px solid var(--col
 button{cursor:pointer}
 button.on{background:var(--color-primary);color:var(--color-on-primary);border-color:var(--color-primary)}
 button.dis{opacity:.55;cursor:not-allowed;filter:grayscale(1)}
+#city{max-width:11rem}
 button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--color-primary)}
 input.c{width:7em}
 #dial{display:block;margin:.5rem auto;width:100%;max-width:14rem;height:auto}
@@ -116,7 +117,6 @@ body.mapfull #stRotRow .sep{display:none}
   <strong>כיוון תפילה</strong>
   <button id="bOn">מיקום משוער</button>
   <button id="bGps" class="dis" aria-disabled="true" title="מיקום מדויק (GPS): בפיתוח, ממתין לאוצריא">GPS</button>
-  <select id="city" aria-label="בחירת עיר"></select>
   <button id="bManT" aria-expanded="false" aria-controls="manBox">מיקום ידני</button>
   <button id="bPcT" aria-expanded="false" aria-controls="pcBox">מיקוד</button>
   <select id="meth" aria-label="שיטת חישוב"><option value="rh" title="כיוון קבוע על המפה" selected>כיוון קבוע (מפה)</option><option value="gc" title="הקו הקצר על הכדור">קו קצר (כדור)</option></select>
@@ -159,7 +159,7 @@ body.mapfull #stRotRow .sep{display:none}
     <ul id="stList"></ul>
     <details class="feat sd"><summary><b>כל היכולות של התוסף</b></summary>
      <p><b>מיקום</b></p><ul>
-      <li>זיהוי מיקום אוטומטי (כשאוצריא מאפשרת), ובחירה לפי העיר שמוגדרת בלוח השנה של אוצריא.</li>
+      <li>מיקום משוער לפי הרשת (מיקום מדויק ב-GPS ממתין לאוצריא), ובחירה לפי העיר שמוגדרת בלוח השנה של אוצריא.</li>
       <li>רשימת ריכוזי קהילה בארץ ובעולם, שכונות ירושלים, וכל עיר מלוח השנה.</li>
       <li>מיקום ידני לפי קווי רוחב ואורך, או לפי מיקוד (ריכוזי הקהילה בחו״ל, עם בחירת קהילה, שמות רחובות והשלמה אוטומטית; וחלק מהארץ).</li>
       <li>מקומות שמורים בשם (בית, בית הכנסת, עבודה) ומעבר ביניהם בבחירה אחת.</li>
@@ -434,7 +434,7 @@ body.mapfull #stRotRow .sep{display:none}
 <p id="loc"></p>
 <div class="row" id="plRow"><select id="pl" aria-label="מקומות שמורים"><option value="">מקומות שמורים…</option></select>
  <input id="plName" placeholder="שם: בית, בית הכנסת…" aria-label="שם למקום" style="width:11em"><button id="plSave">שמור מיקום זה</button><button id="plDel" hidden>מחק מהרשימה</button>
- <span class="sep"></span><input id="stQ" list="stNames" placeholder="רחוב, או: רחוב פינת רחוב" title="אפשר לחפש פינה: ״הרצל פינת ז׳בוטינסקי״" aria-label="חיפוש רחוב" style="width:12em"><datalist id="stNames"></datalist><button id="stGo">מצא</button></div>
+ <span class="sep"></span><select id="city" aria-label="בחירת עיר"></select><input id="stQ" list="stNames" placeholder="רחוב, או: רחוב פינת רחוב" title="אפשר לחפש פינה: ״הרצל פינת ז׳בוטינסקי״" aria-label="חיפוש רחוב" style="width:12em"><datalist id="stNames"></datalist><button id="stGo">מצא</button></div>
 <div class="pair"><div>
 <svg id="dial" viewBox="-120 -120 240 240" aria-label="חוגת כיוון">
   <g id="rose">
