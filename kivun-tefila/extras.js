@@ -347,4 +347,4 @@ $("bGps").onclick = () => {
 const MIN_TEL = "0776935494";
 $("bMin").onclick = () => pop("bMin", "minyan", $("minyan").hidden);
 $("minCopy").onclick = () => copyText(MIN_TEL).then(ok => { $("minMsg").textContent = ok ? "המספר 077-693-5494 הועתק ללוח." : "ההעתקה לא הצליחה. המספר: 077-693-5494" });
-$("minTel").onclick = () => { $("minMsg").textContent = "אם החיוג לא נפתח, אפשר להעתיק את המספר ולחייג מהטלפון." };
+$("minTel").onclick = () => { $("minMsg").textContent = "חיוג ישיר אינו נתמך בתוך אוצריא. אפשר להעתיק את המספר ולחייג מהטלפון." };
