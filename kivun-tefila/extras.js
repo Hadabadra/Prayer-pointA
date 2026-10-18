@@ -69,7 +69,7 @@ function printSheet(again) {
   const b = bear(), when = new Date().toLocaleDateString("he-IL");
   $("printHead").innerHTML = `<h1>כיוון התפילה לירושלים</h1><p><b>${esc(lab || "המיקום")}</b> (${pos[0].toFixed(5)}, ${pos[1].toFixed(5)})</p>`
     + `<p class="pbig">${Math.round(b)}° מהצפון · ${esc(nm(b))}</p><p>${esc($("stTxt").textContent || "")}</p><p><small>במפה: הנקודה השחורה היא המקום, והקו המקווקו מוביל לכיוון ירושלים. הודפס ב-${when} מתוך התוסף "כיוון תפילה" לאוצריא. החישוב אל הר הבית; בשאלה מעשית יש להתייעץ עם רב.</small></p>`;
-  try { window.print() } catch (e) { $("stMsg").textContent = "ההדפסה אינה זמינה כאן." }
+  printNow().catch(() => { $("stMsg").textContent = "ההדפסה אינה זמינה כאן." })
 }
 
 /* ---- זכירת התצוגה: סוג המפה, סיבוב וזום ---- */
@@ -348,3 +348,5 @@ const MIN_TEL = "0776935494";
 $("bMin").onclick = () => pop("bMin", "minyan", $("minyan").hidden);
 $("minCopy").onclick = () => copyText(MIN_TEL).then(ok => { $("minMsg").textContent = ok ? "המספר 077-693-5494 הועתק ללוח." : "ההעתקה לא הצליחה. המספר: 077-693-5494" });
 $("minTel").onclick = () => { $("minMsg").textContent = "חיוג ישיר אינו נתמך בתוך אוצריא. אפשר להעתיק את המספר ולחייג מהטלפון." };
+
+$("minCopy2").onclick = () => copyText("*6837").then(ok => { $("minMsg").textContent = ok ? "המספר *6837 הועתק ללוח." : "ההעתקה לא הצליחה. המספר: *6837" });

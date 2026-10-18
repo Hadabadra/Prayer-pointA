@@ -1,0 +1,62 @@
+/* כיוון תפילה 2.3.0 — שכבת עיצוב לפי מדריך העיצוב של אוצריא (נטענת אחרי הסגנון הראשי) */
+:root{
+  --font-size-base:.9rem;
+  --color-primary:#8f6a1a;                       /* ניגודיות AA מול לבן */
+  --color-on-surface-variant:#5f5644;
+  --color-on-surface-dim:var(--color-on-surface-variant);
+  --color-surface-container-high:#efe8d8;
+  --color-error:#b3261e;--color-on-error:#fff;
+  --color-primary-subtle:color-mix(in srgb,var(--color-primary) 12%,transparent);
+  --color-secondary-subtle:color-mix(in srgb,var(--color-on-surface) 7%,transparent);
+  --radius-lg:16px;--radius-pill:999px;
+}
+:root[data-theme="dark"]{
+  --color-primary:#d8ab52;
+  --color-on-surface-variant:#c3b8a3;
+  --color-on-surface-dim:var(--color-on-surface-variant);
+  --color-surface-container-high:#2a241c;
+  --color-error:#f2b8b5;--color-on-error:#601410;
+}
+body{font-size:var(--font-size-base)}
+
+/* פס עליון: רקע surfaceContainerHigh, גובה 56px (44px במסך צר), כותרת 16px/600 */
+#bar{background:var(--color-surface-container-high);min-height:56px;transition:background-color .15s}
+#bar strong{font-size:calc(var(--font-size-base) + 1px);font-weight:600;color:var(--color-on-surface)}
+#bMore{display:none}
+
+/* כפתורים: משני (Tonal) כברירת מחדל, ראשי (Filled) לפעולה מרכזית */
+button{background:var(--color-secondary-subtle);font-weight:600;transition:opacity .15s,background-color .15s}
+button:hover:not(:disabled):not(.dis){opacity:.88}
+button.on,#stGo,#bMan,#pcGo,#fbSend,#minCopy,#newsOk,#plSave,#flyGo{background:var(--color-primary);color:var(--color-on-primary);border-color:var(--color-primary)}
+button:disabled,button.dis{opacity:.45;cursor:default;filter:none}
+#bOn.busy::after{content:"";display:inline-block;width:.8em;height:.8em;margin-inline-start:.4em;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:kspin .7s linear infinite;vertical-align:-.1em}
+@keyframes kspin{to{transform:rotate(360deg)}}
+@keyframes kfade{from{opacity:0}}
+.pop:not([hidden]){animation:kfade .16s ease-out}
+
+/* כרטיסים (flat, ללא צל) */
+.pair>div{background:var(--color-surface);border:1px solid var(--color-outline);border-radius:var(--radius-md);padding:.6rem .75rem}
+body.mapfull .pair>div{background:none;border:0;border-radius:0;padding:0}
+.chip{display:inline-block;background:var(--color-primary-subtle);color:var(--color-primary);border-radius:var(--radius-pill);padding:.1rem .6rem;font-size:.8em;font-weight:600}
+#about{margin-top:.5rem}
+
+/* מגע: יעדים של 44px */
+@media (pointer:coarse){button,select,input:not([type=checkbox]):not([type=radio]):not([type=range]){min-height:44px}}
+
+/* טלפון: פס 44px, כפתורים משניים מאחורי "עוד", חלוניות כ-bottom sheet */
+@media (max-width:40rem){
+  #bar{min-height:44px}
+  #bMore{display:inline-block}
+  #bar .sec{display:none}
+  #bar.more .sec:not([hidden]){display:inline-block}
+  #help.pop,#set.pop,#fb.pop,#hal.pop,#fly.pop,#minyan.pop{top:auto;bottom:0;inset-inline:0;width:100%;max-height:78vh;border-radius:var(--radius-lg) var(--radius-lg) 0 0;border-width:1px 0 0;border-inline-start:0;box-shadow:0 -4px 16px rgb(0 0 0/.18)}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* הדפסה: המפה לפני החוגה */
+@media print{
+  .pair{display:flex;flex-direction:column}
+  .pair>div:nth-child(2){order:-1}
+  .pair>div{background:none;border:0;padding:0}
+  #about,#bMore{display:none!important}
+}
