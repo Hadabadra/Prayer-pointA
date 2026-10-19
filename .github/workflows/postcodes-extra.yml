@@ -1,0 +1,27 @@
+name: כיוון תפילה — מיקודים שנשלחו על ידי משתמשים
+
+# אוסף issues "[מיקוד] ..." (נשלחים מהתוסף דרך המתווך) ל-kivun-tefila-data/postcodes-extra.json.
+# schedule ו-"Run workflow" פועלים רק מענף ברירת המחדל (dev) — ראו משימה 12 ב-kivun-tefila-docs/PLAN-2.6.md.
+on:
+  schedule:
+    - cron: '41 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: read
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 'כיוון-תפילה'
+      - name: Collect
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue list -R "$GITHUB_REPOSITORY" --state all --search '"[מיקוד]" in:title' --limit 1000 --json body,labels > /tmp/pc.json
+          python3 kivun-tefila-build/postcodes_extra.py < /tmp/pc.json
+          bash kivun-tefila-build/commit_data.sh kivun-tefila-data "מיקודים מהמשתמשים"
