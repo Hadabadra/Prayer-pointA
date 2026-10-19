@@ -350,3 +350,4 @@ $("minCopy").onclick = () => copyText(MIN_TEL).then(ok => { $("minMsg").textCont
 $("minTel").onclick = () => { $("minMsg").textContent = "חיוג ישיר אינו נתמך בתוך אוצריא. אפשר להעתיק את המספר ולחייג מהטלפון." };
 
 $("minCopy2").onclick = () => copyText("*6837").then(ok => { $("minMsg").textContent = ok ? "המספר *6837 הועתק ללוח." : "ההעתקה לא הצליחה. המספר: *6837" });
+$("bKotel").onclick = () => pop("bKotel", "kotel", $("kotel").hidden);

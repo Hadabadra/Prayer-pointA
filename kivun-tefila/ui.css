@@ -60,3 +60,36 @@ body.mapfull .pair>div{background:none;border:0;border-radius:0;padding:0}
   .pair>div{background:none;border:0;padding:0}
   #about,#bMore{display:none!important}
 }
+
+/* 2.4.0 — מתגי גלולה במקום תיבות סימון */
+input[type=checkbox]{appearance:none;-webkit-appearance:none;position:relative;flex:none;inline-size:2.5em;block-size:1.4em;margin:0 0 0 .5em;margin-inline-end:.5em;border-radius:var(--radius-pill);background:var(--color-outline);border:0;vertical-align:-.3em;cursor:pointer;transition:background-color .15s}
+input[type=checkbox]::before{content:"";position:absolute;inset-block-start:.2em;inset-inline-start:.2em;inline-size:1em;block-size:1em;border-radius:50%;background:var(--color-surface);transition:inset-inline-start .15s}
+input[type=checkbox]:checked{background:var(--color-primary)}
+input[type=checkbox]:checked::before{inset-inline-start:1.3em;background:var(--color-on-primary,#fff)}
+input[type=checkbox]:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px}
+input[type=checkbox]:disabled{opacity:.45;cursor:default}
+
+/* הורדות בהגדרות */
+.dlitem{border:1px solid var(--color-outline);border-radius:var(--radius-md);padding:.4rem .6rem;margin:.4rem 0}
+.dlitem .row{margin:.3rem 0 0}
+#nsRes{list-style:none;margin:.3rem 0;padding:0;display:grid;gap:.4rem}
+#nsRes li{border:1px solid var(--color-outline);border-radius:var(--radius-md);padding:.4rem .6rem;background:var(--color-surface)}
+#nsRes button{margin-top:.3rem}
+
+/* מסך פתיחה */
+#splash{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:var(--color-surface);transition:opacity .35s}
+#splash.out{opacity:0;pointer-events:none}
+#spWall{position:absolute;inset:0;opacity:.28;background:var(--color-on-surface);-webkit-mask-position:center bottom;mask-position:center bottom;-webkit-mask-size:cover;mask-size:cover;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
+#spBox{position:relative;text-align:center;padding:2rem 1.5rem;display:grid;gap:.9rem;justify-items:center}
+#spBox h1{font-size:clamp(2rem,6vw,3.4rem);margin:0;color:var(--color-on-surface)}
+#spBox p{margin:0;color:var(--color-on-surface-variant);font-size:1.1rem}
+#spGo{font-size:1.2rem;padding:.7rem 3rem;border-radius:var(--radius-pill);background:var(--color-primary);color:var(--color-on-primary,#fff);border:0}
+#spBox small{color:var(--color-on-surface-variant)}
+@media print{#splash{display:none!important}}
+
+/* תפילה מסידורון על רקע הכותל */
+#tfila{position:fixed;inset:0;z-index:150;background:var(--color-surface);overflow:auto}
+#tfWall{position:fixed;inset:0;opacity:.2;background:var(--color-on-surface);-webkit-mask-position:center bottom;mask-position:center bottom;-webkit-mask-size:cover;mask-size:cover;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;pointer-events:none}
+#tfBox{position:relative;max-width:46rem;margin:0 auto;padding:1rem 1.2rem 3rem}
+#tfText{white-space:pre-wrap;line-height:1.9;font-size:1.25rem}
+@media print{#tfila{display:none!important}}

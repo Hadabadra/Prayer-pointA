@@ -105,7 +105,7 @@ body.mapfull #stRotRow .sep{display:none}
 .newsbox{background:var(--color-surface);border:1px solid var(--color-primary);border-radius:var(--radius-md);padding:.4rem .8rem;margin:.4rem 0}
 .newsbox ul{margin:.25rem 0;padding-inline-start:1.2rem}
 /* החלוניות (זיהוי ידני, הגדרות, הארות) נפתחות בצד ולא מכסות את החוגה והמפה */
-#help.pop,#set.pop,#fb.pop,#hal.pop,#fly.pop,#minyan.pop{top:var(--bar-h,2.6rem);bottom:0;inset-inline-start:auto;inset-inline-end:0;margin:0;width:min(22rem,92vw);max-width:none;max-height:none;border-radius:0;border-width:0 1px 0 0;border-inline-start:1px solid var(--color-outline);box-shadow:0 0 12px color-mix(in srgb,var(--color-on-surface) 15%,transparent);z-index:4}
+#help.pop,#set.pop,#fb.pop,#hal.pop,#fly.pop,#minyan.pop,#kotel.pop{top:var(--bar-h,2.6rem);bottom:0;inset-inline-start:auto;inset-inline-end:0;margin:0;width:min(22rem,92vw);max-width:none;max-height:none;border-radius:0;border-width:0 1px 0 0;border-inline-start:1px solid var(--color-outline);box-shadow:0 0 12px color-mix(in srgb,var(--color-on-surface) 15%,transparent);z-index:4}
 @media (min-width:60rem){body.side main{margin-inline-end:22.5rem;margin-inline-start:auto}}
 
 </style>
@@ -113,6 +113,7 @@ body.mapfull #stRotRow .sep{display:none}
 </head>
 <body>
 <div id="wall" aria-hidden="true"></div>
+<div id="splash" role="dialog" aria-modal="true" aria-labelledby="spT"><div id="spWall" aria-hidden="true"></div><div id="spBox"><h1 id="spT">כיוון תפילה</h1><p>הכיוון לירושלים מכל מקום בעולם</p><button id="spGo" type="button">התחל</button><small id="spVer"></small></div></div>
 <script src="kotel.js"></script>
 <header id="bar">
   <strong>כיוון תפילה</strong>
@@ -123,6 +124,7 @@ body.mapfull #stRotRow .sep{display:none}
   <select id="meth" aria-label="שיטת חישוב"><option value="rh" title="כיוון קבוע על המפה" selected>כיוון קבוע (מפה)</option><option value="gc" title="הקו הקצר על הכדור">קו קצר (כדור)</option></select>
   <button id="bSid" hidden>פתח סידורון</button>
   <button id="bHal" aria-expanded="false" aria-controls="hal">הלכות</button>
+  <button id="bKotel" aria-expanded="false" aria-controls="kotel" title="דיני הכותל המערבי">דיני הכותל</button>
   <button id="bMin" aria-expanded="false" aria-controls="minyan" title="קו טלפוני למציאת מניינים קרובים">מניינים</button>
   <button id="bFly" aria-expanded="false" aria-controls="fly" title="הכיוון לירושלים וזמני היום בזמן טיסה">✈ טיסה</button>
   <button id="bPrint" title="הדפסת דף כיוון למקום הנוכחי">הדפס</button>
@@ -137,7 +139,19 @@ body.mapfull #stRotRow .sep{display:none}
     <button id="fbSend">שלח</button> <span id="fbMsg"></span>
   </div>
   <div id="set" class="pop" hidden>
-    <div class="row"><button id="setDl">הורד את האזור של המיקום הנוכחי (פעם אחת, עם אינטרנט)</button></div>
+    <details class="sd" id="dls" open><summary><b>הורדות</b></summary>
+     <div class="dlitem"><b>רחובות האזור</b> <small>המיקום הנוכחי, פעם אחת עם אינטרנט</small>
+      <div class="row"><button id="setDl">הורד את האזור של המיקום הנוכחי</button></div></div>
+     <div class="dlitem"><b>שמות נהרות וכבישים לחיפוש</b> <small>כ-1MB. נהרות בכל העולם, וכבישים בעלי שם בצפון אמריקה</small>
+      <div class="row"><button id="namesDl">הורד</button><button id="namesImp">טען מקובץ</button><button id="namesLink">העתק קישור</button> <small id="namesMsg"></small></div></div>
+     <div class="dlitem"><b>נהרות, אגמים וכבישים מפורטים למפה</b> <small>כ-3MB</small>
+      <div class="row"><button id="geoDl">הורד</button><button id="geoImp">טען מקובץ</button><button id="geoLink">העתק קישור</button> <small id="geoMsg"></small></div></div>
+     <div class="dlitem"><b>סידורון</b> <small>גרסה 3.7.1 עם כפתור לכיוון תפילה</small>
+      <div class="row"><button id="sidDl">הורד</button> <small id="sidMsg"></small></div></div>
+     <div class="dlitem"><b>דף ההורדה של התוסף</b> <small>הגרסה העדכנית נמצאת תמיד בחנות התוספים של אוצריא</small>
+      <div class="row"><button id="dlLink">פתח את דף ההורדה</button></div></div>
+     <p><small><b>במחשב בלי אינטרנט:</b> לוחצים "העתק קישור", פותחים את הקישור במחשב שיש בו אינטרנט, שומרים את הקובץ (Ctrl+S), מעבירים אותו אל המחשב הזה ולוחצים "טען מקובץ". הקובץ נשמר בתוסף ואין צורך להשאיר אותו.</small></p>
+    </details>
     <details class="sd"><summary><b>מפת רחובות — גם בלי אינטרנט (הסבר)</b></summary>
     
     <p>בתצוגת "הרחובות סביבי" רואים את הרחובות סביבך עם שמותיהם, ואת הקו לירושלים. לוחצים על הרחוב שלידך, ומקבלים הוראה כמו "עמוד במקביל לרחוב, כשפניך לכיוון צפון, והסתובב 23° ימינה". כך אפשר לכוון בלי מצפן, במחשב או בטלפון.</p>
@@ -301,10 +315,8 @@ body.mapfull #stRotRow .sep{display:none}
      <li>מפת רחובות עם הורדה אחת לכל אזור; מצפן המכשיר מיד בפתיחה.</li>
      <li>חוגה, שתי שיטות חישוב, מפות הסביבה ועד ירושלים, וזיהוי ידני לפי שמש, צל, כוכב הצפון ומקום מוכר.</li></ul></details>
     </details>
-    <p>הגרסה העדכנית תמיד בחנות התוספים של אוצריא, וגם כאן: <button id="dlLink">דף ההורדה של כיוון תפילה</button></p>
     <p><small>מיקודים: יש בתוסף כ-580 מיקודים בארץ וכ-20,000 בריכוזי הקהילה בחו״ל, ולא את כל המיקודים.</small></p>
-    <div class="row"><button id="sidDl">הורד סידורון 3.7.1 עם כפתור לכיוון תפילה</button> <small id="sidMsg"></small></div>
-    <div class="row"><button id="geoDl">הורד נהרות, אגמים וכבישים מפורטים (פעם אחת, כ-3MB, עם אינטרנט)</button> <small id="geoMsg"></small></div>
+    <div class="setrow"><label><span><input type="checkbox" id="splashShow" checked> מסך פתיחה עם הכותל</span></label></div>
     <div class="setrow"><label><span><input type="checkbox" id="prayShow"> כפתור ״מצב תפילה״ בשורה העליונה</span></label> <small>(מופעל מעצמו רק כשמתגלה מצפן מובנה במכשיר)</small></div>
     <div class="row"><button id="newsAgain">הצג שוב את חלונית "מה חדש"</button><button id="setFb">יש לך הערה? שלח הארה</button></div>
     <p><small>נתוני הרחובות, בתי הכנסת והמיקודים: © OpenStreetMap contributors, ברישיון ODbL.</small></p>
@@ -328,6 +340,10 @@ body.mapfull #stRotRow .sep{display:none}
     <p id="flyMsg"></p>
     <div id="flyGlobe"></div>
     <div id="flyOut"></div>
+  </div>
+  <div id="kotel" class="pop" hidden>
+    <h2 style="font-size:1.1rem;margin:.25rem 0">דיני הכותל המערבי</h2>
+    <div id="kotelBody"></div>
   </div>
   <div id="minyan" class="pop" hidden>
     <h2 style="font-size:1.1rem;margin:.25rem 0">מניינים קרובים</h2>
@@ -476,7 +492,7 @@ body.mapfull #stRotRow .sep{display:none}
 </main>
 <script src="world.js"></script>
 <script src="geo.js"></script>
-<script>const VER="2.3.1"</script>
+<script>const VER="2.4.0"</script>
 <script>
 const J=[31.7781,35.2359],R=Math.PI/180,O=window.Otzaria;
 const C=[["ירושלים – גאולה",31.7885,35.2188],["ירושלים – רמות",31.8156,35.1955],["ירושלים – הר נוף",31.7858,35.1742],["ירושלים – רמת שלמה",31.8111,35.2175],["ירושלים – בית וגן",31.7641,35.1867],["ירושלים – נווה יעקב",31.8395,35.242],["ירושלים – גבעת שאול",31.79,35.193],["ירושלים – סנהדריה",31.8,35.224],["ירושלים – קרית משה",31.7848,35.2003],["בני ברק",32.0874,34.8324],["בית שמש",31.7462,34.9887],["רמת בית שמש",31.71,34.98],["מודיעין עילית",31.9324,35.0433],["ביתר עילית",31.7019,35.1073],["אלעד",32.0501,34.9522],["אשדוד",31.7977,34.653],["פתח תקווה",32.0878,34.886],["צפת",32.9646,35.5025],["טבריה",32.7939,35.5329],["חיפה",32.8191,34.9984],["רכסים",32.751,35.1014],["עמנואל",32.161,35.137],["נתיבות",31.4214,34.5884],["ערד",31.2612,35.2146],["קרית גת",31.6094,34.7712],["כוכב יעקב",31.8814,35.2453],["חריש",32.463,35.044],["טלזסטון",31.805,35.102],["אופקים",31.314,34.62],["קרית אתא",32.806,35.106],["ברוקלין – בורו פארק",40.634,-73.9968],["ברוקלין – וויליאמסבורג",40.7146,-73.9535],["לייקווד",40.0941,-74.215],["מונסי",41.118,-74.0594],["קרית יואל",41.342,-74.1679],["בולטימור",39.36,-76.7],["שיקגו",42.0,-87.7],["לוס אנג'לס",34.0792,-118.3523],["טורונטו",43.73,-79.43],["מונטריאול",45.5186,-73.6069],["מקסיקו סיטי",19.4335,-99.1909],["בואנוס איירס",-34.6092,-58.406],["מונטווידאו",-34.909,-56.15],["לונדון – סטמפורד היל",51.5707,-0.069],["מנצ'סטר",53.5143,-2.2593],["גייטסהד",54.9617,-1.6044],["אנטוורפן",51.21,4.42],["פריז",48.8589,2.32],["ציריך",47.3744,8.541],["שטרסבורג",48.5846,7.7507],["וינה",48.2006,16.4269],["פראג",50.09,14.419],["מוסקבה",55.75,37.62],["יוהנסבורג",-26.14,28.1008],["מלבורן",-37.8708,145.0218],["מירון",32.98,35.44],["ספסופה",33.002,35.432],["ראש פינה",32.969,35.542],["קצרין",32.99,35.69],["נהריה",33.008,35.095],["ים המלח – עין בוקק",31.2,35.362],["אילת",29.556,34.952],["הקטסקילס – סאות' פולסבורג",41.72,-74.635],["נתניה – קרית צאנז",32.327,34.864],["רחובות",31.8928,34.8113],["אשקלון",31.6688,34.5743],["קרית מלאכי",31.73,34.744],["ירושלים – רוממה",31.792,35.208],["גבעת זאב",31.864,35.17],["ברוקלין – פלטבוש",40.625,-73.96],["ברוקלין – קראון הייטס",40.669,-73.942],["פאר רוקוויי",40.605,-73.755],["פסאיק",40.857,-74.128],["קליבלנד",41.49,-81.54],["לונדון – גולדרס גרין",51.572,-0.194],["סרסל",48.995,2.38],["סידני",-33.891,151.26],["חספין",32.846,35.79],["עין גב",32.78,35.64],["מעלות",33.016,35.272],["שלומי",33.075,35.145],["מטולה",33.28,35.58],["נווה אטי\"ב",33.267,35.738],["עין גדי",31.46,35.39],["מצפה רמון",30.61,34.8],["ארוזה (שווייץ)",46.778,9.678],["דאבוס",46.8,9.836],["לוגאנו",46.005,8.952],["מיאמי ביץ'",25.79,-80.13],["דיל (ניו ג'רזי)",40.252,-73.998],["מונטיצ'לו (הקטסקילס)",41.655,-74.69],["בית שאן",32.497,35.498],["נוף הגליל",32.71,35.325],["כרמיאל",32.918,35.296],["עכו",32.927,35.083],["זכרון יעקב",32.572,34.954],["באר שבע",31.252,34.791],["ירוחם",30.988,34.929],["דימונה",31.069,35.033],["יסוד המעלה",33.059,35.6],["גינוסר",32.848,35.52],["אמירים",32.938,35.447],["יבנאל",32.708,35.505],["כפר חב\"ד",31.989,34.852],["בית לחם הגלילית",32.735,35.19],["ביריה",32.985,35.505],["אור הגנוז",33.007,35.418],["דלתון",33.017,35.488],["כרם בן זמרה",33.038,35.477],["כפר שמאי",32.957,35.459],["אבני איתן",32.818,35.762],["נוב",32.83,35.783],["אודם",33.196,35.756],["חד נס",32.928,35.643],["רמות (גולן)",32.85,35.668],["אלוני הבשן",33.048,35.832],["מגדל",32.837,35.508],["כנרת (המושבה)",32.721,35.565],["כפר תבור",32.688,35.42],["נווה זוהר",31.152,35.364],["קרית שמונה",33.207,35.571],["סנט מוריץ",46.498,9.838],["אנגלברג",46.821,8.405],["צרמט",46.02,7.749],["מריאנסקה לאזנה (מרינבאד)",49.964,12.701],["קרלובי וארי (קרלסבאד)",50.231,12.872],["אומן",48.749,30.214],["מז'יבוז'",49.442,27.414],["ליז'נסק",50.249,22.42],["בורנמות'",50.72,-1.88],["ווסטקליף-און-סי",51.54,0.69],["בית חלקיה",31.7927,34.8108]];
@@ -602,7 +618,7 @@ const Z=f=>{zoom=Math.max(.25,Math.min(60,zoom*f));if(pos)map()};
 $("zIn").onclick=()=>Z(1.5);$("zOut").onclick=()=>Z(1/1.5);$("zReset").onclick=()=>{zoom=1;if(pos)map()};
 $("map").addEventListener("wheel",e=>{e.preventDefault();Z(e.deltaY<0?1.25:.8)},{passive:false});
 $("rotReset").onclick=()=>{manual=null;$("rot").value=0;if(pos)draw();else $("rose").removeAttribute("transform")};
-const PANELS={help:"bHelp",set:"bSet",fb:"bFb",hal:"bHal",fly:"bFly",minyan:"bMin"};
+const PANELS={help:"bHelp",set:"bSet",fb:"bFb",hal:"bHal",fly:"bFly",minyan:"bMin",kotel:"bKotel"};
 function pop(btn,id,show){if(show)for(const k in PANELS)if(k!==id&&!$(k).hidden){$(k).hidden=true;$(PANELS[k]).setAttribute("aria-expanded","false");$(PANELS[k]).classList.remove("on")}const h=$(id);h.hidden=!show;$(btn).setAttribute("aria-expanded",String(show));$(btn).classList.toggle("on",show);if(id in PANELS)document.body.classList.toggle("side",show)}
 $("bHelp").onclick=()=>{const o=$("help").hidden;pop("bFb","fb",false);pop("bSet","set",false);pop("bHelp","help",o)};
 $("bFb").onclick=()=>{const o=$("fb").hidden;pop("bHelp","help",false);pop("bSet","set",false);pop("bFb","fb",o);if(o)$("fbText").focus()};
@@ -655,6 +671,8 @@ else try{restore(localStorage.getItem("kivun-city"))}catch(e){}
 <script src="ui.js"></script>
 <script src="fly.js"></script>
 <script src="globe.js"></script>
+<script src="names.js"></script>
+<script src="kotel-dinim.js"></script>
 <script src="i18n.js"></script>
 <script>
 /* מקומות שמורים: שם + קואורדינטות, נשמרים באחסון התוסף */

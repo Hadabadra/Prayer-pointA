@@ -1,4 +1,4 @@
-/* כיוון תפילה 2.3.0 — תוספות ממשק: "עוד" בטלפון, ספינר, מצב לא מקוון, הדפסה/PDF, אודות וקיצור דרך, נגישות */
+/* כיוון תפילה 2.4.0 — תוספות ממשק: "עוד" בטלפון, ספינר, מצב לא מקוון, הדפסה/PDF, אודות וקיצור דרך, נגישות */
 (function () {
   const $ = id => document.getElementById(id), O = window.Otzaria;
   const HOME = "https://github.com/e0548433917-gif/otzaria/tree/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94";
@@ -13,11 +13,11 @@
   ["txt", "loc", "stMsg", "fbMsg", "satUrl", "minMsg"].forEach(i => { const e = $(i); if (e) e.setAttribute("aria-live", "polite") });
   addEventListener("keydown", e => {
     if (e.key !== "Escape") return;
-    [["bHal", "hal"], ["bFly", "fly"], ["bMin", "minyan"]].forEach(([b, p]) => { if ($(p) && !$(p).hidden) pop(b, p, false) });
+    [["bHal", "hal"], ["bFly", "fly"], ["bMin", "minyan"], ["bKotel", "kotel"]].forEach(([b, p]) => { if ($(p) && !$(p).hidden) pop(b, p, false) });
   });
 
   /* טלפון: כפתורים משניים מאחורי "עוד" (CSS מסתיר אותם רק במסך צר) */
-  ["bHal", "bMin", "bFly", "bPrint", "bHelp", "bSet", "bLang", "bFb", "meth"].forEach(i => { const e = $(i); if (e) e.classList.add("sec") });
+  ["bHal", "bKotel", "bMin", "bFly", "bPrint", "bHelp", "bSet", "bLang", "bFb", "meth"].forEach(i => { const e = $(i); if (e) e.classList.add("sec") });
   const more = document.createElement("button");
   more.id = "bMore"; more.type = "button"; more.textContent = "⋯"; more.title = "עוד"; more.setAttribute("aria-expanded", "false"); more.setAttribute("aria-label", "עוד פעולות");
   more.onclick = () => { const o = bar.classList.toggle("more"); more.setAttribute("aria-expanded", String(o)) };
@@ -133,4 +133,51 @@
     } catch (e) {}
   }
   today(); setInterval(today, 3600000);
+  /* מתגים: תיבות סימון נגישות כמתג */
+  document.querySelectorAll("input[type=checkbox]").forEach(c => c.setAttribute("role", "switch"));
+
+  /* מסך פתיחה עם הכותל וכפתור התחלה; הלחיצה מפעילה את המצפן (ב-iOS נדרשת מחווה) */
+  const sp = $("splash"), dat0 = r => r && (r.data !== undefined ? r.data : r);
+  if (sp) {
+    try { const m = $("wall").style.maskImage || $("wall").style.webkitMaskImage; if (m) { $("spWall").style.maskImage = m; $("spWall").style.webkitMaskImage = m } } catch (e) {}
+    try { $("spVer").textContent = "גרסה " + VER } catch (e) {}
+    const close = () => { sp.classList.add("out"); setTimeout(() => { sp.hidden = true; sp.remove() }, 400) };
+    $("spGo").onclick = () => { try { if (typeof startCompass === "function") startCompass() } catch (e) {} close() };
+    const skip = /nosplash/.test(location.search);
+    const sw = $("splashShow");
+    (async () => {
+      let v = null; try { v = O ? dat0(await O.call("storage.get", { key: "kivun-splash" })) : localStorage.getItem("kivun-splash") } catch (e) {}
+      if (skip || v === "0") { sp.remove(); if (sw) sw.checked = false; return }
+      $("spGo").focus();
+    })();
+    if (sw) sw.onchange = () => { const x = sw.checked ? "1" : "0"; try { O ? O.call("storage.set", { key: "kivun-splash", value: x }).catch(() => {}) : localStorage.setItem("kivun-splash", x) } catch (e) {} };
+  }
+  /* תפילה מסידורון: סידורון שולח את התפילה הנוכחית (plugin.openOther עם param), והיא מוצגת כאן על רקע הכותל */
+  const SID = "com.moshenahari.siduron";
+  const tb = document.createElement("button"); tb.id = "bTfila"; tb.type = "button"; tb.textContent = "תפילה"; tb.title = "התפילה הנוכחית מהסידורון על רקע הכותל";
+  bar.insertBefore(tb, $("bHal"));
+  const ov = document.createElement("div"); ov.id = "tfila"; ov.hidden = true; ov.setAttribute("role", "dialog"); ov.setAttribute("aria-modal", "true"); ov.setAttribute("aria-label", "תפילה");
+  ov.innerHTML = '<div id="tfWall" aria-hidden="true"></div><div id="tfBox"><div class="row"><button id="tfClose" type="button">סגור</button><button id="tfFs" type="button">גופן +</button><button id="tfFs2" type="button">גופן −</button></div><h2 id="tfTitle"></h2><p id="tfDir" class="chip" hidden></p><div id="tfText"></div></div>';
+  document.body.appendChild(ov);
+  try { const m = $("wall").style.maskImage || $("wall").style.webkitMaskImage; if (m) { $("tfWall").style.maskImage = m; $("tfWall").style.webkitMaskImage = m } } catch (e) {}
+  let last = null, fsz = 1.25;
+  const tshow = p => {
+    if (p) last = p;
+    const L = last; $("tfTitle").textContent = L ? (L.title || "תפילה") : "תפילה";
+    const x = $("tfText"); x.innerHTML = "";
+    if (L && L.text) { x.textContent = L.text }
+    else {
+      x.innerHTML = '<p>כדי להציג כאן תפילה: פותחים את סידורון, בוחרים את התפילה (שחרית, מנחה או ערבית), ולוחצים על כפתור "כיוון תפילה" בשורה העליונה שלו. התפילה תעבור לכאן ותוצג על רקע הכותל.</p><p><small>נדרש סידורון בגרסה 3.7.1 ומעלה.</small></p>';
+      if (O) { const b = document.createElement("button"); b.type = "button"; b.textContent = "פתח סידורון"; b.onclick = () => { ov.hidden = true; O.call("plugin.openOther", { pluginId: SID }).catch(() => {}) }; x.appendChild(b) }
+    }
+    const d = $("tfDir");
+    if (typeof pos !== "undefined" && pos) { d.hidden = false; d.textContent = "הכיוון לירושלים: " + Math.round(bearing(pos, J)) + "°" } else d.hidden = true;
+    x.style.fontSize = fsz + "rem"; ov.hidden = false; $("tfClose").focus();
+  };
+  tb.onclick = () => tshow(null);
+  $("tfClose").onclick = () => { ov.hidden = true };
+  $("tfFs").onclick = () => { fsz = Math.min(2.4, fsz + .15); $("tfText").style.fontSize = fsz + "rem" };
+  $("tfFs2").onclick = () => { fsz = Math.max(.9, fsz - .15); $("tfText").style.fontSize = fsz + "rem" };
+  addEventListener("keydown", e => { if (e.key === "Escape" && !ov.hidden) ov.hidden = true });
+  if (O) O.on("plugin.page_opened", e => { const p = e && (e.param || (e.data && e.data.param)); if (p && typeof p === "object" && p.type === "prayer") tshow(p) });
 })();

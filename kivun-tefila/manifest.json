@@ -1,7 +1,7 @@
 {
   "id": "com.shiachrina.kivuntefila",
   "name": "כיוון תפילה",
-  "version": "2.3.1",
+  "version": "2.4.0",
   "description": "הכיוון לירושלים לפי מיקום, עיר או רחוב: חוגה, מצפן, מפות וכדור הארץ בלי אינטרנט, מצב טיסה, הלכות עם מקורות, וממשק באנגלית.",
   "author": "שיח רינה-עמודי שש",
   "schemaVersion": 1,
@@ -32,7 +32,8 @@
       "https://nominatim.openstreetmap.org/reverse",
       "https://overpass-api.de/api/interpreter",
       "https://overpass.kumi.systems/api/interpreter",
-      "https://achat-relay.e0548433917.workers.dev"
+      "https://achat-relay.e0548433917.workers.dev",
+      "https://raw.githubusercontent.com/e0548433917-gif/otzaria/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/kivun-tefila-data"
     ]
   },
   "contributes": {

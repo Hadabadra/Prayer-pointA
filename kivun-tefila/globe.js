@@ -60,6 +60,6 @@ $("geoDl").onclick = async () => {
   const m = $("geoMsg"); m.textContent = "מוריד…";
   try { const j = await getJ(GEOX_URL); if (!j || !j.r) throw 0; GEOX = j; const s = JSON.stringify(j);
     try { O ? await O.call("fs.writeFile", { path: "geo-extra.json", content: s }) : localStorage.setItem("kivun-geo-extra", s) } catch (e) {}
-    m.textContent = "הורד ✓"; if (pos) map() } catch (e) { m.textContent = "ההורדה נכשלה. צריך חיבור לאינטרנט." }
+    m.textContent = "הורד ✓"; if (pos) map() } catch (e) { m.textContent = "ההורדה נכשלה (אין חיבור, או שהכתובת עוד לא אושרה באוצריא). לחץ \"העתק קישור\", הורד במחשב אחר ולחץ \"טען מקובץ\"." }
 };
 setTimeout(geoxLoad, 1500);
