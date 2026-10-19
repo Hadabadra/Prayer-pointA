@@ -1,7 +1,7 @@
 # כיוון תפילה — שיח רינה-עמודי שש
 
 ## הורדה
-- **כיוון תפילה 2.5.1:** [kivun-tefila-2.5.1.otzplugin](https://github.com/e0548433917-gif/otzaria/raw/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/kivun-tefila-2.5.1.otzplugin). זמין גם בחנות התוספים של אוצריא. קבצי המקור נמצאים בתיקייה [kivun-tefila](kivun-tefila).
+- **כיוון תפילה 2.5.2:** [kivun-tefila-2.5.2.otzplugin](https://github.com/e0548433917-gif/otzaria/raw/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/kivun-tefila-2.5.2.otzplugin). זמין גם בחנות התוספים של אוצריא. קבצי המקור נמצאים בתיקייה [kivun-tefila](kivun-tefila).
 - **סידורון 3.7.2 התואם** (כפתור לפתיחת כיוון תפילה, ושליחת התפילה הפתוחה לבקשתו; התוסף של Y-PLONI, נערך באישורו): [com.moshenahari.siduron-3.7.2.otzplugin](https://github.com/e0548433917-gif/otzaria/raw/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/siduron/com.moshenahari.siduron-3.7.2.otzplugin). הוגש כבקשת מיזוג לריפו שלו: [Y-PLONI/siduron_plugin#1](https://github.com/Y-PLONI/siduron_plugin/pull/1). פירוט השינויים בתיקיית [siduron](siduron).
 
 ### קבצי נתונים להורדה (אופציונלי, להורדה פעם אחת מתוך ההגדרות בתוסף)
@@ -16,6 +16,10 @@
 כל הגרסאות, עם סידורון התואם מצורף: [דף ההורדות](https://github.com/e0548433917-gif/otzaria/releases?q=kivun-tefila&expanded=true).
 
 ---
+
+## מה חדש ב-2.5.2
+
+* **הכותל עד למטה:** ציור הכותל ברקע הוארך כלפי מטה, עם נדבכי אבן מהציור עצמו ובלי אנשים, וכבר לא נחתך באמצע.
 
 ## מה חדש ב-2.5.1
 
