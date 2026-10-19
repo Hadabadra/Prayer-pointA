@@ -1,0 +1,637 @@
+From 74ab68082948d23276c22b2249d6e074297f8f88 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Tue, 20 Oct 2026 02:12:05 +0300
+Subject: [PATCH] =?UTF-8?q?5.8.0:=20=D7=9B=D7=9C=D7=99=20PDF,=20=D7=A4?=
+ =?UTF-8?q?=D7=AA=D7=97=20=D7=91=D7=90=D7=9E=D7=A6=D7=A2=D7=95=D7=AA=20?=
+ =?UTF-8?q?=D7=A9=D7=9C=20Windows,=20=D7=92=D7=A8=D7=A1=D7=AA=20=D7=92?=
+ =?UTF-8?q?=D7=A9=D7=A8=201.0.x?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ CHANGELOG.md      |   6 +
+ css/app.css       |   5 +
+ docs/KNOWLEDGE.md |   5 +
+ index.html        |  12 +-
+ js/app.js         |   8 +-
+ js/bridge.js      |  69 +++++++---
+ js/files.js       |   1 +
+ js/lang-en.js     |   3 +-
+ js/pdftools.js    | 320 ++++++++++++++++++++++++++++++++++++++++++++++
+ js/searchable.js  |   2 +-
+ manifest.json     |   4 +-
+ 11 files changed, 410 insertions(+), 25 deletions(-)
+ create mode 100644 js/pdftools.js
+
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 280f99b..7c41baa 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,5 +1,11 @@
+ # CHANGELOG — צופה PDF+OCR
+ 
++## 5.8.0 (20.10.2026)
++- **כלי PDF (כמו PDF24) בתפריט "פעולות נוספות":** בתוסף עצמו — חיבור קבצים ותמונות, פיצול (כל עמוד / כל N / טווחים, ל-ZIP), חילוץ עמודים, מחיקת עמודים, סיבוב קבוע, סידור מחדש והיפוך, הוספת עמוד ריק, תמונות ל-PDF, PDF לתמונות (JPG/PNG ב-ZIP), מספור עמודים, סימן מים בעברית, מאפייני מסמך. במנוע המותקן במחשב דרך גשר אחת שאלתי 1.0.2 (Ghostscript של PDF24, Ghostscript או qpdf): דחיסה, גווני אפור, PDF/A, תיקון קובץ פגום, הגנה בסיסמה, הסרת סיסמה, אופטימיזציה לרשת. התוצאה נשמרת כקובץ חדש ונפתחת בצופה; המקור לא משתנה.
++- **"פתח באמצעות" של Windows ← התוסף:** קובץ PDF שנבחר בו "צופה PDF+OCR (אוצריא)" נכנס לתור בגשר, אוצריא נפתחת בתוסף והקובץ נפתח בו עם כל היכולות (חיפוש, OCR, שמירה, פתיחה בתוכנה אחרת). נדרש גשר אחת שאלתי 1.0.2 (`/pdf/inbox`).
++- **"פתיחה בתוכנה אחרת…"** זמינה גם לקובץ שנפתח דרך הגשר (חיפוש במחשב / "פתח באמצעות"), לא רק מתיקייה שנוספה.
++- **גרסת הגשר:** המספור החדש של אחת שאלתי (1.0.x) נחשב חדש מ-3.x — לפני כן 1.0.1 זוהה בטעות כ"ישן" וכלי החיתוך נחסם. הטקסטים עודכנו ל"1.0.1 ומעלה", וקישור ההורדה ל-Hadabadra/achat-shaalti.
++
+ ## 5.7.1 (20.10.2026)
+ - רשימת "מה חדש" בחלונית "אודות" עודכנה ומציגה את שינויי 5.7.0.
+ 
+diff --git a/css/app.css b/css/app.css
+index 2870924..a207af4 100644
+--- a/css/app.css
++++ b/css/app.css
+@@ -651,3 +651,8 @@ body.toolbar-hidden .tb-toggle svg { transform: rotate(180deg); }
+ .busy-dlg-card h3 { margin: 0 0 8px; }
+ .busy-dlg-card p { margin: 0 0 16px; line-height: 1.5; }
+ .busy-dlg-actions { display: flex; gap: 8px; justify-content: flex-start; flex-wrap: wrap; }
++
++/* 5.8.0 — כלי PDF */
++.pdftool summary { display: flex; align-items: center; gap: 0.5em; cursor: pointer; padding: 0.25em 0; }
++.pdftool[open] summary { margin-bottom: 0.5em; }
++.pdftool .btn { margin-top: 0.5em; }
+diff --git a/docs/KNOWLEDGE.md b/docs/KNOWLEDGE.md
+index d0b069e..45fd272 100644
+--- a/docs/KNOWLEDGE.md
++++ b/docs/KNOWLEDGE.md
+@@ -9,3 +9,8 @@
+ ## מזהה ועיצוב (4.0.1)
+ * מזהה התוסף: com.chadbedera.pdfocrlibrary (נפרד מהצופה com.chadbedera.pdfviewer 3.2.0, שיש בו גרירה/הדבקה/תמונות/DOCX/EPUB/הדפסה).
+ * חנות אוצריא דוחה תגית „מראה תואם“ אם ב-css יש hex/rgba/font-family/border-radius בפיקסלים מחוץ ל-:root. להשתמש ב-var(--color-*), var(--font-ui), var(--radius-*).
++
++## 5.8.0 — "פתח באמצעות", כלי PDF, גרסת הגשר (20.10.2026)
++- **גרסת הגשר:** אחת שאלתי התחיל מספור מחדש ב-1.0.0 (18.10.2026). `B.versionLt` ממפה 1.x/2.x מעל 3.x. `PV.BRIDGE_MIN=1.0.1`, `PV.BRIDGE_OPENWITH_MIN=1.0.2`, `PV.BRIDGE_WRITE_MIN=1.0.0`. קישור ההורדה: Hadabadra/achat-shaalti.
++- **"פתח באמצעות":** הגשר (1.0.2, `PdfAssoc.cs`) נרשם ב-HKCU; `OtzariaBridge.exe --open-pdf` כותב לתור ופותח `otzaria://open/plugin/com.chadbedera.pdfviewer`. התוסף שולף `/pdf/inbox/list` ומאשר `/pdf/inbox/ack` (`B.startInbox` — בעלייה, כל 3 שנ' כשהמסך גלוי, וב-`plugin.resumed`). הקובץ נפתח ב-`B.openDiskFile` ומקבל `V.doc.diskPath`, ש-`Fs.diskPath` מחזיר — כך גם "פתיחה בתוכנה אחרת" עובדת.
++- **כלי PDF (`js/pdftools.js`):** pdf-lib בתוסף לפעולות עמודים; פעולות מנוע דרך `/pdf/engines` ו-`/pdf/op/begin|chunk|run|read|end` בגשר (Ghostscript של PDF24 ב-Program Files\PDF24\gs\bin, Ghostscript, qpdf). שמירה: חלון Windows דרך הגשר, אחרת חלון אוצריא, אחרת הורדה. טקסט עברי (מספור/סימן מים) מצויר כתמונה כי לגופני pdf-lib אין עברית.
+diff --git a/index.html b/index.html
+index 4c84ae8..4040c05 100644
+--- a/index.html
++++ b/index.html
+@@ -311,7 +311,7 @@
+         <h3><i data-icon="cut"></i>מנוע Windows (דרך הגשר)</h3>
+         <p class="muted">מזהה טקסט במנוע ה-OCR של Windows (אותו מנוע של "פעולות טקסט" בכלי החיתוך), ישירות דרך הגשר ובלי לפתוח את כלי החיתוך — גם בעברית. אם המנוע הישיר אינו זמין, הגשר חוזר לשיטה הישנה: פתיחת כל עמוד בכלי החיתוך (איטי יותר, ואסור להשתמש במחשב בזמן הריצה). בסוף כל זיהוי מוצג איזה מנוע עבד בפועל.</p>
+         <ol class="muted">
+-          <li>הורידו והפעילו את גשר אוצריא בגרסה 3.1.0 ומעלה ("הורדת הגשר").</li>
++          <li>הורידו והפעילו את גשר אוצריא ("אחת שאלתי") בגרסה 1.0.1 ומעלה ("הורדת הגשר").</li>
+           <li>לחצו "בדיקת חיבור". בפעם הראשונה ייפתח במחשב חלון "בקשת גישה" — אשרו אותו.</li>
+           <li>בתפריט הזיהוי בחרו "OCR של Windows" — לעמוד הנוכחי או לכל המסמך.</li>
+         </ol>
+@@ -372,6 +372,13 @@
+         <p class="muted">תיקונים לפי הערות המשתמשים בפורום:
+           <a href="#" data-url="https://otzaria.org/forum/post/43255">פוסט 43255</a> ·
+           <a href="#" data-url="https://otzaria.org/forum/post/43381">פוסט 43381</a></p>
++        <span class="version-tag" data-t-skip>5.8.0</span>
++        <ul>
++          <li>כלי PDF כמו ב-PDF24: חיבור, פיצול, חילוץ, מחיקה, סיבוב וסידור עמודים, תמונות ל-PDF ובחזרה, מספור, סימן מים, מאפיינים — ובמנוע של PDF24 במחשב דרך הגשר: דחיסה, גווני אפור, PDF/A, תיקון, הגנה והסרת סיסמה.</li>
++          <li>"פתח באמצעות" של Windows: אפשר לבחור "צופה PDF+OCR (אוצריא)" לקובץ PDF במחשב, והוא נפתח ישירות בתוסף עם כל היכולות (נדרש גשר אחת שאלתי 1.0.2).</li>
++          <li>"פתיחה בתוכנה אחרת…" עובדת גם לקובץ שנפתח מחיפוש במחשב או מ"פתח באמצעות", וחלון בחירת התוכנה כבר לא נעלם (בגשר 1.0.2).</li>
++          <li>תיקון: גשר אחת שאלתי במספור החדש (1.0.x) לא נחשב יותר "ישן".</li>
++        </ul>
+         <span class="version-tag" data-t-skip>5.7.1</span>
+         <ul>
+           <li>רשימת "מה חדש" באודות עודכנה.</li>
+@@ -538,7 +545,7 @@
+         </ul>
+         <span class="version-tag" data-t-skip>3.8.0</span>
+         <ul>
+-          <li>זיהוי טקסט דרך כלי החיתוך של Windows — לעמוד הנוכחי או לכל המסמך — דרך גשר אוצריא 3.1.0 ומעלה.</li>
++          <li>זיהוי טקסט דרך כלי החיתוך של Windows — לעמוד הנוכחי או לכל המסמך — דרך גשר אוצריא 1.0.1 ומעלה.</li>
+           <li>תוקן החיבור לגשר 3.0 ומעלה: התוסף מבקש עכשיו אישור חיבור (צימוד) במקום להיכשל בשקט.</li>
+           <li>הוסר "OCR של Windows" הישן: אין לו תמיכה בעברית.</li>
+         </ul>
+@@ -642,5 +649,6 @@
+ <script src="./js/tabs.js"></script>
+ <script src="./js/app.js"></script>
+ <script src="./js/openwith.js"></script>
++<script src="./js/pdftools.js"></script>
+ </body>
+ </html>
+diff --git a/js/app.js b/js/app.js
+index 6ef498f..ec46473 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -396,9 +396,9 @@
+   function showOverlayTab(name) {
+     document.querySelectorAll('[data-otab]').forEach((t) => t.classList.toggle('active', t.dataset.otab === name));
+     document.querySelectorAll('[data-opanel]').forEach((p) => { p.hidden = p.dataset.opanel !== name; });
+-    $('overlay-title').textContent = PV.t({ settings: 'הגדרות', ocr: 'זיהוי טקסט (OCR)', about: 'אודות', searchable: 'PDF עם שכבת טקסט (OCR)' }[name]);
++    $('overlay-title').textContent = PV.t({ settings: 'הגדרות', ocr: 'זיהוי טקסט (OCR)', about: 'אודות', searchable: 'PDF עם שכבת טקסט (OCR)', pdftools: 'כלי PDF' }[name]);
+     const tabsBar = document.querySelector('#overlay .tabs');
+-    if (tabsBar) tabsBar.hidden = name === 'searchable';
++    if (tabsBar) tabsBar.hidden = name === 'searchable' || name === 'pdftools';
+     if (name === 'ocr') renderLangs();
+   }
+   // PDF עם שכבת טקסט — מסמך או תיקייה
+@@ -409,6 +409,7 @@
+     PV.searchable.refreshUi();
+     openOverlay('searchable');
+   }
++  PV.openOverlay = openOverlay;
+   $('overlay-scrim').addEventListener('click', closeOverlay);
+   $('overlay-close').addEventListener('click', closeOverlay);
+   document.querySelectorAll('[data-otab]').forEach((t) => t.addEventListener('click', () => showOverlayTab(t.dataset.otab)));
+@@ -813,7 +814,8 @@
+     O2.on('plugin.page_opened', onPageOpened);
+     O2.on('app.command', onCommand);
+     O2.on('library.providerBook.openRequested', (ev) => { PV.tryCall('plugin.openSelf', {}); Fs.openProviderBook(ev); });   // 5.7.0: לעבור ממסך הספרייה לתוסף
+-    O2.on('plugin.resumed', () => { if (sidebarTab.current === 'files') Fs.refreshOpenBooks(); });
++    O2.on('plugin.resumed', () => { if (sidebarTab.current === 'files') Fs.refreshOpenBooks(); if (PV.bridge && PV.bridge.checkInbox) PV.bridge.checkInbox(); });
++    if (PV.bridge && PV.bridge.startInbox) setTimeout(() => PV.bridge.startInbox(), 800);   // 5.8.0: "פתח באמצעות" של Windows
+     // גיבוי: אם ה-boot כבר עבר לפני שהסקריפט נרשם
+     setTimeout(() => { if (!booted) PV.tryCall('app.getTheme', {}).then((t) => boot({ theme: t })); }, 1500);
+   } else {
+diff --git a/js/bridge.js b/js/bridge.js
+index 806c3a8..269c978 100644
+--- a/js/bridge.js
++++ b/js/bridge.js
+@@ -1,5 +1,6 @@
+ /* צופה PDF+OCR — לקוח לגשר אוצריא (שירות Windows מקומי).
+-   מגרסה 3.6.0: צימוד לגשר (נדרש מגשר 3.0), וזיהוי טקסט דרך כלי החיתוך של Windows (גשר 3.1.0 ומעלה).
++   מגרסה 3.6.0: צימוד לגשר, וזיהוי טקסט דרך כלי החיתוך של Windows.
++   5.8.0: הגשר ("אחת שאלתי") התחיל מספור חדש מ-1.0.0, שהוא חדש מכל 3.x — ראו versionLt.
+    ה-OCR של Windows (Windows.Media.Ocr) הוסר: אין לו עברית. */
+ (function () {
+   'use strict';
+@@ -7,8 +8,9 @@
+ 
+   const PORTS = [47917, 47918, 47919, 47920, 47921];
+   const HOST = 'http://127.0.0.1:';
+-  PV.BRIDGE_URL = 'https://github.com/e0548433917-gif/otzaria-system-tools/releases/latest';
+-  PV.BRIDGE_MIN = '3.1.0';
++  PV.BRIDGE_URL = 'https://github.com/Hadabadra/achat-shaalti/releases/latest';
++  PV.BRIDGE_MIN = '1.0.1';
++  PV.BRIDGE_OPENWITH_MIN = '1.0.2'; // "פתח באמצעות" של Windows ← התוסף (/pdf/inbox)
+ 
+   const B = (PV.bridge = { port: null, info: null });
+ 
+@@ -102,8 +104,10 @@
+   };
+ 
+   /** האם גרסת הגשר a נמוכה מ-b (למשל "3.0.0" < "3.1.0") */
++  // המספור החדש של הגשר (1.x/2.x, מ-18.10.2026) חדש מהמספור הישן (3.x) — ממפים אותו מעל, כדי ש-1.0.1 לא ייחשב "ישן"
++  const norm = (v) => { const n = String(v || '0').split('.').map(Number); if (n[0] >= 1 && n[0] < 3) n[0] += 100; return n; };
+   B.versionLt = function (a, b) {
+-    const x = String(a || '0').split('.').map(Number), y = String(b).split('.').map(Number);
++    const x = norm(a), y = norm(b);
+     for (let i = 0; i < 3; i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) < (y[i] || 0); }
+     return false;
+   };
+@@ -263,6 +267,50 @@
+ 
+   /** חיפוש קובץ במחשב תוך כדי הקלדה: שורת חיפוש במסך הפתיחה ורשימה נפתחת */
+   const EXT = ['pdf', 'docx', 'md', 'txt', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'tif', 'tiff'];   // אותם סוגים כמו בחיפוש בתיקיות
++  /** פתיחת קובץ לפי נתיב מלא: בתוך "התיקיות שלי" — דרך אוצריא; אחרת קריאה דרך הגשר.
++   *  הנתיב נשמר במסמך (V.doc.diskPath) כדי שכל היכולות שתלויות בנתיב (פתיחה בתוכנה אחרת) יעבדו גם כאן. */
++  B.openDiskFile = async function (path, name) {
++    name = name || String(path).split(/[\\/]/).pop();
++    try { if (PV.files.openByPath && await PV.files.openByPath(path, name)) return true; } catch (e) { /* ממשיכים לגשר */ }
++    let cancelled = false, blob = null;
++    PV.progress.show(PV.t('טוען…'), () => { cancelled = true; });
++    try {
++      blob = await B.readBlob(path, {
++        cancelled: () => cancelled,
++        onProgress: (f, a, t) => PV.progress.update(PV.t('טוען… {a} מתוך {t}', { a: PV.formatSize(a), t: PV.formatSize(t) }), f),
++      });
++    } catch (e) { if (!cancelled) PV.error(PV.errMsg(e)); }
++    PV.progress.hide();
++    if (!blob) return false;
++    await PV.files.openBlob(blob, name, { source: null });
++    if (PV.viewer && PV.viewer.doc) PV.viewer.doc.diskPath = path;
++    return true;
++  };
++
++  // ── "פתח באמצעות ← צופה PDF+OCR" ב-Windows (גשר 1.0.2+) ──────────────────
++  // הגשר שם את הקובץ בתור ופותח את אוצריא בתוסף; כאן שולפים את התור בעלייה, בחזרה לתוסף ובבדיקה תקופתית.
++  let inboxBusy = false;
++  B.checkInbox = async function () {
++    if (inboxBusy || !PV.hasOtz()) return;
++    inboxBusy = true;
++    try {
++      if (!B.port && !(await B.probe())) return;
++      if (B.versionLt(B.info && B.info.version, PV.BRIDGE_OPENWITH_MIN)) return;
++      const r = await B.call('/pdf/inbox/list', {}, 8000);
++      const items = (r && r.items) || [];
++      if (!items.length) return;
++      await B.call('/pdf/inbox/ack', { ids: items.map((x) => x.id) }, 8000).catch(() => {});
++      PV.tryCall('plugin.openSelf', {});
++      for (const it of items) await B.openDiskFile(it.path, it.name);
++    } catch (e) { /* הגשר לא זמין — ננסה שוב */ }
++    finally { inboxBusy = false; }
++  };
++  B.startInbox = function () {
++    B.checkInbox();
++    setInterval(() => { if (!document.hidden) B.checkInbox(); }, 3000);
++    document.addEventListener('visibilitychange', () => { if (!document.hidden) B.checkInbox(); });
++  };
++
+   B.initLiveSearch = function (input, ul, wrap) {
+     if (!input || !ul) return;
+     if (!PV.hasOtz()) { if (wrap) wrap.hidden = true; return; }
+@@ -279,18 +327,7 @@
+     }
+     async function open(h) {
+       close(); input.value = '';
+-      // קובץ שנמצא בתוך אחת התיקיות שהוספתם — נפתח דרך אוצריא (בלי הגבלת גודל ובלי קריאה דרך הגשר)
+-      try { if (PV.files.openByPath && await PV.files.openByPath(h.path, h.name)) return; } catch (e) { /* ממשיכים לגשר */ }
+-      let cancelled = false, blob = null;
+-      PV.progress.show(PV.t('טוען…'), () => { cancelled = true; });
+-      try {
+-        blob = await B.readBlob(h.path, {
+-          cancelled: () => cancelled,
+-          onProgress: (f, a, t) => PV.progress.update(PV.t('טוען… {a} מתוך {t}', { a: PV.formatSize(a), t: PV.formatSize(t) }), f),
+-        });
+-      } catch (e) { if (!cancelled) PV.error(PV.errMsg(e)); }
+-      PV.progress.hide();
+-      if (blob) await PV.files.openBlob(blob, h.name, { source: null });
++      await B.openDiskFile(h.path, h.name);
+     }
+     async function run() {
+       const text = input.value.trim();
+diff --git a/js/files.js b/js/files.js
+index c4caa44..62970e3 100644
+--- a/js/files.js
++++ b/js/files.js
+@@ -241,6 +241,7 @@
+   };
+   /** 5.7.0: נתיב מלא בדיסק של המסמך הנוכחי (רק לקובץ מתיקייה שנוספה), לפתיחה בתוכנה אחרת דרך הגשר */
+   Fs.diskPath = function () {
++    if (V.doc && V.doc.diskPath) return V.doc.diskPath;   // 5.8.0: קובץ שנפתח דרך הגשר ("פתח באמצעות", חיפוש במחשב)
+     const s = V.doc && V.doc.source;
+     if (!s || s.type !== 'folder' || !s.path) return null;
+     const f = folders.find((x) => x.folderToken === s.folderToken);
+diff --git a/js/lang-en.js b/js/lang-en.js
+index 44c74ca..37d91d0 100644
+--- a/js/lang-en.js
++++ b/js/lang-en.js
+@@ -388,7 +388,8 @@ window.PV_LANG_EN = {
+   'Tesseract המובנה, או כלי החיתוך של Windows דרך גשר אוצריא': 'Built-in Tesseract, or the Windows Snipping Tool through the Otzaria bridge',
+   'מנוע Windows (דרך הגשר)': 'Windows Snipping Tool (via the bridge)',
+   'מזהה טקסט במנוע ה-OCR של Windows (אותו מנוע של \"פעולות טקסט\" בכלי החיתוך), ישירות דרך הגשר ובלי לפתוח את כלי החיתוך — גם בעברית. אם המנוע הישיר אינו זמין, הגשר חוזר לשיטה הישנה: פתיחת כל עמוד בכלי החיתוך (איטי יותר, ואסור להשתמש במחשב בזמן הריצה). בסוף כל זיהוי מוצג איזה מנוע עבד בפועל.': 'Recognizes text with the Windows OCR engine (the same one behind "Text actions" in the Snipping Tool), directly through the bridge without opening the Snipping Tool — Hebrew included. If the direct engine is unavailable, the bridge falls back to the old method: opening each page in the Snipping Tool (slower, and you must not use the computer while it runs). After every recognition the engine that actually ran is shown.',
+-  'הורידו והפעילו את גשר אוצריא בגרסה 3.1.0 ומעלה ("הורדת הגשר").': 'Download and run the Otzaria bridge, version 3.1.0 or later ("Download the bridge").',
++  'הורידו והפעילו את גשר אוצריא ("אחת שאלתי") בגרסה 1.0.1 ומעלה ("הורדת הגשר").': 'Download and run the Otzaria bridge ("Achat Shaalti"), version 1.0.1 or later ("Download the bridge").',
++  'זיהוי טקסט דרך כלי החיתוך של Windows — לעמוד הנוכחי או לכל המסמך — דרך גשר אוצריא 1.0.1 ומעלה.': 'Text recognition with the Windows Snipping Tool — for the current page or the whole document — through Otzaria bridge 1.0.1 or later.',
+   'לחצו "בדיקת חיבור". בפעם הראשונה ייפתח במחשב חלון "בקשת גישה" — אשרו אותו.': 'Click "Check connection". The first time, an "access request" window opens on the computer — approve it.',
+   'בתפריט הזיהוי בחרו "OCR של Windows" — לעמוד הנוכחי או לכל המסמך.': 'In the recognition menu choose "OCR via Snipping Tool" — current page or whole document.',
+   'נסו על העמוד הנוכחי': 'Try on the current page',
+diff --git a/js/pdftools.js b/js/pdftools.js
+new file mode 100644
+index 0000000..f5528c6
+--- /dev/null
++++ b/js/pdftools.js
+@@ -0,0 +1,320 @@
++/* 5.8.0 — "כלי PDF": הפעולות של PDF24 בתוך התוסף.
++   בתוסף עצמו (pdf-lib, בלי גשר): חיבור, פיצול, חילוץ, מחיקה, סיבוב, סידור מחדש, הוספת עמוד ריק, תמונות ל-PDF,
++   PDF לתמונות, מספור עמודים, סימן מים, מאפייני מסמך.
++   במנוע המותקן במחשב דרך גשר אחת שאלתי 1.0.2 (Ghostscript של PDF24 / Ghostscript / qpdf): דחיסה, גווני אפור,
++   PDF/A, תיקון, הגנה בסיסמה, הסרת סיסמה, אופטימיזציה לרשת. */
++(function () {
++  'use strict';
++  const PV = window.PV, $ = PV.$, V = PV.viewer, B = PV.bridge, Fs = PV.files;
++  const T = (s, o) => PV.t(s, o);
++  const L = () => window.PDFLib;
++
++  // ── עזר ──────────────────────────────────────────────────────────────
++  const stem = () => String((V.doc && V.doc.name) || 'מסמך').replace(/\.[^.]+$/, '');
++  async function curBytes() {
++    if (!V.doc || V.doc.kind !== 'pdf') throw new Error(T('יש לפתוח קובץ PDF'));
++    const blob = await Fs.docBlob(V.doc);
++    if (!blob) throw new Error(T('לא ניתן לקרוא את המסמך הפתוח'));
++    return new Uint8Array(await blob.arrayBuffer());
++  }
++  async function load(bytes) {
++    try { return await L().PDFDocument.load(bytes, { ignoreEncryption: false }); }
++    catch (e) { if (/encrypt/i.test(String(e && e.message))) throw new Error(T('המסמך מוגן בסיסמה — השתמשו קודם ב"הסרת סיסמה"')); throw e; }
++  }
++  /** "1-3, 5, 8-" → [0,1,2,4,7,…] (אינדקסים מ-0). ריק = כל העמודים */
++  function parsePages(str, count) {
++    const s = String(str || '').replace(/\s+/g, '');
++    if (!s) return Array.from({ length: count }, (_, i) => i);
++    const out = [];
++    for (const part of s.split(/[,،;]/)) {
++      if (!part) continue;
++      const m = part.match(/^(\d*)-(\d*)$/);
++      let a, b;
++      if (m) { a = m[1] ? +m[1] : 1; b = m[2] ? +m[2] : count; } else if (/^\d+$/.test(part)) { a = b = +part; } else return null;
++      if (a < 1 || b > count || a > b) return null;
++      for (let i = a; i <= b; i++) out.push(i - 1);
++    }
++    return out;
++  }
++  async function pickFiles(exts, multiple) {
++    if (PV.hasOtz()) {
++      const res = [];
++      do {
++        let r;
++        try { r = await PV.call('fs.pickUserFile', { title: T('בחירת קובץ'), extensions: exts }); } catch (e) { break; }
++        if (!r || r.cancelled) break;
++        const blob = await (await fetch(r.url)).blob();
++        res.push({ name: r.name, bytes: new Uint8Array(await blob.arrayBuffer()), type: blob.type });
++        if (!multiple) break;
++      } while (window.confirm(T('נוסף: {n}. להוסיף קובץ נוסף?', { n: res[res.length - 1].name })));
++      return res;
++    }
++    return new Promise((resolve) => {
++      const inp = document.createElement('input');
++      inp.type = 'file'; inp.multiple = !!multiple; inp.accept = exts.map((x) => '.' + x).join(',');
++      inp.onchange = async () => resolve(await Promise.all(Array.from(inp.files || []).map(async (f) => ({ name: f.name, bytes: new Uint8Array(await f.arrayBuffer()), type: f.type }))));
++      inp.click();
++    });
++  }
++  /** שמירה: גשר (חלון "שמירה בשם" של Windows, בלי מגבלת גודל) → חלון השמירה של אוצריא → הורדה */
++  async function save(bytes, name, ext, mime) {
++    const file = name + '.' + ext;
++    if (PV.hasOtz() && B) {
++      try {
++        if (B.port || (await B.probe())) {
++          const r = await B.pickSaveFile({ suggestedName: file, title: T('שמירת התוצאה') });
++          if (!r || r.cancelled) return null;
++          return await B.writeBinary(r.path, bytes, { overwrite: true });
++        }
++      } catch (e) { /* בלי גשר — חלון אוצריא */ }
++    }
++    const blob = new Blob([bytes], { type: mime });
++    if (PV.hasOtz()) {
++      const up = await PV.call('fs.beginBinaryWrite', { purpose: 'user-file', expectedSize: blob.size });
++      const res = await fetch(up.uploadUrl, { method: 'PUT', headers: { 'Content-Type': mime }, body: blob });
++      if (!res.ok) throw new Error('HTTP ' + res.status);
++      const done = await PV.call('fs.commitUserFileWrite', { writeToken: up.writeToken, suggestedName: name, extension: ext, title: T('שמירת התוצאה') });
++      return done && !done.cancelled ? (done.name || file) : null;
++    }
++    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = file; a.click();
++    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
++    return file;
++  }
++  async function finishPdf(bytes, name, openIt) {
++    const where = await save(bytes, name, 'pdf', 'application/pdf');
++    if (!where) return;
++    PV.toast(T('נשמר: {p}', { p: where }), { long: true });
++    if (openIt !== false) await Fs.openBlob(new Blob([bytes], { type: 'application/pdf' }), name + '.pdf', { source: null });
++    if (typeof where === 'string' && /^[a-z]:\\/i.test(where) && V.doc) V.doc.diskPath = where;
++  }
++  /** טקסט (גם עברית) כתמונה — גופני pdf-lib הסטנדרטיים אינם תומכים בעברית */
++  function textPng(text, px, color, opacity) {
++    const c = document.createElement('canvas'), g = c.getContext('2d');
++    const font = 'bold ' + px + 'px ' + (getComputedStyle(document.body).fontFamily || 'sans-serif');
++    g.font = font; const w = Math.ceil(g.measureText(text).width) + px; c.width = w; c.height = Math.ceil(px * 1.5);
++    g.font = font; g.direction = 'rtl'; g.textAlign = 'center'; g.textBaseline = 'middle';
++    g.globalAlpha = opacity; g.fillStyle = color; g.fillText(text, w / 2, c.height / 2);
++    return { url: c.toDataURL('image/png'), w: c.width, h: c.height };
++  }
++  async function engine(op, params, label) {
++    const bytes = await curBytes();
++    if (!B || !(B.port || (await B.probe()))) throw new Error(T('הפעולה דורשת את גשר אחת שאלתי 1.0.2 ומעלה'));
++    if (B.versionLt(B.info && B.info.version, '1.0.2')) throw new Error(T('הפעולה דורשת את גשר אחת שאלתי 1.0.2 ומעלה'));
++    const eng = await B.call('/pdf/engines', {}, 15000);
++    if (!eng || !(eng.ops || []).includes(op)) throw new Error(T('לא נמצא מנוע מתאים במחשב — התקינו את PDF24 (חינמי) או Ghostscript'));
++    let cancelled = false;
++    PV.progress.show(label + '…', () => { cancelled = true; });
++    const { id } = await B.call('/pdf/op/begin', {}, 15000);
++    try {
++      const CH = 1024 * 1024;
++      for (let off = 0; off < bytes.length; off += CH) {
++        if (cancelled) return null;
++        const part = bytes.subarray(off, off + CH);
++        const b64 = await new Promise((res) => { const fr = new FileReader(); fr.onload = () => res(String(fr.result).split(',')[1] || ''); fr.readAsDataURL(new Blob([part])); });
++        await B.call('/pdf/op/chunk', { id, data: b64 }, 60000);
++        PV.progress.update(T('מעלה למנוע… {p}%', { p: Math.round((off + part.length) / bytes.length * 100) }), (off + part.length) / bytes.length * 0.3);
++      }
++      PV.progress.update(label + '…', 0.4);
++      const r = await B.call('/pdf/op/run', { id, op, params: params || {} }, 600000);
++      const out = new Uint8Array(r.size); let off = 0;
++      while (off < r.size) {
++        const c = await B.call('/pdf/op/read', { id, offset: off }, 60000);
++        const bin = atob(c.data); for (let i = 0; i < bin.length; i++) out[off + i] = bin.charCodeAt(i);
++        off = c.offset; PV.progress.update(T('מקבל את התוצאה…'), 0.7 + 0.3 * off / r.size);
++        if (c.done) break;
++      }
++      return { bytes: out, inSize: r.inSize, engine: r.engine };
++    } finally { PV.progress.hide(); B.call('/pdf/op/end', { id }, 10000).catch(() => {}); }
++  }
++
++  // ── הכלים ────────────────────────────────────────────────────────────
++  // f: שדות בטופס. run(values) מבצע.
++  const TOOLS = [
++    { id: 'merge', name: 'חיבור קבצים', icon: 'add', desc: 'מחבר למסמך הפתוח קובצי PDF ותמונות נוספים, לפי סדר הבחירה', fields: [{ k: 'first', label: 'המסמך הפתוח', type: 'select', options: [['first', 'בהתחלה'], ['last', 'בסוף'], ['none', 'לא לכלול']] }],
++      async run(v) {
++        const files = await pickFiles(['pdf', 'png', 'jpg', 'jpeg'], true);
++        if (!files.length) return;
++        const out = await L().PDFDocument.create();
++        const addPdf = async (bytes) => { const d = await load(bytes); (await out.copyPages(d, d.getPageIndices())).forEach((p) => out.addPage(p)); };
++        const cur = V.doc && V.doc.kind === 'pdf' && v.first !== 'none' ? await curBytes() : null;
++        if (cur && v.first === 'first') await addPdf(cur);
++        for (const f of files) { if (/\.pdf$/i.test(f.name)) await addPdf(f.bytes); else await addImagePage(out, f); }
++        if (cur && v.first === 'last') await addPdf(cur);
++        await finishPdf(await out.save(), stem() + ' - מחובר');
++      } },
++    { id: 'split', name: 'פיצול', icon: 'cut', desc: 'מפצל לקבצים נפרדים (בקובץ ZIP)', fields: [{ k: 'mode', label: 'אופן', type: 'select', options: [['each', 'כל עמוד לקובץ'], ['n', 'כל N עמודים'], ['ranges', 'לפי טווחים']] }, { k: 'n', label: 'N / טווחים (למשל 1-3,4-10)', type: 'text', value: '2' }],
++      async run(v) {
++        const src = await load(await curBytes()), count = src.getPageCount(), groups = [];
++        if (v.mode === 'each') for (let i = 0; i < count; i++) groups.push([i]);
++        else if (v.mode === 'n') { const n = Math.max(1, parseInt(v.n, 10) || 1); for (let i = 0; i < count; i += n) groups.push(Array.from({ length: Math.min(n, count - i) }, (_, k) => i + k)); }
++        else for (const r of String(v.n).split(/[,،;]/)) { const p = parsePages(r, count); if (!p || !p.length) throw new Error(T('טווח לא תקין: {r}', { r })); groups.push(p); }
++        const zip = new window.JSZip();
++        for (let g = 0; g < groups.length; g++) {
++          PV.progress.update(T('מפצל… {n} מתוך {t}', { n: g + 1, t: groups.length }), g / groups.length);
++          const d = await L().PDFDocument.create(); (await d.copyPages(src, groups[g])).forEach((p) => d.addPage(p));
++          zip.file(stem() + ' - ' + (groups[g][0] + 1) + (groups[g].length > 1 ? '-' + (groups[g][groups[g].length - 1] + 1) : '') + '.pdf', await d.save());
++        }
++        const where = await save(await zip.generateAsync({ type: 'uint8array' }), stem() + ' - פיצול', 'zip', 'application/zip');
++        if (where) PV.toast(T('נשמרו {n} קבצים: {p}', { n: groups.length, p: where }), { long: true });
++      } },
++    { id: 'extract', name: 'חילוץ עמודים', icon: 'copy', desc: 'יוצר PDF חדש מהעמודים שנבחרו', fields: [{ k: 'pages', label: 'עמודים (למשל 1-3,7)', type: 'text', cur: true }],
++      async run(v) { await pagesOp(v.pages, (src, idx) => idx, ' - עמודים ' + v.pages); } },
++    { id: 'delete', name: 'מחיקת עמודים', icon: 'delete', desc: 'מסיר את העמודים שנבחרו', fields: [{ k: 'pages', label: 'עמודים למחיקה', type: 'text', cur: true }],
++      async run(v) { await pagesOp(v.pages, (src, idx) => src.getPageIndices().filter((i) => !idx.includes(i)), ' - בלי עמודים'); } },
++    { id: 'rotate', name: 'סיבוב עמודים', icon: 'arrow_clockwise', desc: 'מסובב לצמיתות (נשמר בקובץ)', fields: [{ k: 'deg', label: 'זווית', type: 'select', options: [['90', '90° בכיוון השעון'], ['180', '180°'], ['270', '90° נגד כיוון השעון']] }, { k: 'pages', label: 'עמודים (ריק = כולם)', type: 'text' }],
++      async run(v) {
++        const d = await load(await curBytes()), idx = parsePages(v.pages, d.getPageCount()); if (!idx) throw new Error(T('טווח העמודים אינו תקין'));
++        idx.forEach((i) => { const p = d.getPage(i); p.setRotation(L().degrees((p.getRotation().angle + (+v.deg)) % 360)); });
++        await finishPdf(await d.save(), stem() + ' - מסובב');
++      } },
++    { id: 'reorder', name: 'סידור עמודים מחדש', icon: 'list', desc: 'סדר חדש (למשל 3,1,2,4-) או היפוך', fields: [{ k: 'order', label: 'סדר העמודים', type: 'text' }, { k: 'rev', label: 'הפוך את הסדר', type: 'check' }],
++      async run(v) { await pagesOp(v.order, (src, idx) => (v.rev ? idx.slice().reverse() : idx), ' - סדר חדש', true); } },
++    { id: 'blank', name: 'הוספת עמוד ריק', icon: 'add', desc: 'מוסיף עמוד ריק בגודל העמוד הסמוך', fields: [{ k: 'after', label: 'אחרי עמוד (0 = בהתחלה)', type: 'text', cur: true }],
++      async run(v) {
++        const d = await load(await curBytes()), n = Math.min(Math.max(0, parseInt(v.after, 10) || 0), d.getPageCount());
++        const ref = d.getPage(Math.max(0, n - 1)).getSize(); d.insertPage(n, [ref.width, ref.height]);
++        await finishPdf(await d.save(), stem() + ' - עם עמוד ריק');
++      } },
++    { id: 'img2pdf', name: 'תמונות ל-PDF', icon: 'image', desc: 'JPG/PNG לקובץ PDF אחד, עמוד לכל תמונה', fields: [],
++      async run() {
++        const files = await pickFiles(['png', 'jpg', 'jpeg'], true); if (!files.length) return;
++        const d = await L().PDFDocument.create(); for (const f of files) await addImagePage(d, f);
++        await finishPdf(await d.save(), files[0].name.replace(/\.[^.]+$/, '') + ' - תמונות');
++      } },
++    { id: 'pdf2img', name: 'PDF לתמונות', icon: 'image', desc: 'כל עמוד לתמונה (בקובץ ZIP)', fields: [{ k: 'fmt', label: 'פורמט', type: 'select', options: [['jpeg', 'JPG'], ['png', 'PNG']] }, { k: 'dpi', label: 'רזולוציה', type: 'select', options: [['1.5', 'רגילה'], ['2.5', 'גבוהה'], ['4', 'גבוהה מאוד']] }, { k: 'pages', label: 'עמודים (ריק = כולם)', type: 'text' }],
++      async run(v) {
++        if (!V.isPaged()) throw new Error(T('יש לפתוח קובץ PDF'));
++        const idx = parsePages(v.pages, V.count); if (!idx) throw new Error(T('טווח העמודים אינו תקין'));
++        const zip = new window.JSZip(), ext = v.fmt === 'png' ? 'png' : 'jpg';
++        for (let k = 0; k < idx.length; k++) {
++          PV.progress.update(T('ממיר עמוד {n} מתוך {t}…', { n: k + 1, t: idx.length }), k / idx.length);
++          const c = await V.renderOffscreen(idx[k] + 1, +v.dpi);
++          const blob = await new Promise((r) => c.toBlob(r, v.fmt === 'png' ? 'image/png' : 'image/jpeg', 0.92)); c.width = 0;
++          zip.file(stem() + ' - ' + String(idx[k] + 1).padStart(3, '0') + '.' + ext, blob);
++        }
++        const where = await save(await zip.generateAsync({ type: 'uint8array' }), stem() + ' - תמונות', 'zip', 'application/zip');
++        if (where) PV.toast(T('נשמר: {p}', { p: where }), { long: true });
++      } },
++    { id: 'numbers', name: 'מספור עמודים', icon: 'text_number_list_rtl', desc: 'מוסיף מספר בתחתית כל עמוד', fields: [{ k: 'pos', label: 'מיקום', type: 'select', options: [['center', 'במרכז'], ['left', 'שמאל'], ['right', 'ימין']] }, { k: 'start', label: 'מספר התחלה', type: 'text', value: '1' }, { k: 'fmt', label: 'תבנית ({n}, {t})', type: 'text', value: '{n}' }],
++      async run(v) {
++        const d = await load(await curBytes()), total = d.getPageCount(), st = parseInt(v.start, 10) || 1;
++        for (let i = 0; i < total; i++) {
++          const p = d.getPage(i), { width } = p.getSize();
++          const t = textPng(String(v.fmt || '{n}').replace('{n}', st + i).replace('{t}', total + st - 1), 28, '#000', 1);
++          const img = await d.embedPng(t.url), w = t.w / 3, h = t.h / 3;
++          const x = v.pos === 'left' ? 30 : v.pos === 'right' ? width - 30 - w : (width - w) / 2;
++          p.drawImage(img, { x, y: 18, width: w, height: h });
++        }
++        await finishPdf(await d.save(), stem() + ' - ממוספר');
++      } },
++    { id: 'watermark', name: 'סימן מים', icon: 'document_text', desc: 'טקסט שקוף באלכסון על כל עמוד', fields: [{ k: 'text', label: 'טקסט', type: 'text', value: 'טיוטה' }, { k: 'op', label: 'שקיפות', type: 'select', options: [['0.15', 'עדין'], ['0.3', 'בינוני'], ['0.5', 'בולט']] }],
++      async run(v) {
++        if (!String(v.text || '').trim()) throw new Error(T('יש להזין טקסט'));
++        const d = await load(await curBytes()), t = textPng(v.text, 120, '#888', +v.op), img = await d.embedPng(t.url);
++        for (const p of d.getPages()) {
++          const { width, height } = p.getSize(), w = Math.min(width, height) * 0.8, h = w * t.h / t.w;
++          p.drawImage(img, { x: width / 2 - w / 2 * 0.7, y: height / 2 - w / 2 * 0.7, width: w, height: h, rotate: L().degrees(45) });
++        }
++        await finishPdf(await d.save(), stem() + ' - סימן מים');
++      } },
++    { id: 'meta', name: 'מאפייני מסמך', icon: 'info', desc: 'כותרת, מחבר, נושא ומילות מפתח', fields: [{ k: 'title', label: 'כותרת', type: 'text', meta: 'getTitle' }, { k: 'author', label: 'מחבר', type: 'text', meta: 'getAuthor' }, { k: 'subject', label: 'נושא', type: 'text', meta: 'getSubject' }, { k: 'keywords', label: 'מילות מפתח', type: 'text', meta: 'getKeywords' }],
++      async run(v) {
++        const d = await load(await curBytes());
++        d.setTitle(v.title || ''); d.setAuthor(v.author || ''); d.setSubject(v.subject || '');
++        d.setKeywords(String(v.keywords || '').split(/[,،]/).map((s) => s.trim()).filter(Boolean)); d.setProducer('צופה PDF+OCR');
++        await finishPdf(await d.save(), stem());
++      } },
++    // ── במנוע המותקן דרך הגשר ──
++    { id: 'compress', name: 'דחיסה', icon: 'document_arrow_down', engine: true, desc: 'מקטין את הקובץ (מנוע PDF24/Ghostscript דרך הגשר)', fields: [{ k: 'level', label: 'רמה', type: 'select', options: [['ebook', 'מאוזנת (150dpi)'], ['screen', 'חזקה (72dpi)'], ['printer', 'איכות הדפסה (300dpi)']] }],
++      async run(v) { const r = await engine('compress', { level: v.level }, T('דוחס')); if (!r) return; PV.toast(T('הגודל: {a} ← {b}', { a: PV.formatSize(r.inSize), b: PV.formatSize(r.bytes.length) }), { long: true }); await finishPdf(r.bytes, stem() + ' - דחוס'); } },
++    { id: 'gray', name: 'גווני אפור', icon: 'weather_moon', engine: true, desc: 'ממיר את כל המסמך לשחור-לבן', fields: [],
++      async run() { const r = await engine('grayscale', {}, T('ממיר')); if (r) await finishPdf(r.bytes, stem() + ' - אפור'); } },
++    { id: 'pdfa', name: 'המרה ל-PDF/A', icon: 'document_pdf', engine: true, desc: 'פורמט לשמירה ארוכת טווח', fields: [],
++      async run() { const r = await engine('pdfa', {}, T('ממיר')); if (r) await finishPdf(r.bytes, stem() + ' - PDFA'); } },
++    { id: 'repair', name: 'תיקון קובץ פגום', icon: 'settings', engine: true, desc: 'בונה מחדש קובץ שלא נפתח כראוי', fields: [],
++      async run() { const r = await engine('repair', {}, T('מתקן')); if (r) await finishPdf(r.bytes, stem() + ' - מתוקן'); } },
++    { id: 'protect', name: 'הגנה בסיסמה', icon: 'warning', engine: true, desc: 'סיסמה לפתיחת הקובץ', fields: [{ k: 'pw', label: 'סיסמה', type: 'password' }],
++      async run(v) { if (!v.pw) throw new Error(T('יש להזין סיסמה')); const r = await engine('protect', { userPassword: v.pw }, T('מצפין')); if (r) await finishPdf(r.bytes, stem() + ' - מוגן', false); } },
++    { id: 'unlock', name: 'הסרת סיסמה', icon: 'open', engine: true, desc: 'שומר עותק בלי הסיסמה (נדרשת הסיסמה)', fields: [{ k: 'pw', label: 'הסיסמה הנוכחית', type: 'password' }],
++      async run(v) { const r = await engine('unlock', { password: v.pw || '' }, T('מסיר סיסמה')); if (r) await finishPdf(r.bytes, stem() + ' - ללא סיסמה'); } },
++    { id: 'linearize', name: 'אופטימיזציה לרשת', icon: 'arrow_download', engine: true, desc: 'פתיחה מהירה מהאינטרנט (qpdf)', fields: [],
++      async run() { const r = await engine('linearize', {}, T('מבצע אופטימיזציה')); if (r) await finishPdf(r.bytes, stem() + ' - לרשת'); } },
++  ];
++
++  async function pagesOp(str, pick, suffix, allowEmptyAll) {
++    const src = await load(await curBytes());
++    const idx = parsePages(str, src.getPageCount());
++    if (!idx || (!idx.length && !allowEmptyAll)) throw new Error(T('טווח העמודים אינו תקין (המסמך כולל {n} עמודים)', { n: src.getPageCount() }));
++    const keep = pick(src, idx);
++    if (!keep.length) throw new Error(T('לא נשארו עמודים'));
++    const d = await L().PDFDocument.create(); (await d.copyPages(src, keep)).forEach((p) => d.addPage(p));
++    await finishPdf(await d.save(), stem() + suffix);
++  }
++  async function addImagePage(doc, f) {
++    const png = /png$/i.test(f.name) || f.type === 'image/png';
++    const img = png ? await doc.embedPng(f.bytes) : await doc.embedJpg(f.bytes);
++    const p = doc.addPage([img.width, img.height]); p.drawImage(img, { x: 0, y: 0, width: img.width, height: img.height });
++  }
++
++  // ── ממשק ─────────────────────────────────────────────────────────────
++  const body = document.querySelector('#overlay .overlay-body');
++  if (!body || !L()) return;
++  const sec = document.createElement('section'); sec.dataset.opanel = 'pdftools'; sec.hidden = true;
++  body.appendChild(sec);
++
++  let engines = null;
++  async function render() {
++    sec.innerHTML = '';
++    const intro = document.createElement('p'); intro.className = 'muted';
++    intro.textContent = T('הפעולות פועלות על המסמך הפתוח ושומרות קובץ חדש — המקור לא משתנה. פעולות שמסומנות ⚙ משתמשות במנוע המותקן במחשב (PDF24 או Ghostscript) דרך גשר אחת שאלתי.');
++    sec.appendChild(intro);
++    if (engines === null) {
++      engines = [];
++      try { if (B && (B.port || (await B.probe())) && !B.versionLt(B.info && B.info.version, '1.0.2')) engines = (await B.call('/pdf/engines', {}, 10000)).engines || []; } catch (e) { /* */ }
++    }
++    const st = document.createElement('p'); st.className = 'muted';
++    st.textContent = engines.length ? T('מנוע במחשב: {e}', { e: engines.map((x) => x.name).join(', ') }) : T('לא נמצא מנוע במחשב (או שהגשר אינו 1.0.2) — הפעולות המסומנות ⚙ לא יעבדו. התקינו את PDF24 החינמי.');
++    sec.appendChild(st);
++    for (const t of TOOLS) {
++      const card = document.createElement('details'); card.className = 'card pdftool';
++      const sum = document.createElement('summary');
++      sum.innerHTML = '<i data-icon="' + t.icon + '"></i><b></b><span class="muted"></span>';
++      sum.querySelector('b').textContent = T(t.name) + (t.engine ? ' ⚙' : '');
++      sum.querySelector('span').textContent = ' — ' + T(t.desc);
++      card.appendChild(sum);
++      const vals = {};
++      for (const f of t.fields) {
++        const row = document.createElement('div'); row.className = 'setting-row';
++        const lab = document.createElement('div'); lab.className = 'sr-text'; lab.innerHTML = '<b></b>'; lab.querySelector('b').textContent = T(f.label); row.appendChild(lab);
++        let el;
++        if (f.type === 'select') { el = document.createElement('select'); el.className = 'select'; f.options.forEach(([v, l]) => { const o = document.createElement('option'); o.value = v; o.textContent = T(l); el.appendChild(o); }); }
++        else if (f.type === 'check') { el = document.createElement('input'); el.type = 'checkbox'; }
++        else { el = document.createElement('input'); el.type = f.type === 'password' ? 'password' : 'text'; el.className = 'input'; el.value = f.value || (f.cur && V.page ? String(V.page) : ''); el.dir = 'auto'; }
++        if (f.meta) card.addEventListener('toggle', async () => { if (card.open) try { el.value = (await load(await curBytes()))[f.meta]() || ''; } catch (e) { /* */ } }, { once: true });
++        vals[f.k] = el; row.appendChild(el); card.appendChild(row);
++      }
++      const go = document.createElement('button'); go.className = 'btn primary'; go.textContent = T('ביצוע');
++      go.addEventListener('click', async () => {
++        const v = {}; for (const k in vals) v[k] = vals[k].type === 'checkbox' ? vals[k].checked : vals[k].value;
++        go.disabled = true;
++        try { if (!t.engine) PV.progress.show(T(t.name) + '…'); await t.run(v); }
++        catch (e) { PV.error(PV.errMsg(e)); }
++        finally { go.disabled = false; if (!t.engine) PV.progress.hide(); }
++      });
++      card.appendChild(go); sec.appendChild(card);
++    }
++    PV.hydrateIcons(sec);
++  }
++
++  // פריט בתפריט "פעולות נוספות"
++  const menu = $('more-menu');
++  if (menu) {
++    const item = document.createElement('button'); item.className = 'menu-item'; item.id = 'mi-pdftools';
++    item.innerHTML = '<i data-icon="settings"></i><span class="mi-text"></span>';
++    item.querySelector('.mi-text').textContent = T('כלי PDF (חיבור, פיצול, דחיסה…)');
++    menu.insertBefore(item, menu.firstChild);
++    PV.hydrateIcons(item);
++    item.addEventListener('click', async () => { PV.closePopovers(); await render(); if (PV.openOverlay) PV.openOverlay('pdftools'); });
++  }
++  PV.pdftools = { tools: TOOLS, parsePages, render };
++})();
+diff --git a/js/searchable.js b/js/searchable.js
+index 52b83da..26f7cdb 100644
+--- a/js/searchable.js
++++ b/js/searchable.js
+@@ -5,7 +5,7 @@
+   const PV = window.PV, $ = PV.$, V = PV.viewer, O = PV.ocr, Fs = PV.files, B = PV.bridge;
+   const S = (PV.searchable = {});
+ 
+-  PV.BRIDGE_WRITE_MIN = '3.4.0'; // /fs/write-binary (עם יצירת תיקיות) ו-/fs/pick-save-file
++  PV.BRIDGE_WRITE_MIN = '1.0.0'; // /fs/write-binary (עם יצירת תיקיות) ו-/fs/pick-save-file
+   const HOST_WRITE_MAX = 100 * 1024 * 1024 - 4096; // מגבלת אוצריא לכתיבה דרך חלון השמירה שלה (100MB)
+   const IMG_PT = 72 / 150; // תמונה בלי DPI ידוע: מניחים 150 DPI
+   const DEF = { src: 'doc', ask: true, out: 'same', suffix: ' - OCR', outPath: '', outName: '', replace: true, skipDigital: true, sub: true, engine: '' };
+diff --git a/manifest.json b/manifest.json
+index 0ae5c51..ef68c52 100644
+--- a/manifest.json
++++ b/manifest.json
+@@ -2,10 +2,10 @@
+   "schemaVersion": 1,
+   "id": "com.chadbedera.pdfviewer",
+   "name": "צופה PDF+OCR",
+-  "version": "5.7.1",
++  "version": "5.8.0",
+   "description": "צופה PDF, תמונות ומסמכים בעיצוב אוצריא: חיפוש, תוכן עניינים, OCR בעברית, התיקיות שלי בחיפוש הספרייה ופתיחת ספרי PDF בעמוד הנוכחי.",
+   "author": "חד בדרא",
+-  "homepage": "https://github.com/e0548433917-gif/pdf-viewer",
++  "homepage": "https://github.com/Hadabadra/pdf-viewer",
+   "type": "webapp",
+   "category": "Utilities",
+   "stability": "stable",
+-- 
+2.43.0
+

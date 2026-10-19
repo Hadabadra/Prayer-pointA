@@ -1,0 +1,834 @@
+From 1814ea49fc57a1ca310c3131576c67d3d62b4d2c Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Tue, 20 Oct 2026 02:12:05 +0300
+Subject: [PATCH] =?UTF-8?q?1.0.2:=20=D7=A4=D7=AA=D7=97=20=D7=91=D7=90?=
+ =?UTF-8?q?=D7=9E=D7=A6=D7=A2=D7=95=D7=AA=20PDF,=20=D7=97=D7=9C=D7=95?=
+ =?UTF-8?q?=D7=9F=20=D7=91=D7=97=D7=99=D7=A8=D7=94=20=D7=91=D7=97=D7=96?=
+ =?UTF-8?q?=D7=99=D7=AA,=20=D7=A4=D7=A2=D7=95=D7=9C=D7=95=D7=AA=20PDF=20?=
+ =?UTF-8?q?=D7=91=D7=9E=D7=A0=D7=95=D7=A2=20PDF24/Ghostscript,=20=D7=9E?=
+ =?UTF-8?q?=D7=A6=D7=A4=D7=9F,=20=D7=AA=D7=99=D7=A7=D7=95=D7=9F=20=D7=93?=
+ =?UTF-8?q?=D7=99=D7=95=D7=95=D7=97=D7=99=D7=9D,=20=D7=92=D7=A8=D7=A1?=
+ =?UTF-8?q?=D7=90=D7=95=D7=AA=20=D7=91=D7=AA=D7=95=D7=A1=D7=A4=D7=99=D7=9D?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ CHANGELOG.md                         |   9 ++
+ bridge/CompassApi.cs                 |  40 +++++
+ bridge/Extras.cs                     |   2 +-
+ bridge/FsApi.cs                      |   2 +-
+ bridge/HardLock.cs                   |   3 +
+ bridge/Installer.cs                  |   1 +
+ bridge/OtzariaBridge.csproj          |   2 +-
+ bridge/PdfApi.cs                     |   4 +-
+ bridge/PdfAssoc.cs                   | 214 +++++++++++++++++++++++++++
+ bridge/PdfOps.cs                     | 186 +++++++++++++++++++++++
+ bridge/Program.cs                    |   3 +
+ bridge/Server.cs                     |   3 +
+ bridge/Support.cs                    |   7 +-
+ bridge/UpdateApi.cs                  |   2 +-
+ docs/BRIDGE_API.md                   |  13 ++
+ docs/PDF-INTEGRATION-SPEC.md         |   2 +-
+ file-explorer/js/app.js              |   8 +-
+ file-explorer/manifest.json          |   4 +-
+ system-settings/js/app.js            |   4 +-
+ system-settings/js/bridge.js         |   8 +-
+ system-settings/js/lang-en.js        |   2 +-
+ system-settings/js/sections/kiosk.js |   2 +-
+ system-settings/manifest.json        |   4 +-
+ 23 files changed, 500 insertions(+), 25 deletions(-)
+ create mode 100644 bridge/CompassApi.cs
+ create mode 100644 bridge/PdfAssoc.cs
+ create mode 100644 bridge/PdfOps.cs
+
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 23d87a2..39ee393 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -6,6 +6,15 @@
+ ---
+ 
+ 
++## 1.0.2 — 20.10.2026
++- **"פתח באמצעות" ← צופה PDF+OCR:** הגשר נרשם ב-Windows (HKCU, בלי הרשאות מנהל) כאפשרות פתיחה לקובצי PDF, וגם ב"אפליקציות ברירת מחדל". בחירה בו פותחת את אוצריא ישירות בתוסף "צופה PDF+OCR" עם הקובץ, עם כל יכולות התוסף. נקודות קצה: `/pdf/assoc/status|register|unregister|open-settings`, `/pdf/inbox/list|ack`; שורת פקודה `--open-pdf "<path>"`. הרישום מוסר בהסרת הגשר.
++- **תיקון: חלון "בחירת תוכנה" נעלם מאחור ונסגר אחרי כמה שניות** — נפתח עכשיו בחזית (SHOpenWithDialog מחוט STA עם חלון בעלים) ונשאר עד שבוחרים. גם בסייר הקבצים.
++- **פעולות PDF במנוע מותקן (שלב ג):** `/pdf/engines`, `/pdf/op/begin|chunk|run|read|end` — דחיסה, גווני אפור, PDF/A, תיקון, הגנה/הסרת סיסמה (Ghostscript של PDF24, Ghostscript רגיל) ואופטימיזציה לרשת (qpdf). הקובץ עובר בחתיכות, בלי צורך בנתיב בדיסק. משמש את "כלי PDF" בצופה PDF+OCR 5.8.0.
++- **תוספי הגדרות מערכת וסייר קבצים 1.0.2:** "אודות" הציג גרסה 3.4.0 — עכשיו 1.0.2; הוסר "מגרסה 3.0" מהסבר הצימוד; קישורי עדכון ל-Hadabadra/achat-shaalti.
++- **מצפן:** `POST /sys/compass` מחזיר את כיוון הצפון מחיישן המכשיר (טאבלטים), עבור "כיוון תפילה".
++- **דיווחים אוטומטיים מיותרים (#81–#92):** קריסת הבדיקה העצמית לא נמסרת יותר לשליחה דרך התוסף; קריאה מצינור רכיב ההקשחה אחרי פסק זמן לא מדווחת יותר כ-task-error.
++- טרם נבדק ב-Windows.
++
+ ## 1.0.1 — 20.10.2026
+ - **גשר — מיקום מ-Windows:** `POST /sys/location` (וגם `/location`) מחזיר קו רוחב, קו אורך, דיוק ומקור. כשהמיקום כבוי — הסבר איך להפעיל, ו-`/sys/location/settings` פותח את ההגדרה. משמש את "כיוון תפילה" 2.6.0.
+ - **גשר — `/feedback`:** כינוי ל-`/sys/feedback`, כדי שתוספים שהמתווך לא מאושר להם ישלחו הערות דרך הגשר.
+diff --git a/bridge/CompassApi.cs b/bridge/CompassApi.cs
+new file mode 100644
+index 0000000..d257fbe
+--- /dev/null
++++ b/bridge/CompassApi.cs
+@@ -0,0 +1,40 @@
++using Windows.Devices.Sensors;
++
++namespace OtzariaBridge;
++
++/// <summary>מצפן המכשיר (Windows.Devices.Sensors.Compass) — לטאבלטים/מחשבים עם חיישן מגנטי.
++/// בתוך אוצריא deviceorientation לא מגיע ב-Windows, ולכן "כיוון תפילה" מבקש את כיוון הצפון מהגשר.
++/// POST /sys/compass → { available, headingTrue (מעלות מצפון אמיתי, או null), headingMagnetic, accuracy ("high"|"approximate"|"unreliable"|"unknown"), time }</summary>
++internal static class CompassApi
++{
++    private static Compass _c;
++    private static bool _tried;
++    private static readonly object Gate = new();
++
++    public static void Register()
++    {
++        Server.Route("/sys/compass", _ => Read());
++        Server.Route("/compass", _ => Read());
++    }
++
++    private static object Read()
++    {
++        lock (Gate)
++        {
++            if (!_tried) { _tried = true; try { _c = Compass.GetDefault(); if (_c != null) _c.ReportInterval = Math.Max(_c.MinimumReportInterval, 100u); } catch { _c = null; } }
++        }
++        if (_c == null) return new { available = false, headingTrue = (double?)null, headingMagnetic = (double?)null, accuracy = "unknown", time = (string)null };
++        try
++        {
++            var r = _c.GetCurrentReading();
++            if (r == null) return new { available = true, headingTrue = (double?)null, headingMagnetic = (double?)null, accuracy = "unknown", time = (string)null };
++            string acc = r.HeadingAccuracy switch
++            {
++                MagnetometerAccuracy.High => "high", MagnetometerAccuracy.Approximate => "approximate",
++                MagnetometerAccuracy.Unreliable => "unreliable", _ => "unknown",
++            };
++            return new { available = true, headingTrue = r.HeadingTrueNorth, headingMagnetic = (double?)r.HeadingMagneticNorth, accuracy = acc, time = r.Timestamp.ToString("o") };
++        }
++        catch (Exception ex) { throw new BridgeException("unsupported", "המצפן אינו זמין: " + ex.Message, 503); }
++    }
++}
+diff --git a/bridge/Extras.cs b/bridge/Extras.cs
+index 9ab408f..227ac7c 100644
+--- a/bridge/Extras.cs
++++ b/bridge/Extras.cs
+@@ -549,7 +549,7 @@ internal sealed class EmergencyForm : Form
+ /// </summary>
+ internal static class Diagnostics_
+ {
+-    public const string IssuesUrl = "https://github.com/e0548433917-gif/achat-shaalti/issues/new";
++    public const string IssuesUrl = "https://github.com/Hadabadra/achat-shaalti/issues/new";
+     private static readonly Regex Secret = new("(hash|salt|key|secret|password|token|recovery)", RegexOptions.IgnoreCase);
+ 
+     public static void Report()
+diff --git a/bridge/FsApi.cs b/bridge/FsApi.cs
+index e3c7665..57a9a6d 100644
+--- a/bridge/FsApi.cs
++++ b/bridge/FsApi.cs
+@@ -672,7 +672,7 @@ public static class FsApi
+         // החלון מאפשר לדפדף לכל תוכנה במחשב, ולכן שם נשארת הפתיחה בתוכנת ברירת המחדל בלבד.
+         if (b.Has("openWith") && b.Bool("openWith") && File.Exists(path) && !Kiosk.IsActive && !FxPolicy.IsRestricted)
+         {
+-            Process.Start(new ProcessStartInfo("rundll32.exe", "shell32.dll,OpenAs_RunDLL " + path) { UseShellExecute = false });
++            PdfAssoc.ShowOpenWith(path);
+             return new { opened = true, chooser = true };
+         }
+         Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+diff --git a/bridge/HardLock.cs b/bridge/HardLock.cs
+index 8c738f7..d43bee3 100644
+--- a/bridge/HardLock.cs
++++ b/bridge/HardLock.cs
+@@ -55,6 +55,9 @@ public static class HardLock
+             var r = new StreamReader(pipe, Encoding.UTF8);
+             w.WriteLine(req.ToJsonString());
+             var readTask = r.ReadLineAsync();
++            // #83-#92: בפסק זמן הצינור נסגר (using) והקריאה נכשלת אחר כך ב-ObjectDisposedException שאיש לא צופה בה —
++            // מסמנים אותה כנצפית כדי שלא תדווח כ-task-error
++            _ = readTask.ContinueWith(t => _ = t.Exception, TaskContinuationOptions.OnlyOnFaulted);
+             // בעיה #14 סעיף 2: רצפת המתנה קשיחה, לא 15ש' שחוסמות חוט HTTP גם כשנדרש timeout קצר בהרבה
+             if (!readTask.Wait(Math.Max(timeoutMs, 3000))) return null;
+             return JsonNode.Parse(readTask.Result ?? "") as JsonObject;
+diff --git a/bridge/Installer.cs b/bridge/Installer.cs
+index 8c07804..b1cd9dd 100644
+--- a/bridge/Installer.cs
++++ b/bridge/Installer.cs
+@@ -212,6 +212,7 @@ public static class Installer
+ 
+         StopOtherInstances();
+         using (var k = Registry.CurrentUser.OpenSubKey(RunKey, true)) k?.DeleteValue(RunValue, false);
++        PdfAssoc.Remove(); // "פתח באמצעות"
+         try { if (File.Exists(ShortcutPath)) File.Delete(ShortcutPath); } catch { }
+ 
+         if (IsRunningFromInstallDir())
+diff --git a/bridge/OtzariaBridge.csproj b/bridge/OtzariaBridge.csproj
+index bdeba29..a1352e8 100644
+--- a/bridge/OtzariaBridge.csproj
++++ b/bridge/OtzariaBridge.csproj
+@@ -10,7 +10,7 @@
+     <Nullable>disable</Nullable>
+     <AssemblyName>OtzariaBridge</AssemblyName>
+     <RootNamespace>OtzariaBridge</RootNamespace>
+-    <Version>1.0.1</Version>
++    <Version>1.0.2</Version>
+     <Product>אחת שאלתי</Product>
+     <AssemblyTitle>אחת שאלתי - תוכנת חסימת מחשב לתוכנות תורניות בלבד</AssemblyTitle>
+     <Company>גמח תורת אסתר</Company>
+diff --git a/bridge/PdfApi.cs b/bridge/PdfApi.cs
+index a17f178..98ad3e0 100644
+--- a/bridge/PdfApi.cs
++++ b/bridge/PdfApi.cs
+@@ -115,9 +115,7 @@ internal static class PdfApi
+         else if (h.Id == "windows-chooser")
+         {
+             if (FxPolicy.IsRestricted) throw FxPolicy.Outside("במצב מוגבל אי אפשר לבחור תוכנה");
+-            var psi = new ProcessStartInfo("rundll32.exe") { UseShellExecute = false };
+-            psi.ArgumentList.Add("shell32.dll,OpenAs_RunDLL"); psi.ArgumentList.Add(path);
+-            Process.Start(psi);
++            PdfAssoc.ShowOpenWith(path); // חלון שנשאר בחזית (במקום rundll32 שנעלם)
+         }
+         else
+         {
+diff --git a/bridge/PdfAssoc.cs b/bridge/PdfAssoc.cs
+new file mode 100644
+index 0000000..43b2d08
+--- /dev/null
++++ b/bridge/PdfAssoc.cs
+@@ -0,0 +1,214 @@
++using System.Diagnostics;
++using System.Runtime.InteropServices;
++using System.Text.Json;
++using Microsoft.Win32;
++
++namespace OtzariaBridge;
++
++/// <summary>שלב ד של docs/PDF-INTEGRATION-SPEC.md — "פתח באמצעות" של Windows ישירות לתוסף "צופה PDF+OCR".
++/// • רישום ב-HKCU (בלי הרשאות מנהל): Applications\OtzariaBridge.exe + ProgId OtzariaBridge.pdf ב-.pdf\OpenWithProgids,
++///   כך שהצופה מופיע ב"פתח באמצעות" וב"אפליקציות ברירת מחדל". נרשם אוטומטית בעליית הגשר (אפשר לבטל: pdf.assoc=false).
++/// • OtzariaBridge.exe --open-pdf "path" → הנתיב נכתב לתור (קובץ בתיקיית inbox, כדי לעבור בין מופעים בלי IPC),
++///   ואוצריא נפתחת ישירות בתוסף (otzaria://open/plugin/&lt;id&gt;). התוסף שולף ב-/pdf/inbox/list ומאשר ב-/pdf/inbox/ack.
++/// • חלון "פתח באמצעות" של Windows (בחירת תוכנה) נפתח מחוט STA עם חלון בעלים בחזית, כדי שלא ייעלם מאחור וייסגר מעצמו.</summary>
++internal static class PdfAssoc
++{
++    public const string PluginId = "com.chadbedera.pdfviewer";
++    private const string ProgId = "OtzariaBridge.pdf";
++    private const string ExeName = "OtzariaBridge.exe";
++    private static string InboxDir => Path.Combine(Config.Dir, "pdf-inbox");
++    private static readonly TimeSpan Ttl = TimeSpan.FromMinutes(10);
++
++    public static void Register()
++    {
++        Server.Route("/pdf/assoc/status", _ => Status());
++        Server.Route("/pdf/assoc/register", _ => { if (Kiosk.IsActive) throw BridgeException.Locked(); Write(); return Status(); });
++        Server.Route("/pdf/assoc/unregister", _ => { if (Kiosk.IsActive) throw BridgeException.Locked(); Remove(); Config.Set("pdf.assoc", false); return Status(); });
++        Server.Route("/pdf/assoc/open-settings", _ => { if (Kiosk.IsActive) throw BridgeException.Locked(); Process.Start(new ProcessStartInfo("ms-settings:defaultapps") { UseShellExecute = true }); return new { opened = true }; });
++        Server.Route("/pdf/inbox/list", _ => new { items = List() });
++        Server.Route("/pdf/inbox/ack", Ack);
++        // רישום אוטומטי בעלייה (מה שסוכם): הצופה מופיע ב"פתח באמצעות" בלי פעולה נוספת
++        try { if (Config.Get("pdf.assoc", true)) Write(); } catch (Exception ex) { Config.Log("pdf assoc: " + ex.Message); }
++    }
++
++    private static string Exe => Path.Combine(Path.GetDirectoryName(Environment.ProcessPath) ?? Config.Dir, ExeName);
++    private static string Command => "\"" + Exe + "\" --open-pdf \"%1\"";
++
++    private static object Status()
++    {
++        string cmd = null;
++        try { using var k = Registry.CurrentUser.OpenSubKey(@"Software\Classes\" + ProgId + @"\shell\open\command"); cmd = k?.GetValue("") as string; } catch { }
++        bool isDefault = false;
++        try
++        {
++            using var u = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.pdf\UserChoice");
++            isDefault = string.Equals(u?.GetValue("ProgId") as string, ProgId, StringComparison.OrdinalIgnoreCase)
++                        || (u?.GetValue("ProgId") as string ?? "").Contains("OtzariaBridge", StringComparison.OrdinalIgnoreCase);
++        }
++        catch { }
++        return new { registered = cmd != null, isDefault, command = cmd };
++    }
++
++    private static void Write()
++    {
++        string name = Lang.T("צופה PDF+OCR (אוצריא)", "PDF+OCR Viewer (Otzaria)");
++        string icon = "\"" + Exe + "\",0";
++        var C = Registry.CurrentUser;
++        using (var k = C.CreateSubKey(@"Software\Classes\" + ProgId))
++        {
++            k.SetValue("", name); k.SetValue("FriendlyTypeName", name);
++            using (var di = k.CreateSubKey("DefaultIcon")) di.SetValue("", icon);
++            using (var sh = k.CreateSubKey(@"shell\open")) sh.SetValue("FriendlyAppName", name);
++            using (var c = k.CreateSubKey(@"shell\open\command")) c.SetValue("", Command);
++        }
++        using (var k = C.CreateSubKey(@"Software\Classes\Applications\" + ExeName))
++        {
++            k.SetValue("FriendlyAppName", name);
++            using (var st = k.CreateSubKey("SupportedTypes")) st.SetValue(".pdf", "");
++            using (var di = k.CreateSubKey("DefaultIcon")) di.SetValue("", icon);
++            using (var c = k.CreateSubKey(@"shell\open\command")) c.SetValue("", Command);
++        }
++        using (var k = C.CreateSubKey(@"Software\Classes\.pdf\OpenWithProgids")) k.SetValue(ProgId, Array.Empty<byte>(), RegistryValueKind.None);
++        // "אפליקציות ברירת מחדל" של Windows
++        using (var k = C.CreateSubKey(@"Software\OtzariaBridge\Capabilities"))
++        {
++            k.SetValue("ApplicationName", name); k.SetValue("ApplicationDescription", name);
++            using var fa = k.CreateSubKey("FileAssociations"); fa.SetValue(".pdf", ProgId);
++        }
++        using (var k = C.CreateSubKey(@"Software\RegisteredApplications")) k.SetValue("OtzariaBridge", @"Software\OtzariaBridge\Capabilities");
++        SHChangeNotify(0x08000000, 0, IntPtr.Zero, IntPtr.Zero); // SHCNE_ASSOCCHANGED
++    }
++
++    public static void Remove()
++    {
++        var C = Registry.CurrentUser;
++        try { C.DeleteSubKeyTree(@"Software\Classes\" + ProgId, false); } catch { }
++        try { C.DeleteSubKeyTree(@"Software\Classes\Applications\" + ExeName, false); } catch { }
++        try { using var k = C.OpenSubKey(@"Software\Classes\.pdf\OpenWithProgids", true); k?.DeleteValue(ProgId, false); } catch { }
++        try { C.DeleteSubKeyTree(@"Software\OtzariaBridge\Capabilities", false); } catch { }
++        try { using var k = C.OpenSubKey(@"Software\RegisteredApplications", true); k?.DeleteValue("OtzariaBridge", false); } catch { }
++        SHChangeNotify(0x08000000, 0, IntPtr.Zero, IntPtr.Zero);
++    }
++
++    [DllImport("shell32.dll")] private static extern void SHChangeNotify(int eventId, int flags, IntPtr a, IntPtr b);
++
++    // ── תור הפתיחה ─────────────────────────────────────────────────────────
++
++    /// <summary>OtzariaBridge.exe --open-pdf "path": נכתב לתור ופותח את אוצריא בתוסף. נקרא מ-Main לפני בדיקת המופע היחיד.</summary>
++    public static void Enqueue(string raw)
++    {
++        try
++        {
++            if (string.IsNullOrWhiteSpace(raw)) return;
++            string path = Path.GetFullPath(Environment.ExpandEnvironmentVariables(raw.Trim().Trim('"')));
++            if (!File.Exists(path)) return;
++            Directory.CreateDirectory(InboxDir);
++            string id = DateTime.UtcNow.ToString("yyyyMMddHHmmssfff") + "-" + Guid.NewGuid().ToString("N")[..8];
++            File.WriteAllText(Path.Combine(InboxDir, id + ".txt"), path);
++            OpenPluginInOtzaria();
++        }
++        catch (Exception ex) { Config.Log("open-pdf: " + ex.Message); }
++    }
++
++    private static void OpenPluginInOtzaria()
++    {
++        try { Process.Start(new ProcessStartInfo("otzaria://open/plugin/" + PluginId) { UseShellExecute = true }); return; }
++        catch (Exception ex) { Config.Log("open-pdf otzaria uri: " + ex.Message); }
++        try
++        {
++            string p = Config.Get<string>("kiosk.otzariaPath", "");
++            if (!string.IsNullOrEmpty(p) && File.Exists(p)) Process.Start(new ProcessStartInfo(p) { UseShellExecute = true });
++        }
++        catch { }
++    }
++
++    private static List<object> List()
++    {
++        var res = new List<object>();
++        if (!Directory.Exists(InboxDir)) return res;
++        foreach (var f in Directory.GetFiles(InboxDir, "*.txt").OrderBy(x => x, StringComparer.Ordinal))
++        {
++            try
++            {
++                var at = File.GetLastWriteTimeUtc(f);
++                if (DateTime.UtcNow - at > Ttl) { File.Delete(f); continue; }
++                string path = File.ReadAllText(f).Trim();
++                try { FxPolicy.EnsurePathAllowed(path); } catch { File.Delete(f); continue; } // מחוץ למדיניות — נזרק בשקט
++                if (Kiosk.IsActive && !Kiosk.AllowedExtensions.Any(x => x.Equals("pdf", StringComparison.OrdinalIgnoreCase))) continue;
++                long size = 0; try { size = new FileInfo(path).Length; } catch { }
++                res.Add(new { id = Path.GetFileNameWithoutExtension(f), path, name = Path.GetFileName(path), size, at = at.ToString("o"), source = "open-with" });
++            }
++            catch { }
++        }
++        return res;
++    }
++
++    private static object Ack(JsonElement b)
++    {
++        int n = 0;
++        if (b.ValueKind == JsonValueKind.Object && b.TryGetProperty("ids", out var ids) && ids.ValueKind == JsonValueKind.Array)
++            foreach (var e in ids.EnumerateArray())
++            {
++                string id = e.GetString() ?? "";
++                if (id.Length == 0 || id.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 || id.Contains("..")) continue;
++                string f = Path.Combine(InboxDir, id + ".txt");
++                try { if (File.Exists(f)) { File.Delete(f); n++; } } catch { }
++            }
++        return new { removed = n };
++    }
++
++    // ── חלון "פתח באמצעות" שנשאר פתוח ───────────────────────────────────
++
++    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
++    private struct OPENASINFO { public string pcszFile; public string pcszClass; public int oaifInFlags; }
++    [DllImport("shell32.dll", CharSet = CharSet.Unicode)] private static extern int SHOpenWithDialog(IntPtr hwnd, ref OPENASINFO info);
++    [DllImport("user32.dll")] private static extern IntPtr GetForegroundWindow();
++    [DllImport("user32.dll")] private static extern uint GetWindowThreadProcessId(IntPtr h, IntPtr pid);
++    [DllImport("user32.dll")] private static extern bool AttachThreadInput(uint a, uint b, bool attach);
++    [DllImport("user32.dll")] private static extern bool SetForegroundWindow(IntPtr h);
++    [DllImport("user32.dll")] private static extern bool AllowSetForegroundWindow(int pid);
++    [DllImport("kernel32.dll")] private static extern uint GetCurrentThreadId();
++
++    /// <summary>הקודם (rundll32 OpenAs_RunDLL מתהליך רקע) נפתח בלי זכות חזית, מאחורי אוצריא, ו"נעלם" אחרי כמה שניות
++    /// כי חלונית הבחירה של Windows 10/11 נסגרת כשאין לה פוקוס. כאן: חוט STA, חלון בעלים זעיר שנלקח לחזית,
++    /// ו-SHOpenWithDialog מודאלי עם OAIF_EXEC — נשאר עד שהמשתמש בוחר או סוגר.</summary>
++    public static void ShowOpenWith(string path)
++    {
++        var t = new Thread(() =>
++        {
++            try
++            {
++                using var owner = new Form
++                {
++                    FormBorderStyle = FormBorderStyle.None, ShowInTaskbar = false, TopMost = true,
++                    StartPosition = FormStartPosition.Manual, Size = new System.Drawing.Size(1, 1), Opacity = 0.01,
++                    Location = Cursor.Position,
++                };
++                owner.Show();
++                ForceForeground(owner.Handle);
++                var info = new OPENASINFO { pcszFile = path, pcszClass = null, oaifInFlags = 0x1 | 0x4 | 0x20 }; // ALLOW_REGISTRATION | EXEC | HIDE_REGISTRATION
++                int hr = SHOpenWithDialog(owner.Handle, ref info);
++                if (hr < 0 && hr != unchecked((int)0x800704C7)) // לא "בוטל ע"י המשתמש"
++                    Process.Start(new ProcessStartInfo("rundll32.exe", "shell32.dll,OpenAs_RunDLL " + path) { UseShellExecute = false });
++                owner.Close();
++            }
++            catch (Exception ex) { Config.Log("open-with dialog: " + ex.Message); }
++        }) { IsBackground = true, Name = "OpenWith" };
++        t.SetApartmentState(ApartmentState.STA);
++        t.Start();
++    }
++
++    private static void ForceForeground(IntPtr h)
++    {
++        try
++        {
++            AllowSetForegroundWindow(-1);
++            IntPtr fg = GetForegroundWindow();
++            uint fgT = fg == IntPtr.Zero ? 0 : GetWindowThreadProcessId(fg, IntPtr.Zero), me = GetCurrentThreadId();
++            if (fgT != 0 && fgT != me) AttachThreadInput(me, fgT, true);
++            SetForegroundWindow(h);
++            if (fgT != 0 && fgT != me) AttachThreadInput(me, fgT, false);
++        }
++        catch { }
++    }
++}
+diff --git a/bridge/PdfOps.cs b/bridge/PdfOps.cs
+new file mode 100644
+index 0000000..c6f9942
+--- /dev/null
++++ b/bridge/PdfOps.cs
+@@ -0,0 +1,186 @@
++using System.Collections.Concurrent;
++using System.Diagnostics;
++using System.Text.Json;
++
++namespace OtzariaBridge;
++
++/// <summary>שלב ג של docs/PDF-INTEGRATION-SPEC.md — פעולות PDF כבדות במנוע מותקן (כמו ב-PDF24), עבור "צופה PDF+OCR".
++/// מנוע: Ghostscript — זה שמגיע עם PDF24 (Program Files\PDF24\gs\bin) או התקנה רגילה של Ghostscript; qpdf אם מותקן.
++/// הקובץ עובר בחתיכות (אין צורך בנתיב בדיסק ובמדיניות תיקיות): begin → chunk… → run → read… → end.
++///   POST /pdf/engines → { engines: [{ id, name, path }], ops: [...] }
++///   POST /pdf/op/begin {} → { id }
++///   POST /pdf/op/chunk { id, data (base64) } → { size }
++///   POST /pdf/op/run { id, op, params } → { size, engine }
++///   POST /pdf/op/read { id, offset } → { data (base64, עד 1MB), offset, size, done }
++///   POST /pdf/op/end { id } → { removed }
++/// פעולות: compress {level: screen|ebook|printer|prepress}, grayscale, pdfa, repair, protect {userPassword, ownerPassword},
++/// unlock {password}, linearize. קבצים זמניים ב-%TEMP%\OtzariaBridge-pdfops, נמחקים ב-end או אחרי שעה.</summary>
++internal static class PdfOps
++{
++    private static string Root => Path.Combine(Path.GetTempPath(), "OtzariaBridge-pdfops");
++    private static readonly ConcurrentDictionary<string, DateTime> Jobs = new();
++    private const long MaxBytes = 1024L * 1024 * 1024; // 1GB
++
++    public static void Register()
++    {
++        Server.Route("/pdf/engines", _ => Engines());
++        Server.Route("/pdf/op/begin", _ => Begin());
++        Server.Route("/pdf/op/chunk", Chunk);
++        Server.Route("/pdf/op/run", Run);
++        Server.Route("/pdf/op/read", Read);
++        Server.Route("/pdf/op/end", b => { Cleanup(Id(b)); return new { removed = true }; });
++        try { if (Directory.Exists(Root)) foreach (var d in Directory.GetDirectories(Root)) if (DateTime.UtcNow - Directory.GetLastWriteTimeUtc(d) > TimeSpan.FromHours(1)) Directory.Delete(d, true); } catch { }
++    }
++
++    // ── זיהוי מנועים ─────────────────────────────────────────────────────
++    private static string Gs()
++    {
++        string pf = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), pf86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
++               la = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
++        var cands = new List<string>
++        {
++            Path.Combine(pf, "PDF24", "gs", "bin", "gswin64c.exe"), Path.Combine(pf, "PDF24", "gs", "bin", "gswin32c.exe"),
++            Path.Combine(pf86, "PDF24", "gs", "bin", "gswin32c.exe"), Path.Combine(la, "PDF24", "gs", "bin", "gswin64c.exe"),
++        };
++        foreach (var root in new[] { Path.Combine(pf, "gs"), Path.Combine(pf86, "gs") })
++            try { if (Directory.Exists(root)) foreach (var d in Directory.GetDirectories(root).OrderByDescending(x => x)) { cands.Add(Path.Combine(d, "bin", "gswin64c.exe")); cands.Add(Path.Combine(d, "bin", "gswin32c.exe")); } } catch { }
++        return cands.FirstOrDefault(File.Exists) ?? OnPath("gswin64c.exe") ?? OnPath("gswin32c.exe");
++    }
++
++    private static string Qpdf()
++    {
++        string pf = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
++        try { foreach (var d in Directory.GetDirectories(pf, "qpdf*")) { var p = Path.Combine(d, "bin", "qpdf.exe"); if (File.Exists(p)) return p; } } catch { }
++        return OnPath("qpdf.exe");
++    }
++
++    private static string OnPath(string exe)
++    {
++        foreach (var dir in (Environment.GetEnvironmentVariable("PATH") ?? "").Split(';'))
++            try { var p = Path.Combine(dir.Trim().Trim('"'), exe); if (dir.Length > 0 && File.Exists(p)) return p; } catch { }
++        return null;
++    }
++
++    private static object Engines()
++    {
++        var list = new List<object>();
++        string gs = Gs(), q = Qpdf();
++        if (gs != null) list.Add(new { id = "ghostscript", name = gs.Contains("PDF24", StringComparison.OrdinalIgnoreCase) ? "Ghostscript (PDF24)" : "Ghostscript", path = gs });
++        if (q != null) list.Add(new { id = "qpdf", name = "qpdf", path = q });
++        var ops = new List<string>();
++        if (gs != null) ops.AddRange(new[] { "compress", "grayscale", "pdfa", "repair", "protect", "unlock" });
++        if (q != null) ops.AddRange(new[] { "linearize", "protect", "unlock", "repair" });
++        return new { engines = list, ops = ops.Distinct() };
++    }
++
++    // ── העברת קבצים ─────────────────────────────────────────────────────
++    private static string Id(JsonElement b)
++    {
++        string id = b.Req("id");
++        if (id.Length != 32 || !id.All(Uri.IsHexDigit)) throw BridgeException.BadRequest("מזהה לא תקין");
++        if (!Jobs.ContainsKey(id)) throw new BridgeException("not_found", "הפעולה לא נמצאה (פג תוקף?)", 404);
++        Jobs[id] = DateTime.UtcNow;
++        return id;
++    }
++    private static string Dir(string id) => Path.Combine(Root, id);
++
++    private static object Begin()
++    {
++        if (Kiosk.IsActive) throw BridgeException.Locked();
++        string id = Guid.NewGuid().ToString("N");
++        Directory.CreateDirectory(Dir(id));
++        Jobs[id] = DateTime.UtcNow;
++        return new { id };
++    }
++
++    private static object Chunk(JsonElement b)
++    {
++        string id = Id(b), f = Path.Combine(Dir(id), "in.pdf");
++        byte[] data = Convert.FromBase64String(b.Req("data"));
++        using (var s = new FileStream(f, FileMode.Append, FileAccess.Write)) { if (s.Length + data.Length > MaxBytes) throw BridgeException.BadRequest("הקובץ גדול מדי"); s.Write(data); }
++        return new { size = new FileInfo(f).Length };
++    }
++
++    private static object Read(JsonElement b)
++    {
++        string id = Id(b), f = Path.Combine(Dir(id), "out.pdf");
++        if (!File.Exists(f)) throw new BridgeException("not_found", "אין תוצאה", 404);
++        long off = b.Long("offset", 0), size = new FileInfo(f).Length;
++        using var s = File.OpenRead(f);
++        s.Seek(off, SeekOrigin.Begin);
++        var buf = new byte[(int)Math.Min(1024 * 1024, Math.Max(0, size - off))];
++        int n = s.Read(buf, 0, buf.Length);
++        return new { data = Convert.ToBase64String(buf, 0, n), offset = off + n, size, done = off + n >= size };
++    }
++
++    private static void Cleanup(string id) { try { Jobs.TryRemove(id, out _); Directory.Delete(Dir(id), true); } catch { } }
++
++    // ── הרצה ────────────────────────────────────────────────────────────
++    private static object Run(JsonElement b)
++    {
++        if (Kiosk.IsActive) throw BridgeException.Locked();
++        string id = Id(b), dir = Dir(id), inp = Path.Combine(dir, "in.pdf"), outp = Path.Combine(dir, "out.pdf");
++        if (!File.Exists(inp)) throw BridgeException.BadRequest("לא הועלה קובץ");
++        try { File.Delete(outp); } catch { }
++        string op = b.Req("op");
++        JsonElement p = b.TryGetProperty("params", out var pp) && pp.ValueKind == JsonValueKind.Object ? pp : default;
++        string P(string k, string def = "") => p.ValueKind == JsonValueKind.Object ? (p.Str(k, def) ?? def) : def;
++        string gs = Gs(), q = Qpdf();
++        var a = new List<string>();
++        string exe, engine;
++
++        bool useQpdf = q != null && (op == "linearize" || ((op == "protect" || op == "unlock" || op == "repair") && gs == null));
++        if (useQpdf)
++        {
++            exe = q; engine = "qpdf";
++            switch (op)
++            {
++                case "linearize": a.AddRange(new[] { "--linearize", inp, outp }); break;
++                case "repair": a.AddRange(new[] { inp, outp }); break;
++                case "unlock": a.Add("--password=" + P("password")); a.AddRange(new[] { "--decrypt", inp, outp }); break;
++                case "protect":
++                    string up = P("userPassword"), own = P("ownerPassword");
++                    if (own.Length == 0) own = up.Length > 0 ? up : Guid.NewGuid().ToString("N");
++                    a.AddRange(new[] { "--encrypt", up, own, "256", "--", inp, outp }); break;
++            }
++        }
++        else
++        {
++            if (gs == null) throw BridgeException.Unsupported("לא נמצא מנוע PDF: יש להתקין את PDF24 או Ghostscript");
++            exe = gs; engine = gs.Contains("PDF24", StringComparison.OrdinalIgnoreCase) ? "ghostscript-pdf24" : "ghostscript";
++            a.AddRange(new[] { "-dBATCH", "-dNOPAUSE", "-dQUIET", "-dSAFER", "-sDEVICE=pdfwrite", "-dCompatibilityLevel=1.7" });
++            switch (op)
++            {
++                case "compress":
++                    string lvl = P("level", "ebook");
++                    if (!new[] { "screen", "ebook", "printer", "prepress" }.Contains(lvl)) lvl = "ebook";
++                    a.Add("-dPDFSETTINGS=/" + lvl); a.Add("-dDetectDuplicateImages=true"); break;
++                case "grayscale": a.AddRange(new[] { "-sColorConversionStrategy=Gray", "-dProcessColorModel=/DeviceGray" }); break;
++                case "pdfa": a.AddRange(new[] { "-dPDFA=2", "-dPDFACompatibilityPolicy=1", "-sColorConversionStrategy=RGB" }); break;
++                case "repair": break;
++                case "unlock": a.Add("-sPDFPassword=" + P("password")); break;
++                case "protect":
++                    string up = P("userPassword"), own = P("ownerPassword");
++                    if (own.Length == 0) own = up.Length > 0 ? up : Guid.NewGuid().ToString("N");
++                    a.Add("-sOwnerPassword=" + own); if (up.Length > 0) a.Add("-sUserPassword=" + up); a.Add("-dEncryptionR=3"); a.Add("-dKeyLength=128"); break;
++                default: throw BridgeException.BadRequest("פעולה לא מוכרת: " + op);
++            }
++            a.Add("-sOutputFile=" + outp); a.Add(inp);
++        }
++        if (a.Count == 0) throw BridgeException.BadRequest("פעולה לא מוכרת: " + op);
++
++        var psi = new ProcessStartInfo(exe) { UseShellExecute = false, CreateNoWindow = true, RedirectStandardError = true, RedirectStandardOutput = true };
++        foreach (var x in a) psi.ArgumentList.Add(x);
++        using var pr = Process.Start(psi);
++        var err = pr.StandardError.ReadToEndAsync(); _ = pr.StandardOutput.ReadToEndAsync();
++        if (!pr.WaitForExit(10 * 60 * 1000)) { try { pr.Kill(true); } catch { } throw new BridgeException("timeout", "הפעולה ארכה יותר מדי", 504); }
++        // qpdf מחזיר 3 על אזהרות — התוצאה תקינה
++        if (!File.Exists(outp) || new FileInfo(outp).Length == 0 || (pr.ExitCode != 0 && !(engine == "qpdf" && pr.ExitCode == 3)))
++        {
++            string msg = (err.Result ?? "").Trim();
++            if (op == "unlock" && msg.Contains("password", StringComparison.OrdinalIgnoreCase)) throw new BridgeException("wrong_password", "סיסמה שגויה", 401);
++            throw new BridgeException("op_failed", "הפעולה נכשלה: " + (msg.Length > 300 ? msg[..300] : msg), 500);
++        }
++        return new { size = new FileInfo(outp).Length, inSize = new FileInfo(inp).Length, engine };
++    }
++}
+diff --git a/bridge/Program.cs b/bridge/Program.cs
+index efd2b90..293352c 100644
+--- a/bridge/Program.cs
++++ b/bridge/Program.cs
+@@ -85,6 +85,9 @@ public static class Program
+             // לפני הכול: אם אין נעילה פעילה — שולחן העבודה חייב לעלות (בעיה #8)
+             Kiosk.BootGuard();
+ 
++            // "פתח באמצעות ← צופה PDF+OCR": הקובץ נכנס לתור ואוצריא נפתחת בתוסף; אם הגשר כבר רץ — יוצאים, אחרת ממשיכים לעלות כרגיל
++            if (Has("--open-pdf")) PdfAssoc.Enqueue(Arg("--open-pdf"));
++
+             using var mutex = new Mutex(true, @"Local\OtzariaBridge", out bool first);
+             if (!first) return 0;
+             Installer.CleanupOldExe();
+diff --git a/bridge/Server.cs b/bridge/Server.cs
+index e3b5ae6..3b4a799 100644
+--- a/bridge/Server.cs
++++ b/bridge/Server.cs
+@@ -71,6 +71,9 @@ public static class Server
+         AdminLog.Register();
+         SettingsIO.Register();
+         PdfApi.Register();      // שלבים א-ב של docs/PDF-INTEGRATION-SPEC.md
++        PdfOps.Register();      // שלב ג: פעולות PDF במנוע מותקן (PDF24/Ghostscript, qpdf)
++        CompassApi.Register();  // כיוון תפילה: כיוון הצפון
++        PdfAssoc.Register();    // שלב ד: "פתח באמצעות" לתוסף + תור פתיחה
+         LocationApi.Register(); // מיקום מ-Windows ו-/feedback (כיוון תפילה 2.6)
+ 
+         int port = FindPort();
+diff --git a/bridge/Support.cs b/bridge/Support.cs
+index a63684f..9a1607f 100644
+--- a/bridge/Support.cs
++++ b/bridge/Support.cs
+@@ -65,7 +65,12 @@ internal static class Outbox
+         var list = new JsonArray();
+         if (Directory.Exists(Dir))
+             foreach (var f in Directory.GetFiles(Dir, "*.txt").OrderBy(x => x).Take(10))
+-                list.Add(new JsonObject { ["id"] = Path.GetFileNameWithoutExtension(f), ["text"] = File.ReadAllText(f) });
++            {
++                string t = File.ReadAllText(f);
++                // #81-#90: קריסת הבדיקה העצמית דלפה ל-GitHub דרך התוסף (/diag/pending) — לא נמסרת לשליחה
++                if (t.Contains("selftest-crash", StringComparison.Ordinal)) continue;
++                list.Add(new JsonObject { ["id"] = Path.GetFileNameWithoutExtension(f), ["text"] = t });
++            }
+         return new JsonObject { ["enabled"] = Config.Get("diag.autoReport", true), ["items"] = list };
+     }
+ 
+diff --git a/bridge/UpdateApi.cs b/bridge/UpdateApi.cs
+index bb2a379..fc6a944 100644
+--- a/bridge/UpdateApi.cs
++++ b/bridge/UpdateApi.cs
+@@ -13,7 +13,7 @@ namespace OtzariaBridge;
+ /// </summary>
+ public static class UpdateApi
+ {
+-    public const string Repo = "e0548433917-gif/achat-shaalti";
++    public const string Repo = "Hadabadra/achat-shaalti";
+     public const string ReleasesUrl = "https://github.com/" + Repo + "/releases/latest";
+     public const string AllReleasesUrl = "https://github.com/" + Repo + "/releases";
+     private const string ApiUrl = "https://api.github.com/repos/" + Repo + "/releases?per_page=20";
+diff --git a/docs/BRIDGE_API.md b/docs/BRIDGE_API.md
+index 26ddd18..07b671a 100644
+--- a/docs/BRIDGE_API.md
++++ b/docs/BRIDGE_API.md
+@@ -262,3 +262,16 @@ Win / Alt+Tab / Alt+Esc / Ctrl+Esc / Alt+F4 על חלון אוצריא, מעקב
+ | `/pdf/open` | `{ path, handlerId?, page? }` | `{ opened, handlerId, pageHonored }`. נתיב עובר `FxPolicy`; בנעילה רק אם `pdf` ב-`kiosk.allowOpenExtensions`, ותמיד בתוכנת ברירת המחדל |
+ 
+ הערה: בתוכנית "כיוון תפילה" נכתב `GET /location`. בגשר כל הבקשות (חוץ מ-`/health`) הן POST עם צימוד, ולכן המימוש הוא `POST /location`.
++
++## 1.0.2 (20.10.2026)
++| נקודת קצה | גוף | תשובה |
++|---|---|---|
++| `/pdf/assoc/status` | `{}` | `{ registered, isDefault, command }` |
++| `/pdf/assoc/register` / `unregister` | `{}` | כמו status. נרשם אוטומטית בעלייה אלא אם `pdf.assoc=false` |
++| `/pdf/assoc/open-settings` | `{}` | פותח `ms-settings:defaultapps` |
++| `/pdf/inbox/list` | `{}` | `{ items: [{ id, path, name, size, at, source }] }` (תוקף 10 דק', אחרי FxPolicy) |
++| `/pdf/inbox/ack` | `{ ids }` | `{ removed }` |
++| `/pdf/engines` | `{}` | `{ engines: [{id,name,path}], ops }` |
++| `/pdf/op/begin` → `chunk {id,data}` → `run {id,op,params}` → `read {id,offset}` → `end {id}` | | פעולות: compress {level}, grayscale, pdfa, repair, protect {userPassword,ownerPassword}, unlock {password}, linearize |
++| `/sys/compass` (וגם `/compass`) | `{}` | `{ available, headingTrue, headingMagnetic, accuracy, time }` — רק במכשיר עם חיישן מצפן |
++שורת פקודה: `OtzariaBridge.exe --open-pdf "<path>"` (שם הקובץ בתור, פותח את אוצריא בתוסף הצופה).
+diff --git a/docs/PDF-INTEGRATION-SPEC.md b/docs/PDF-INTEGRATION-SPEC.md
+index cdbf44a..7c6eb5d 100644
+--- a/docs/PDF-INTEGRATION-SPEC.md
++++ b/docs/PDF-INTEGRATION-SPEC.md
+@@ -1,6 +1,6 @@
+ # מפרט: שילוב תוכנות PDF בגשר (הצעה)
+ 
+-> **20.10.2026:** שלבים א ו-ב מומשו ב-`bridge/PdfApi.cs` (`/pdf/handlers`, `/pdf/open` עם `sumatra -page N` ו-`acrobat /A page=N`). עדיין לא נבדקו ב-Windows ולא נארזו. שלבים ג-ה ממתינים לתשובות לשאלות הפתוחות (סעיף 9; הצעות תשובה שם).
++> **20.10.2026 (1.0.2):** גם שלבים ג (PdfOps.cs, Ghostscript של PDF24 / qpdf) וד (PdfAssoc.cs, "פתח באמצעות" + inbox) מומשו. **קודם לכן:** שלבים א ו-ב מומשו ב-`bridge/PdfApi.cs` (`/pdf/handlers`, `/pdf/open` עם `sumatra -page N` ו-`acrobat /A page=N`). עדיין לא נבדקו ב-Windows ולא נארזו. שלבים ג-ה ממתינים לתשובות לשאלות הפתוחות (סעיף 9; הצעות תשובה שם).
+ 
+ > סטטוס: **הצעה, לא ממומש.** נכתב ב-19.10.2026 מול גרסה 1.0.0, על סמך `docs/BRIDGE_API.md` ועל סמך קריאה חלקית של `bridge/` (`Programs.cs`, `FsApi.cs`, `Installer.cs`).
+ > רכיבים שלא נבדקו בקוד מסומנים **[לאמת]**.
+diff --git a/file-explorer/js/app.js b/file-explorer/js/app.js
+index 17e86cc..da79f42 100644
+--- a/file-explorer/js/app.js
++++ b/file-explorer/js/app.js
+@@ -5,9 +5,9 @@
+   var ui = window.SS.ui;
+   FX.ui = ui;
+   FX.t = window.I18N ? window.I18N.t : function (x) { return x; };
+-  FX.VERSION = '3.4.0';
+-  FX.CHANGELOG_URL = 'https://github.com/e0548433917-gif/achat-shaalti/blob/main/CHANGELOG.md';
+-  FX.BRIDGE_URL = 'https://github.com/e0548433917-gif/achat-shaalti/releases/latest';
++  FX.VERSION = '1.0.2';
++  FX.CHANGELOG_URL = 'https://github.com/Hadabadra/achat-shaalti/blob/main/CHANGELOG.md';
++  FX.BRIDGE_URL = 'https://github.com/Hadabadra/achat-shaalti/releases/latest';
+ 
+   var LS = 'fx.view';
+   var S = {
+@@ -1192,7 +1192,7 @@
+       if (act === 'close') { close(); return; }
+       if (act === 'fb') { sendFeedback(); return; }
+       if (act === 'changelog') { openUrl(FX.CHANGELOG_URL); return; }
+-      if (act === 'releases') { openUrl('https://github.com/e0548433917-gif/achat-shaalti/releases/latest'); return; }
++      if (act === 'releases') { openUrl('https://github.com/Hadabadra/achat-shaalti/releases/latest'); return; }
+       if (act === 'reset') {
+         if (!(await ui.confirm('איפוס הגדרות', '<p>להחזיר את הגדרות הסייר לברירת המחדל?</p>', 'איפוס'))) return;
+         saveOpts(Object.assign({}, OPT_DEF)); FX.layout.setZoom(0.9); FX.layout.setMode('details'); FX.layout.setPanes(false, false);
+diff --git a/file-explorer/manifest.json b/file-explorer/manifest.json
+index 81fa0fb..9204707 100644
+--- a/file-explorer/manifest.json
++++ b/file-explorer/manifest.json
+@@ -1,7 +1,7 @@
+ {
+   "id": "com.chadbedera.fileexplorer",
+   "name": "סייר קבצים",
+-  "version": "1.0.1",
++  "version": "1.0.2",
+   "description": "סייר קבצים מתוך אוצריא: עיון, העתקה, גזירה, הדבקה, מחיקה, שינוי שם, תצוגה מקדימה וחיפוש קבצים. דורש את אחת שאלתי; בלעדיה — תיקיות שאושרו.",
+   "author": "חד בדרא, יאיר דניאל",
+   "schemaVersion": 1,
+@@ -82,5 +82,5 @@
+       ]
+     }
+   },
+-  "homepage": "https://github.com/e0548433917-gif/achat-shaalti"
++  "homepage": "https://github.com/Hadabadra/achat-shaalti"
+ }
+diff --git a/system-settings/js/app.js b/system-settings/js/app.js
+index 163543c..16d37ed 100644
+--- a/system-settings/js/app.js
++++ b/system-settings/js/app.js
+@@ -4,8 +4,8 @@
+   var SS = (window.SS = window.SS || {});
+   var ui = SS.ui;
+   SS.sections = SS.sections || [];
+-  SS.VERSION = '3.4.0';
+-  SS.BRIDGE_URL = 'https://github.com/e0548433917-gif/achat-shaalti/releases/latest';
++  SS.VERSION = '1.0.2';
++  SS.BRIDGE_URL = 'https://github.com/Hadabadra/achat-shaalti/releases/latest';
+ 
+   var state = { current: null, connected: false, probeTimer: null, suspended: false, booted: false };
+ 
+diff --git a/system-settings/js/bridge.js b/system-settings/js/bridge.js
+index f864bd6..70feb7f 100644
+--- a/system-settings/js/bridge.js
++++ b/system-settings/js/bridge.js
+@@ -533,7 +533,7 @@
+   mockRoutes['/kiosk/hard/status'] = function () { return clone(M.hard); };
+   mockRoutes['/kiosk/hard/install'] = function (b) {
+     checkPw(b.password, false);
+-    M.hard = { installed: true, running: true, configured: true, active: M.kiosk.active, blockUsbStorage: false, version: '3.0.0', needsUpdate: false, sessions: 1 };
++    M.hard = { installed: true, running: true, configured: true, active: M.kiosk.active, blockUsbStorage: false, version: '1.0.2', needsUpdate: false, sessions: 1 };
+     return clone(M.hard);
+   };
+   mockRoutes['/kiosk/hard/settings'] = function (b) { checkPw(b.password, false); M.hard.blockUsbStorage = !!b.blockUsbStorage; return clone(M.hard); };
+@@ -580,16 +580,16 @@
+     return { vendor: M.bios.vendor, manufacturer: M.bios.manufacturer, model: M.bios.model, steps: steps };
+   };
+   mockRoutes['/sys/update-check'] = function () {
+-    return { current: '3.0.0', latest: '3.0.0', newer: false, canInstall: false, url: 'https://github.com/e0548433917-gif/achat-shaalti/releases/latest' };
++    return { current: '1.0.2', latest: '1.0.2', newer: false, canInstall: false, url: 'https://github.com/Hadabadra/achat-shaalti/releases/latest' };
+   };
+-  mockRoutes['/sys/update-install'] = function () { return { started: false, message: 'הגשר מעודכן (3.0.0)' }; };
++  mockRoutes['/sys/update-install'] = function () { return { started: false, message: 'הגשר מעודכן (1.0.2)' }; };
+ 
+   var mock = {
+     port: 47917,
+     async probe() {
+       await delay(250);
+       if (/[?&]offline=1/.test(location.search)) return null;
+-      return { name: 'otzaria-bridge', version: '3.4.0', port: 47917, auth: 'token', paired: true, kioskActive: M.kiosk.active, platform: 'windows' };
++      return { name: 'otzaria-bridge', version: '1.0.2', port: 47917, auth: 'token', paired: true, kioskActive: M.kiosk.active, platform: 'windows' };
+     },
+     async call(path, body) {
+       await delay(180);
+diff --git a/system-settings/js/lang-en.js b/system-settings/js/lang-en.js
+index b71fca2..5f6d02c 100644
+--- a/system-settings/js/lang-en.js
++++ b/system-settings/js/lang-en.js
+@@ -680,7 +680,7 @@
+     'תוספים מחוברים': 'Paired plugins',
+     'אין תוספים מחוברים': 'No paired plugins',
+     'תוספים מחוברים לגשר': 'Plugins paired with the bridge',
+-    'מגרסה 3.0 רק תוסף שאושר בחלון של הגשר יכול להשתמש בו. תוכנה אחרת במחשב לא יכולה לגשת לקבצים ולהגדרות בלי אישור כזה.': 'Since version 3.0 only a plugin approved in the bridge\'s window can use it. Other software on the computer can\'t access files and settings without such approval.',
++    'רק תוסף שאושר בחלון של הגשר יכול להשתמש בו. תוכנה אחרת במחשב לא יכולה לגשת לקבצים ולהגדרות בלי אישור כזה.': 'Only a plugin approved in the bridge\'s window can use it. Other software on the computer can\'t access files and settings without such approval.',
+     'פרטים נוספים (': 'More details (',
+     'אין תוספים מחוברים.': 'No paired plugins.',
+     'רואים כפילות (אותו שם פעמיים)? כנראה חיבור ישן משארית התקנה קודמת - אפשר לנתק אותו בבטחה, השני ימשיך לעבוד.': 'See a duplicate (same name twice)? It\'s probably an old pairing left from a previous install — you can safely unpair it; the other one keeps working.',
+diff --git a/system-settings/js/sections/kiosk.js b/system-settings/js/sections/kiosk.js
+index ff03872..98bee6f 100644
+--- a/system-settings/js/sections/kiosk.js
++++ b/system-settings/js/sections/kiosk.js
+@@ -619,7 +619,7 @@
+       ? '<span class="chip ok">' + ui.icon('check') + pairs.length + ' תוספים מחוברים</span>'
+       : '<span class="chip warn">' + ui.icon('warning') + 'אין תוספים מחוברים</span>';
+     return '<div class="card"><div class="card-title">תוספים מחוברים לגשר</div>' +
+-      '<p class="muted">מגרסה 3.0 רק תוסף שאושר בחלון של הגשר יכול להשתמש בו. תוכנה אחרת במחשב לא יכולה לגשת לקבצים ולהגדרות בלי אישור כזה.</p>' +
++      '<p class="muted">רק תוסף שאושר בחלון של הגשר יכול להשתמש בו. תוכנה אחרת במחשב לא יכולה לגשת לקבצים ולהגדרות בלי אישור כזה.</p>' +
+       status +
+       '<details class="more-details"><summary>פרטים נוספים (' + pairs.length + ')</summary><div class="more-details-body">' +
+       (rows || '<p class="muted">אין תוספים מחוברים.</p>') +
+diff --git a/system-settings/manifest.json b/system-settings/manifest.json
+index 3774196..7640227 100644
+--- a/system-settings/manifest.json
++++ b/system-settings/manifest.json
+@@ -1,10 +1,10 @@
+ {
+   "id": "com.chadbedera.systemsettings",
+   "name": "הגדרות מערכת",
+-  "version": "1.0.1",
++  "version": "1.0.2",
+   "description": "כל הגדרות המחשב מתוך אוצריא: מסך, שמע, חשמל, שעה, מקלדת, עכבר, מדפסות, USB, רשת, ומצב נעילה ללימוד. דורש את אחת שאלתי.",
+   "author": "חד בדרא, יאיר דניאל",
+-  "homepage": "https://github.com/e0548433917-gif/achat-shaalti",
++  "homepage": "https://github.com/Hadabadra/achat-shaalti",
+   "schemaVersion": 1,
+   "sdkVersion": "1.x",
+   "stability": "stable",
+-- 
+2.43.0
+
