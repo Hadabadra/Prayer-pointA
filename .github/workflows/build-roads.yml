@@ -1,0 +1,56 @@
+name: כיוון תפילה — כבישים לכל העולם
+
+# בונה kivun-tefila-data/roads/<ISO3>.json מ-OpenStreetMap (Overpass) ומחזיר לענף.
+# הפעלה: דחיפה של שינוי ב-kivun-tefila-build/roads-request.txt, או "Run workflow".
+# schedule ו-"Run workflow" פועלים ב-GitHub רק כשהקובץ נמצא בענף ברירת המחדל (dev).
+on:
+  push:
+    branches: ['כיוון-תפילה']
+    paths:
+      - 'kivun-tefila-build/roads-request.txt'
+      - 'kivun-tefila-build/build_roads.py'
+  workflow_dispatch:
+    inputs:
+      countries:
+        description: 'ISO3 מופרדים בפסיקים (ריק = כל העולם)'
+        required: false
+  schedule:
+    - cron: '17 2 3 * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-roads
+  cancel-in-progress: false
+
+jobs:
+  roads:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 'כיוון-תפילה'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build
+        env:
+          COUNTRIES: ${{ github.event.inputs.countries }}
+          MAX_MINUTES: '300'
+        run: |
+          if [ -z "$COUNTRIES" ] && [ -f kivun-tefila-build/roads-request.txt ]; then
+            COUNTRIES="$(grep -v '^#' kivun-tefila-build/roads-request.txt | tr -s ' \n' ',' | sed 's/^,//;s/,$//')"
+          fi
+          export COUNTRIES
+          python3 kivun-tefila-build/build_roads.py
+      - name: Commit
+        run: |
+          git config user.name "Claude"
+          git config user.email "noreply@anthropic.com"
+          git add kivun-tefila-data/roads
+          if git diff --cached --quiet; then echo "אין שינוי"; exit 0; fi
+          n="$(ls kivun-tefila-data/roads/*.json | grep -v index.json | wc -l)"
+          git commit -m "כיוון תפילה: עדכון קובצי כבישים ($n מדינות) [skip ci]"
+          for i in 1 2 3; do git pull --rebase origin 'כיוון-תפילה' && git push origin HEAD:'כיוון-תפילה' && break; sleep 10; done
