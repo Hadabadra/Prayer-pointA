@@ -39,6 +39,7 @@ jobs:
         env:
           COUNTRIES: ${{ github.event.inputs.countries }}
           MAX_MINUTES: '300'
+          COMMIT_EVERY: '10'
         run: |
           if [ -z "$COUNTRIES" ] && [ -f kivun-tefila-build/roads-request.txt ]; then
             COUNTRIES="$(grep -v '^#' kivun-tefila-build/roads-request.txt | tr -s ' \n' ',' | sed 's/^,//;s/,$//')"

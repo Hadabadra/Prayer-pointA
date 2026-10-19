@@ -7,6 +7,7 @@
 שמות: name:he לפני name. נתונים: © OpenStreetMap contributors, ODbL.
 משתני סביבה: COUNTRIES (ISO3 בפסיקים, ריק=הכול), MAX_MINUTES (300), MAX_AGE_DAYS (25).
 """
+import subprocess
 import json, os, sys, time, urllib.parse, urllib.request, datetime
 
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "kivun-tefila-data", "roads")
@@ -120,6 +121,7 @@ def main():
     budget = time.time() + 60 * float(os.environ.get("MAX_MINUTES", "300"))
     max_age = float(os.environ.get("MAX_AGE_DAYS", "25"))
     today = datetime.date.today()
+    every = int(os.environ.get("COMMIT_EVERY", "0") or 0); built = 0
     for iso in want:
         if time.time() > budget:
             print("התקציב נגמר; שאר המדינות בריצה הבאה."); break
@@ -139,6 +141,9 @@ def main():
         idx["c"][iso] = {"he": nm[0], "en": nm[1], "n": len(ents), "b": len(body.encode()), "k": kinds, "d": today.isoformat()}
         json.dump(idx, open(idx_path, "w", encoding="utf8"), ensure_ascii=False, separators=(",", ":"), sort_keys=True)
         print(f"  {len(ents)} כבישים, {len(body.encode())//1024}KB ({kinds})", flush=True)
+        built += 1
+        if every and built % every == 0:  # משימה 11: שמירת ביניים, כדי שריצה ארוכה לא תאבד הכול
+            subprocess.run(["bash", os.path.join(os.path.dirname(__file__), "commit_data.sh"), OUT, "קובצי כבישים"])
         time.sleep(5)
 
 
