@@ -69,6 +69,7 @@ function printSheet(again) {
   const b = bear(), when = new Date().toLocaleDateString("he-IL");
   $("printHead").innerHTML = `<h1>כיוון התפילה לירושלים</h1><p><b>${esc(lab || "המיקום")}</b> (${pos[0].toFixed(5)}, ${pos[1].toFixed(5)})</p>`
     + `<p class="pbig">${Math.round(b)}° מהצפון · ${esc(nm(b))}</p><p>${esc($("stTxt").textContent || "")}</p><p><small>במפה: הנקודה השחורה היא המקום, והקו המקווקו מוביל לכיוון ירושלים. הודפס ב-${when} מתוך התוסף "כיוון תפילה" לאוצריא. החישוב אל הר הבית; בשאלה מעשית יש להתייעץ עם רב.</small></p>`;
+  if (typeof showPrintPreview === "function") { window.__pdf = false; showPrintPreview(); return }
   printNow().catch(() => { $("stMsg").textContent = "ההדפסה אינה זמינה כאן." })
 }
 

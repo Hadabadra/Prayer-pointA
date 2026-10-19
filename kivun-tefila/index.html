@@ -64,6 +64,12 @@ button.src{padding:.05rem .4rem;font-size:.8rem;margin:.1rem 0}
 #prayX{position:absolute;top:.6rem;inset-inline-start:.6rem}
 #prayDeg{font-size:2.2rem;margin:0}
 #prayTxt{max-width:30rem;margin:0;color:var(--color-on-surface-dim)}
+#pv{position:fixed;inset:0;z-index:60;background:var(--color-bg);overflow:auto;padding:1em;display:flex;flex-direction:column;align-items:center;gap:.5em}
+#pv[hidden]{display:none}
+#pvPage{background:var(--color-surface);color:var(--color-on-surface);border:0.0625em solid var(--color-outline);width:min(100%,42em);padding:1.5em;text-align:center}
+#pvPage .pvMap svg{width:100%;height:auto}
+#pvPage .pbig{font-size:1.6em;font-weight:700}
+@media print{#pv{display:none!important}}
 #printHead{display:none}
 @media print{
  #bar,#news,#plRow,#pray,.row,#stNone,#stMsg,#txt,#rot,#bSat,.pair>div:first-child>.row,main>p:last-child,#mapMode,#zIn,#zOut,#zReset,#zFull,#noCompass,#stRotRow{display:none!important}
@@ -739,6 +745,7 @@ else try{restore(localStorage.getItem("kivun-city"))}catch(e){}
 <script src="streets.js"></script>
 <script src="extras.js"></script>
 <script src="ui.js"></script>
+<script src="printprev.js"></script>
 <script src="fly.js"></script>
 <script src="globe.js"></script>
 <script src="names.js"></script>
