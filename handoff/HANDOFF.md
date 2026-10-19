@@ -68,3 +68,4 @@ Release `kivun-tefila-v2.6.0` נוצר ופורסם לחנות ב-20.10.2026. פ
 - ריצת ה-workflow על `9cbd8d7` הצליחה (39337726506), כולל שלב הפרסום לחנות. נוצרו התג `v5.7.0` ו-Release עם `com.chadbedera.pdfviewer-5.7.0.otzplugin`: https://github.com/Hadabadra/pdf-viewer/releases/tag/v5.7.0
 - התגית "מראה תואם לאוצריא" הוסרה ידנית מהחנות לפני כן; אפשר להחזיר אותה בעמוד התוסף.
 - החבילה 21.9MB, מעל הרף שה-workflow מזהיר עליו (16MB).
+- **5.7.1 (20.10.2026):** רשימת "מה חדש" באודות (`index.html`) לא הציגה את שינויי 5.7.0, ולכן הוצאה גרסה 5.7.1 (commit `5a472c4`) שמעדכנת אותה, עם עדכון גרסה ב-`manifest.json`, `js/core.js` ו-`CHANGELOG.md`. ולידטור רשמי: 0/0/0. ריצת ה-workflow (39338633569) הצליחה, כולל פרסום לחנות. Release: https://github.com/Hadabadra/pdf-viewer/releases/tag/v5.7.1
