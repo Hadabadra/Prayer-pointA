@@ -1,7 +1,7 @@
 # כיוון תפילה — שיח רינה-עמודי שש
 
 ## הורדה
-- **כיוון תפילה 2.6.0:** [kivun-tefila-2.6.0.otzplugin](https://github.com/Hadabadra/Prayer-pointA/raw/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/kivun-tefila-2.6.0.otzplugin). זמין גם בחנות התוספים של אוצריא. קבצי המקור נמצאים בתיקייה [kivun-tefila](kivun-tefila).
+- **כיוון תפילה 2.6.1:** [kivun-tefila-2.6.1.otzplugin](https://github.com/Hadabadra/Prayer-pointA/raw/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/kivun-tefila-2.6.1.otzplugin). זמין גם בחנות התוספים של אוצריא. קבצי המקור נמצאים בתיקייה [kivun-tefila](kivun-tefila).
 - **סידורון 3.7.2 התואם** (כפתור לפתיחת כיוון תפילה, ושליחת התפילה הפתוחה לבקשתו; התוסף של Y-PLONI, נערך באישורו): [com.moshenahari.siduron-3.7.2.otzplugin](https://github.com/Hadabadra/Prayer-pointA/raw/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/siduron/com.moshenahari.siduron-3.7.2.otzplugin). הוגש כבקשת מיזוג לריפו שלו: [Y-PLONI/siduron_plugin#1](https://github.com/Y-PLONI/siduron_plugin/pull/1). פירוט השינויים בתיקיית [siduron](siduron).
 
 ### קבצי נתונים להורדה (אופציונלי, להורדה פעם אחת מתוך ההגדרות בתוסף)
@@ -17,6 +17,11 @@
 כל הגרסאות, עם סידורון התואם מצורף: [דף ההורדות](https://github.com/Hadabadra/Prayer-pointA/releases?q=kivun-tefila&expanded=true).
 
 ---
+
+## מה חדש ב-2.6.1
+- **חיבור לגשר אחת שאלתי:** המיקום נלקח מ-Windows דרך הגשר אוטומטית כשהתוסף נפתח (כשלא נבחרה עיר), לא רק בלחיצה על "מיקום משוער". לכן התוסף מתחבר לגשר מיד ומופיע בו.
+- **ניסיון חוזר:** אם הגשר עלה אחרי התוסף, התוסף מתחבר אליו בתוך כ-20 שניות.
+- **צפון מהגשר:** במחשב או טאבלט עם חיישן מצפן, כיוון הצפון מגיע מהגשר (1.0.2 ומעלה). במחשב בלי חיישן אין ממה לקרוא צפון — משתמשים בחוגה ובדרכי הזיהוי הידניות כמו קודם.
 
 ## מה חדש ב-2.6.0
 
