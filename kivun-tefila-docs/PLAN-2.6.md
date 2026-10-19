@@ -58,3 +58,22 @@ commit ו-push אחרי כל שלב, בשם Claude בלבד. עדכן את הי�
 
 ## יומן
 - 19.10.2026: 2.5.4 (דיני הכותל, מצב תפילה על רקע הכותל, ביטול הארכת התמונה, השלמת היומן, 0 הערות עיצוב). המסמך נכתב.
+
+## פרומפט מאוחד לשיחה הבאה (הכול בשיחה אחת)
+```
+ממשיכים בפרויקטים של אוצריא בחשבון GitHub Hadabadra. כל commit ו-push בשם Claude בלבד (Claude <noreply@anthropic.com>), לעולם לא בשם TziporaStern או צפורה שטרן.
+קרא קודם את kivun-tefila-docs/PLAN-2.6.md בריפו Hadabadra/Prayer-pointA, ענף כיוון-תפילה, ועבוד לפי הסדר:
+
+א. בדיקה ראשונה: הפעל את Action הפרסום לחנות (Hadabadra/madaei-hatanach, kivun-tefila-store.yml, Run workflow) ובדוק אם ההתחברות עובדת.
+   אם עדיין "session ריק": עצור ותגיד לי בדיוק מה לבדוק (התחברות באתר otzaria.org עם סיסמה, לא דרך Google; ערכי הסודות OTZARIA_USER ו-OTZARIA_PASSWORD ב-https://github.com/Hadabadra/madaei-hatanach/settings/secrets/actions).
+ב. משימה 0: כל הקישורים לשם החדש Hadabadra/Prayer-pointA ו-Hadabadra/madaei-hatanach, בכל הריפו שלי, כולל manifest.json (allowlist ו-homepage; השאר גם את הכתובת הישנה ב-allowlist), names.js, globe.js, extras.js, ui.js, README, requests/*.md ו-build_roads.py.
+ג. משימות 11, 6, 8, 10, 9 ובסוף 1 מהטבלה ב-PLAN-2.6.md.
+ד. הגשר של "אחת שאלתי" (Hadabadra/madaei-hatanach, ענף כלי-מערכת, קרא docs/STATUS.md):
+   1. GET /location: מיקום מ-Windows Location (Windows.Devices.Geolocation): lat, lon, accuracy ומקור; אם השירות כבוי, שגיאה ברורה עם הסבר איך להפעיל.
+   2. POST /feedback: מעביר הערה ל-https://achat-relay.e0548433917.workers.dev (אותו פורמט כמו בתוספים).
+   3. בכיוון תפילה ובתוספים האחרים: אם יש גשר (network.localhost), לנסות אותו קודם (מיקום ומשוב), ובלי גשר להמשיך כמו היום.
+   אל תארוז גרסה חדשה של אחת שאלתי; הכן לאריזה הבאה ורשום ב-docs/STATUS.md מה נשאר.
+ה. כיוון תפילה 2.6.0: אריזה דטרמיניסטית (kivun-tefila-build/pack.py), ולידטור רשמי (Otzaria/otzaria-plugin-validator, src/cli.js) עם 0 הערות עיצוב, "מה חדש" בהגדרות וב-README, בדיקות בסוף, ווידוא שה-Release נוצר ושהפרסום לחנות עבר.
+אחרי כל שלב: עדכן את היומן ב-PLAN-2.6.md, commit ו-push. אסור להחליף ענף בכוח. ה-PR לאוצריא רק באישורי.
+בסוף: תעד הכול בגיט ובזיכרון, ואשר שאפשר למחוק את השיחה.
+```
