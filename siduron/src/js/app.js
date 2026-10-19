@@ -760,10 +760,18 @@
   // Note: otzaria:// deep-links work only from outside the app, not from a
   // plugin page, so they are not used here.
   var KIVUN_ID = 'com.shiachrina.kivuntefila';
+  // 3.7.2: התפילה נשלחת שוב אחרי שנייה ושלוש, כי אם "כיוון תפילה" עוד נטען או מושהה, ההודעה הראשונה עלולה ללכת לאיבוד.
+  // לכל שליחה id אחד, ו"כיוון תפילה" מתעלם מכפילויות.
+  function kivunParam() {
+    var c = document.getElementById('content'), t = document.getElementById('hdr-title');
+    return { type: 'prayer', id: 'p' + Date.now().toString(36), service: STATE.service || '', title: t ? t.textContent.trim() : '', nusach: STATE.nusach || '', text: c ? c.innerText : '' };
+  }
   async function openKivunTefila() {
     var err = null;
     try {
-      var r = await window.Otzaria.call('plugin.openOther', { pluginId: KIVUN_ID });
+      var param = kivunParam();
+      var r = await window.Otzaria.call('plugin.openOther', { pluginId: KIVUN_ID, param: param });
+      if (r && r.success) [1000, 3000].forEach(function (ms) { setTimeout(function () { window.Otzaria.call('plugin.openOther', { pluginId: KIVUN_ID, param: param }).catch(function () {}); }, ms); });
       if (!r || !r.success) err = (r && r.error) || { message: 'unknown' };
     } catch (e) { err = e; }
     if (!err) return;
@@ -785,6 +793,20 @@
     if (!Array.isArray(list)) { btn.hidden = false; return; }
     btn.hidden = !list.some(function (p) { return p && (p.pluginId === KIVUN_ID || p.id === KIVUN_ID); });
   }
+
+  // 3.7.2: "כיוון תפילה" מבקש את התפילה הפתוחה (לחיצה על "תפילה" שם). מחכים שהסידור ייטען, ושולחים.
+  var kivunAsked = false;
+  window.Otzaria.on('plugin.page_opened', function (e) {
+    var p = e && (e.param || (e.data && e.data.param));
+    if (!p || typeof p !== 'object' || p.type !== 'send-prayer') return;
+    if (kivunAsked) return; kivunAsked = true;
+    var tries = 0;
+    (function wait() {
+      var c = document.getElementById('content');
+      if ((c && c.innerText.trim().length > 40) || ++tries > 25) { kivunAsked = false; openKivunTefila(); return; }
+      setTimeout(wait, 200);
+    })();
+  });
 
   /* ────────────── Panels ────────────── */
   function closeAllPanels() {

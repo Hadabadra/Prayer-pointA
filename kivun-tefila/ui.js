@@ -1,4 +1,4 @@
-/* כיוון תפילה 2.4.0 — תוספות ממשק: "עוד" בטלפון, ספינר, מצב לא מקוון, הדפסה/PDF, אודות וקיצור דרך, נגישות */
+/* כיוון תפילה 2.5.0 — תוספות ממשק: "עוד" בטלפון, ספינר, מצב לא מקוון, הדפסה/PDF, אודות וקיצור דרך, נגישות */
 (function () {
   const $ = id => document.getElementById(id), O = window.Otzaria;
   const HOME = "https://github.com/e0548433917-gif/otzaria/tree/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94";
@@ -152,7 +152,9 @@
     })();
     if (sw) sw.onchange = () => { const x = sw.checked ? "1" : "0"; try { O ? O.call("storage.set", { key: "kivun-splash", value: x }).catch(() => {}) : localStorage.setItem("kivun-splash", x) } catch (e) {} };
   }
-  /* תפילה מסידורון: סידורון שולח את התפילה הנוכחית (plugin.openOther עם param), והיא מוצגת כאן על רקע הכותל */
+  /* תפילה מסידורון (2.5.0): לחיצה על "תפילה" כאן מבקשת מסידורון (3.7.2 ומעלה) לשלוח את התפילה שפתוחה בו.
+     סידורון נפתח לרגע ומחזיר את התפילה עם plugin.openOther (אין באוצריא ערוץ שקט בין תוספים).
+     סידורון שולח שוב אחרי שנייה ושלוש, ליתר ביטחון; כפילויות מזוהות לפי id. */
   const SID = "com.moshenahari.siduron";
   const tb = document.createElement("button"); tb.id = "bTfila"; tb.type = "button"; tb.textContent = "תפילה"; tb.title = "התפילה הנוכחית מהסידורון על רקע הכותל";
   bar.insertBefore(tb, $("bHal"));
@@ -160,24 +162,40 @@
   ov.innerHTML = '<div id="tfWall" aria-hidden="true"></div><div id="tfBox"><div class="row"><button id="tfClose" type="button">סגור</button><button id="tfFs" type="button">גופן +</button><button id="tfFs2" type="button">גופן −</button></div><h2 id="tfTitle"></h2><p id="tfDir" class="chip" hidden></p><div id="tfText"></div></div>';
   document.body.appendChild(ov);
   try { const m = $("wall").style.maskImage || $("wall").style.webkitMaskImage; if (m) { $("tfWall").style.maskImage = m; $("tfWall").style.webkitMaskImage = m } } catch (e) {}
-  let last = null, fsz = 1.25;
+  let last = null, fsz = 1.25, lastId = null, waitT = 0;
   const tshow = p => {
-    if (p) last = p;
+    if (p && p !== "wait") last = p;
     const L = last; $("tfTitle").textContent = L ? (L.title || "תפילה") : "תפילה";
     const x = $("tfText"); x.innerHTML = "";
     if (L && L.text) { x.textContent = L.text }
+    else if (p === "wait") { x.innerHTML = '<p>מבקש את התפילה מסידורון…</p>' }
     else {
-      x.innerHTML = '<p>כדי להציג כאן תפילה: פותחים את סידורון, בוחרים את התפילה (שחרית, מנחה או ערבית), ולוחצים על כפתור "כיוון תפילה" בשורה העליונה שלו. התפילה תעבור לכאן ותוצג על רקע הכותל.</p><p><small>נדרש סידורון בגרסה 3.7.1 ומעלה.</small></p>';
+      x.innerHTML = '<p>כדי להציג כאן תפילה: פותחים את סידורון, בוחרים את התפילה (שחרית, מנחה או ערבית), ולוחצים על כפתור "כיוון תפילה" בשורה העליונה שלו (או לוחצים כאן על "תפילה"). התפילה תעבור לכאן ותוצג על רקע הכותל.</p><p><small>נדרש סידורון בגרסה 3.7.2 ומעלה, עם ההרשאה "פתיחת תוסף אחר".</small></p>';
       if (O) { const b = document.createElement("button"); b.type = "button"; b.textContent = "פתח סידורון"; b.onclick = () => { ov.hidden = true; O.call("plugin.openOther", { pluginId: SID }).catch(() => {}) }; x.appendChild(b) }
     }
     const d = $("tfDir");
     if (typeof pos !== "undefined" && pos) { d.hidden = false; d.textContent = "הכיוון לירושלים: " + Math.round(bearing(pos, J)) + "°" } else d.hidden = true;
     x.style.fontSize = fsz + "rem"; ov.hidden = false; $("tfClose").focus();
   };
-  tb.onclick = () => tshow(null);
+  tb.onclick = async () => {
+    if (!O) { tshow(null); return }
+    last = null; tshow("wait"); clearTimeout(waitT);
+    try {
+      const r = await O.call("plugin.openOther", { pluginId: SID, param: { type: "send-prayer", from: "com.shiachrina.kivuntefila" } });
+      if (r && r.success === false) throw r.error || 0;
+      waitT = setTimeout(() => { if (!last) tshow(null) }, 9000);
+    } catch (e) { tshow(null) }
+  };
   $("tfClose").onclick = () => { ov.hidden = true };
   $("tfFs").onclick = () => { fsz = Math.min(2.4, fsz + .15); $("tfText").style.fontSize = fsz + "rem" };
   $("tfFs2").onclick = () => { fsz = Math.max(.9, fsz - .15); $("tfText").style.fontSize = fsz + "rem" };
   addEventListener("keydown", e => { if (e.key === "Escape" && !ov.hidden) ov.hidden = true });
-  if (O) O.on("plugin.page_opened", e => { const p = e && (e.param || (e.data && e.data.param)); if (p && typeof p === "object" && p.type === "prayer") tshow(p) });
+  if (O) O.on("plugin.page_opened", e => {
+    const p = e && (e.param || (e.data && e.data.param));
+    if (!(p && typeof p === "object" && p.type === "prayer")) return;
+    if (p.id && p.id === lastId && !ov.hidden) return; lastId = p.id || null;
+    clearTimeout(waitT);
+    const s = $("splash"); if (s) { s.hidden = true; s.remove() }
+    tshow(p);
+  });
 })();

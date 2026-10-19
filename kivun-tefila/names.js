@@ -1,4 +1,4 @@
-/* כיוון תפילה 2.4.0 — חיפוש כבישים ראשיים ונהרות, בחירת מדינה, וטעינת קבצים מהגדרות.
+/* כיוון תפילה 2.5.0 — חיפוש כבישים ראשיים ונהרות, בחירת מדינה, וטעינת קבצים מהגדרות.
    נתונים: Natural Earth (נחלת הכלל). נהרות בעלי שם בכל העולם; כבישים בעלי שם בצפון אמריקה.
    כבישים במדינות אחרות: חיפוש דרך Overpass (OpenStreetMap) כשיש אינטרנט. נשלחים החוצה רק טקסט החיפוש ושם המדינה. */
 (function () {
@@ -15,7 +15,7 @@
     return new Promise(res => { const f = document.createElement("input"); f.type = "file"; f.accept = ".json,application/json"; f.onchange = () => f.files[0] ? f.files[0].text().then(res) : res(null); f.click() });
   }
   async function saveFile(name, s) { try { O ? await O.call("fs.writeFile", { path: name, content: s }) : localStorage.setItem("kivun-" + name, s) } catch (e) {} }
-  async function readFile(name) { try { return O ? dat(await O.call("fs.readFile", { path: name })) : localStorage.getItem("kivun-" + name) } catch (e) { return null } }
+  async function readFile(name) { try { if (!O) return localStorage.getItem("kivun-" + name); const r = dat(await O.call("fs.readFile", { path: name })); return r && typeof r === "object" ? (r.content != null ? r.content : null) : r } catch (e) { return null } }
   const openUrl = u => { let w = null; try { w = window.open(u, "_blank", "noopener") } catch (e) {} if (!w && O) O.call("app.openUrl", { url: u }).catch(() => {}) };
   function link(btn, msg, url, what) {
     $(btn).onclick = () => { copyText(url).then(ok => { say(msg, ok ? "הקישור הועתק. פתח אותו במחשב עם אינטרנט ושמור את הקובץ (Ctrl+S)." : "העתקה אוטומטית נכשלה: " + url); openUrl(url) }) };
@@ -43,17 +43,37 @@
   };
   link("geoLink", "geoMsg", PAGE + "geo-extra.json");
 
+  /* ---- כבישים ראשיים לפי מדינה (kivun-tefila-data/roads/<ISO3>.json, נבנה ב-GitHub Actions מ-OpenStreetMap) ---- */
+  const RD = {};
+  let RIDX = null;
+  async function ridxLoad() {
+    try { const t = await readFile("roads-index.json"); if (t) { const j = JSON.parse(t); if (j && j.c) RIDX = j.c } } catch (e) {}
+    try { const j = await getJ(BASE + "roads/index.json"); if (j && j.c) { RIDX = j.c; saveFile("roads-index.json", JSON.stringify(j)) } } catch (e) {}
+    fillCountries();
+  }
+  async function roadsLocal(iso) {
+    if (RD[iso]) return RD[iso];
+    const t = await readFile("roads-" + iso + ".json");
+    try { if (t) { const j = typeof t === "string" ? JSON.parse(t) : t; if (j && j.e) return RD[iso] = j.e } } catch (e) {}
+    return null;
+  }
+  async function roadsSet(iso, s) { const j = JSON.parse(s); if (!j || !j.e || (j.iso && j.iso !== iso)) throw 0; await saveFile("roads-" + iso + ".json", s); RD[iso] = j.e; return j.e }
+  const cName = () => { const o = $("nsCountry").selectedOptions[0]; return o ? o.textContent : "" };
+
   /* ---- ממשק החיפוש ---- */
-  const row = document.createElement("div");
-  row.className = "row"; row.id = "nsRow";
-  row.innerHTML = '<select id="nsKind" aria-label="מה לחפש"><option value="st">עיר ורחוב</option><option value="rd">כבישים ראשיים (בין-עירוניים)</option><option value="rv">נהרות</option></select>'
-    + '<select id="nsCountry" aria-label="מדינה"></select>'
-    + '<input id="nsQ" placeholder="שם או מספר" aria-label="שם הכביש או הנהר" style="width:11em" hidden><button id="nsGo" hidden>חפש</button> <small id="nsMsg" aria-live="polite"></small>';
+  const row = document.createElement("span");
+  row.id = "nsRow"; row.style.display = "contents";
+  const kindSel = document.createElement("span"); kindSel.style.display = "contents";
+  kindSel.innerHTML = '<select id="nsKind" aria-label="מה לחפש"><option value="st">עיר ורחוב</option><option value="rd">כבישים ראשיים</option><option value="rv">נהרות</option></select>';
+  row.innerHTML = '<select id="nsCountry" aria-label="מדינה"></select>'
+    + '<input id="nsQ" placeholder="שם או מספר" aria-label="שם הכביש או הנהר" style="width:11em" hidden><button id="nsGo" hidden>חפש</button><span id="rdBox" hidden><button id="rdDl" type="button">הורד כבישי המדינה</button><button id="rdImp" type="button">טען מקובץ</button><button id="rdLink" type="button">העתק קישור</button></span> <small id="nsMsg" aria-live="polite"></small>';
   const res = document.createElement("ul"); res.id = "nsRes"; res.hidden = true;
-  const pl = $("plRow"); pl.parentNode.insertBefore(row, pl.nextSibling); row.parentNode.insertBefore(res, row.nextSibling);
+  /* בשורה אחת: [מה לחפש] [עיר] [רחוב] [מצא] או [מה לחפש] [מדינה] [שם] [חפש] */
+  const pl = $("plRow"); pl.insertBefore(kindSel, $("city")); pl.appendChild(row); pl.parentNode.insertBefore(res, pl.nextSibling);
   function fillCountries() {
     const cur = $("nsCountry").value, m = new Map(BASIC.map(c => [c[0], [c[1], c[2]]]));
     if (N && N.c) for (const k in N.c) if (!m.has(k)) m.set(k, N.c[k]);
+    if (RIDX) for (const k in RIDX) if (!m.has(k)) m.set(k, [RIDX[k].he || k, RIDX[k].en || k]);
     const arr = [...m].sort((a, b) => a[1][0].localeCompare(b[1][0], "he"));
     $("nsCountry").innerHTML = '<option value="">כל המדינות</option>' + arr.map(([k, v]) => `<option value="${k}" data-en="${v[1]}">${v[0]}</option>`).join("");
     if (cur) $("nsCountry").value = cur;
@@ -66,7 +86,19 @@
     $("nsCountry").hidden = s; $("nsQ").hidden = s; $("nsGo").hidden = s; res.hidden = s || !res.children.length;
     say("nsMsg", s ? "" : (N ? "" : "קובץ השמות לא הורד: נהרות וכבישים בצפון אמריקה דורשים הורדה בהגדרות. כבישים במדינות אחרות יחפשו דרך האינטרנט."));
   }
-  $("nsKind").onchange = mode; mode();
+  async function rdBox() { const k = $("nsKind").value, c = $("nsCountry").value; $("rdBox").hidden = !(k === "rd" && c) || !!(await roadsLocal(c)) }
+  $("nsKind").onchange = () => { mode(); rdBox() }; $("nsCountry").onchange = rdBox; mode();
+  $("rdDl").onclick = async () => {
+    const c = $("nsCountry").value; if (!c) return; say("nsMsg", "מוריד את כבישי " + cName() + "…");
+    try { const j = await getJ(BASE + "roads/" + c + ".json"); if (!j || !j.e) throw 0; await roadsSet(c, JSON.stringify(j)); say("nsMsg", "כבישי " + cName() + " נשמרו ✓ (" + j.e.length + ")"); rdBox() }
+    catch (e) { say("nsMsg", "ההורדה נכשלה: אין חיבור, הכתובת עוד לא אושרה באוצריא, או שקובץ המדינה עוד לא נבנה. אפשר \"העתק קישור\" ו\"טען מקובץ\".") }
+  };
+  $("rdImp").onclick = async () => {
+    const c = $("nsCountry").value; if (!c) return;
+    try { const t = await pickText("בחר את הקובץ " + c + ".json"); if (t == null) return; const e = await roadsSet(c, t); say("nsMsg", "נטען ✓ (" + e.length + ")"); rdBox() }
+    catch (e) { say("nsMsg", "הקובץ אינו קובץ כבישים תקין של המדינה שנבחרה.") }
+  };
+  $("rdLink").onclick = () => { const c = $("nsCountry").value; if (!c) return; const u = PAGE + "roads/" + c + ".json"; copyText(u).then(ok => { say("nsMsg", ok ? "הקישור הועתק. פתח אותו במחשב עם אינטרנט, שמור את הקובץ (Ctrl+S) ולחץ \"טען מקובץ\"." : "העתקה אוטומטית נכשלה: " + u); openUrl(u) }) };
 
   /* ---- חישוב קרבה לקו ---- */
   const parse = s => s.split(";").map(l => l.split(" ").map(p => p.split(",").map(Number)));
@@ -102,8 +134,14 @@
       let rel = (bj - n.h + 360) % 360; if (rel > 180) rel -= 360;
       info.textContent += `כיוון הקו שם בקירוב ${dirName(n.h)}, וירושלים ${Math.abs(Math.round(rel))}° ${rel >= 0 ? "מימין" : "משמאל"} לכיוון הקו (${dirName(bj)} מהנקודה).`;
       const b = document.createElement("button"); b.type = "button"; b.textContent = "קבע מיקום על הנקודה הזו";
-      b.onclick = () => { setPos([+n.q[0].toFixed(5), +n.q[1].toFixed(5)], "על " + (e[1] || ""), null, false); scrollTo(0, 0) };
-      li.append(info, b); res.appendChild(li);
+      const hl = () => { window.HL = { name: e[1] || "", w: e[0] === "w", lines, at: n.q } };
+      const mode2 = w => { const mm = $("mapMode"); if (mm && mm.value !== w) { mm.value = w; mm.dispatchEvent(new Event("change")) } };
+      b.onclick = () => { hl(); setPos([+n.q[0].toFixed(5), +n.q[1].toFixed(5)], "על " + (e[1] || ""), null, false); mode2("near"); map(); scrollTo(0, 0) };
+      const sh = document.createElement("button"); sh.type = "button"; sh.textContent = "הצג במפה";
+      sh.onclick = () => { hl(); if (typeof pos !== "undefined" && pos) { mode2(n.d != null && n.d < 120 ? "near" : "far"); map(); $("map").scrollIntoView({ block: "center" }) } else say("nsMsg", "בחר קודם מיקום, כדי שהמפה תוצג.") };
+      const cl = document.createElement("button"); cl.type = "button"; cl.textContent = "הסר מהמפה";
+      cl.onclick = () => { window.HL = null; if (typeof pos !== "undefined" && pos) map() };
+      li.append(info, b, sh, cl); res.appendChild(li);
     });
   }
 
@@ -122,6 +160,47 @@
     return [...g.values()];
   }
 
+  /* ---- שמירה מקומית של כבישים שנמצאו דרך האינטרנט (roads-cache.json), כדי שיעבדו אחר כך בלי רשת ---- */
+  let CACHE = null; const CMAX = 1500000;
+  async function cacheLoad() {
+    if (CACHE) return CACHE;
+    try { const t = await readFile("roads-cache.json"); if (t) CACHE = JSON.parse(t) } catch (e) {}
+    if (!CACHE || !CACHE.q) CACHE = { v: 1, q: {} };
+    return CACHE;
+  }
+  function simp(l, tol) {
+    if (l.length < 3) return l;
+    const keep = new Uint8Array(l.length); keep[0] = keep[l.length - 1] = 1; const st = [[0, l.length - 1]];
+    while (st.length) {
+      const [a, b] = st.pop(), A = l[a], B = l[b], dx = B[1] - A[1], dy = B[0] - A[0], L = dx * dx + dy * dy; let bd = -1, bi = -1;
+      for (let i = a + 1; i < b; i++) { const P = l[i]; let u = L ? ((P[1] - A[1]) * dx + (P[0] - A[0]) * dy) / L : 0; u = Math.max(0, Math.min(1, u));
+        const ex = P[1] - A[1] - u * dx, ey = P[0] - A[0] - u * dy, d = ex * ex + ey * ey; if (d > bd) { bd = d; bi = i } }
+      if (bd > tol * tol) { keep[bi] = 1; st.push([a, bi], [bi, b]) }
+    }
+    return l.filter((p, i) => keep[i]);
+  }
+  async function cachePut(c, nq, ents) {
+    const C = await cacheLoad();
+    C.q[(c || "*") + "|" + nq] = { d: new Date().toISOString().slice(0, 10), e: ents.map(e => [e[0], e[1], e[2], c ? [c] : (e[3] || []), e[4].map(l => simp(l, .0008).map(p => [+(+p[0]).toFixed(4), +(+p[1]).toFixed(4)]))]) };
+    let s = JSON.stringify(C);
+    while (s.length > CMAX && Object.keys(C.q).length > 1) { const old = Object.keys(C.q).sort((a, b) => C.q[a].d.localeCompare(C.q[b].d))[0]; delete C.q[old]; s = JSON.stringify(C) }
+    await saveFile("roads-cache.json", s);
+  }
+  async function cacheFind(c, nq) {
+    const C = await cacheLoad(), seen = new Set(), out = []; let d = "";
+    for (const k in C.q) {
+      const it = C.q[k], kc = k.split("|")[0];
+      if (c && kc !== c && kc !== "*") continue;
+      for (const e of it.e) {
+        if (!(norm(e[1]).includes(nq) || norm(e[2]).includes(nq))) continue;
+        if (c && kc === "*" && e[3] && e[3].length && !e[3].includes(c)) continue;
+        const id = e[1] + "|" + (e[3] || []).join(","); if (seen.has(id)) continue; seen.add(id); out.push(e); if (it.d > d) d = it.d;
+      }
+    }
+    return { out, d };
+  }
+  if ($("rcClear")) $("rcClear").onclick = async () => { CACHE = { v: 1, q: {} }; await saveFile("roads-cache.json", JSON.stringify(CACHE)); say("rcMsg", "נוקה ✓") };
+
   async function go() {
     const k = $("nsKind").value, q = $("nsQ").value.trim(), c = $("nsCountry").value, en = $("nsCountry").selectedOptions[0] && $("nsCountry").selectedOptions[0].dataset.en;
     if (!q) { say("nsMsg", "הקלד שם או מספר."); return }
@@ -130,12 +209,22 @@
     let out = [];
     if (N) out = N.e.filter(e => e[0] === t && (!c || (e[3] || []).includes(c)) && (norm(e[1]).includes(nq) || norm(e[2]).includes(nq)))
       .sort((a, b) => (norm(b[1]).startsWith(nq) || norm(b[2]).startsWith(nq)) - (norm(a[1]).startsWith(nq) || norm(a[2]).startsWith(nq)));
+    if (k === "rd" && c) {
+      const ce = await roadsLocal(c);
+      if (ce) out = out.concat(ce.filter(e => norm(e[1]).includes(nq) || norm(e[2]).includes(nq))
+        .sort((a, b) => (norm(b[1]) === nq || norm(b[2]) === nq) - (norm(a[1]) === nq || norm(a[2]) === nq) || norm(b[1]).startsWith(nq) - norm(a[1]).startsWith(nq)));
+    }
     if (!out.length && k === "rd") {
-      try { out = await overpass(c ? en : "", q); say("nsMsg", out.length ? "נמצא דרך האינטרנט (OpenStreetMap)." : "לא נמצאו כבישים. נסה שם אחר או מספר בלבד.") }
-      catch (e) { say("nsMsg", "אין תוצאות בקובץ השמות, והחיפוש דרך האינטרנט לא זמין כרגע.") }
+      const hit = await cacheFind(c, nq);
+      if (hit.out.length) { out = hit.out; say("nsMsg", "נמצא בשמירה המקומית, מחיפוש קודם דרך האינטרנט (" + hit.d.split("-").reverse().join(".") + ").") }
+      else try {
+        out = await overpass(c ? en : "", q);
+        say("nsMsg", out.length ? "נמצא דרך האינטרנט (OpenStreetMap), ונשמר לשימוש בלי רשת." : "לא נמצאו כבישים. נסה שם אחר או מספר בלבד.");
+        if (out.length) cachePut(c, nq, out).catch(() => {});
+      } catch (e) { say("nsMsg", c && !(await roadsLocal(c)) ? "אין תוצאות. אפשר להוריד את כבישי המדינה (הכפתור ליד החיפוש), כדי לחפש בלי אינטרנט." : "אין תוצאות בקבצים, והחיפוש דרך האינטרנט לא זמין כרגע.") }
     } else say("nsMsg", out.length ? "" : (N ? "לא נמצאו תוצאות." : "קובץ השמות לא הורד. הורד אותו בהגדרות."));
     show(out);
   }
   $("nsGo").onclick = go; $("nsQ").addEventListener("keydown", e => { if (e.key === "Enter") go() });
-  namesLoad();
+  namesLoad(); setTimeout(ridxLoad, 2500);
 })();

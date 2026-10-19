@@ -152,7 +152,23 @@ if (!O) document.querySelectorAll("button.src").forEach(b => b.disabled = true);
 
 /* ---- מצפן זמין: מציגים את מצב התפילה גם במכשיר שאינו מגע ---- */
 /* בלי מצפן (מחשב): הסבר שהחוגה אינה מצביעה בחדר, והפניה לשיטות שעובדות במחשב */
-function compassNote() { if (heading != null) document.body.classList.add("hascompass"); $("noCompass").hidden = heading != null || manual != null || !pos }
+/* 2.5.0: ההודעה כבר לא תופסת מקום בעמוד. במקומה כפתור "!" בשורה העליונה, ולחיצה עליו מציגה אותה */
+let ncOpen = false;
+function compassNote() {
+  if (heading != null) document.body.classList.add("hascompass");
+  const need = heading == null && manual == null && !!pos, b = $("bNoComp");
+  if (b) b.hidden = !need;
+  $("noCompass").hidden = !(need && ncOpen);
+}
+(function () {
+  const b = document.createElement("button"); b.id = "bNoComp"; b.type = "button"; b.textContent = "!"; b.hidden = true;
+  b.title = "אין מצפן זמין: לחץ להסבר"; b.setAttribute("aria-label", "אין מצפן זמין, הצג הסבר"); b.setAttribute("aria-controls", "noCompass");
+  b.onclick = () => { ncOpen = !ncOpen; b.setAttribute("aria-expanded", String(ncOpen)); compassNote(); if (ncOpen) $("noCompass").scrollIntoView({ block: "nearest" }) };
+  const bar = $("bar"); bar.insertBefore(b, bar.children[1] || null);
+  const p = $("noCompass"); p.style.position = "relative";
+  const x = document.createElement("button"); x.type = "button"; x.textContent = "×"; x.setAttribute("aria-label", "סגור"); x.style.cssText = "float:inline-end;border:0;background:none;font-size:1.1em;cursor:pointer;color:inherit";
+  x.onclick = () => { ncOpen = false; b.setAttribute("aria-expanded", "false"); compassNote() }; p.prepend(x);
+})();
 setInterval(compassNote, 1000);
 
 /* ---- הורדת האזור של המיקום הנוכחי מתוך ההגדרות ---- */
@@ -326,7 +342,7 @@ function wayExtra(t, b, s) {
   if (t === "סיבוב ידני של החוגה") return `<span>מתאים למחשב בלי מצפן: מסובבים את החוגה עד שהיא תואמת את המציאות, ומאותו רגע החץ מראה את ירושלים.</span>`;
   return null;
 }
-const SID_URL = "https://github.com/e0548433917-gif/otzaria/raw/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/siduron/com.moshenahari.siduron-3.7.1.otzplugin";
+const SID_URL = "https://github.com/e0548433917-gif/otzaria/raw/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/siduron/com.moshenahari.siduron-3.7.2.otzplugin";
 $("sidDl").onclick = () => { copyText(SID_URL); let w = null; try { w = window.open(SID_URL, "_blank", "noopener") } catch (x) {} if (!w && O) O.call("app.openUrl", { url: SID_URL }).catch(() => {}); $("sidMsg").textContent = "הכתובת הועתקה ללוח. אחרי ההורדה: התקנה מקובץ בחנות התוספים של אוצריא." };
 
 /* ---- מיקום מדויק (GPS): ממתין לאוצריא ---- */

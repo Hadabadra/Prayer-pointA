@@ -93,3 +93,10 @@ input[type=checkbox]:disabled{opacity:.45;cursor:default}
 #tfBox{position:relative;max-width:46rem;margin:0 auto;padding:1rem 1.2rem 3rem}
 #tfText{white-space:pre-wrap;line-height:1.9;font-size:1.25rem}
 @media print{#tfila{display:none!important}}
+
+/* 2.5.0: כפתור "!" כשאין מצפן */
+#bNoComp{font-weight:700;min-width:2em;color:var(--color-error,#b3261e);border-color:var(--color-error,#b3261e)}
+#bNoComp[hidden]{display:none}
+/* 2.5.0: בחירת סוג החיפוש, עיר, רחוב, מדינה וכבישים בשורה אחת */
+#plRow{flex-wrap:wrap}
+#nsRes li button{margin-inline-end:.3rem}
