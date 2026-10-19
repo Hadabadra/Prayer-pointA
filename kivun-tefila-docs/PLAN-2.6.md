@@ -18,7 +18,7 @@
 
 | # | משימה | סטטוס |
 |---|-------|-------|
-| 0 | עדכון כל הקישורים לשם החדש `Hadabadra/Prayer-pointA`: `manifest.json` (allowlist ו-homepage; להשאיר גם את הכתובת הישנה ב-allowlist), `names.js` (BASE/PAGE), `globe.js` (GEOX_URL), `extras.js` (DL_URL, DATA_URL, SID_URL), `ui.js` (HOME), README, `requests/*.md`, `build_roads.py` (UA), `kivun-tefila-store.yml` ב-madaei-hatanach (`repository:`), וקישורים בשאר הריפו של המפתחת | לשיחה הבאה |
+| 0 | עדכון כל הקישורים לשם החדש `Hadabadra/Prayer-pointA`: `manifest.json` (allowlist ו-homepage; להשאיר גם את הכתובת הישנה ב-allowlist), `names.js` (BASE/PAGE), `globe.js` (GEOX_URL), `extras.js` (DL_URL, DATA_URL, SID_URL), `ui.js` (HOME), README, `requests/*.md`, `build_roads.py` (UA), `kivun-tefila-store.yml` ב-madaei-hatanach (`repository:`), וקישורים בשאר הריפו של המפתחת | בוצע 20.10 (בריפו הזה; הכתובת הישנה נשארה ב-allowlist) |
 | 1 | תמונת הכותל: ההארכה ב-2.5.2 (שכפול רצועות) נדחתה ובוטלה ב-2.5.4. הבקשה: להשלים רק את האזור שבו היו אנשים, לפי צילומים אחרים של הכותל, בלי לשכפל. דורש צילום מקור חופשי (ויקישיתוף, CC) של החלק התחתון בלי אנשים, או ציור ידני של הנדבכים התחתונים | פתוח |
 | 2 | מצב תפילה על רקע הכותל | בוצע ב-2.5.4 |
 | 3 | דיני הכותל בתוסף: מראי מקומות, ונושאים ושיטות מ"דור המלקטים" (סימנים תק"ס ותקס"א) | בוצע ב-2.5.4. הטיוטה המקורית: `kotel-dinim-DRAFT.md`. כדאי שרב יעבור |
@@ -58,6 +58,7 @@ commit ו-push אחרי כל שלב, בשם Claude בלבד. עדכן את הי�
 
 ## יומן
 - 19.10.2026: 2.5.4 (דיני הכותל, מצב תפילה על רקע הכותל, ביטול הארכת התמונה, השלמת היומן, 0 הערות עיצוב). המסמך נכתב.
+- 20.10.2026: משימה 0 — כל הקישורים ל-Hadabadra/Prayer-pointA. פרסום לחנות עדיין נכשל (session ריק), ממתין לעדכון הסודות.
 
 ## פרומפט מאוחד לשיחה הבאה (הכול בשיחה אחת)
 ```

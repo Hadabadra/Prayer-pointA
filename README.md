@@ -1,19 +1,19 @@
 # כיוון תפילה — שיח רינה-עמודי שש
 
 ## הורדה
-- **כיוון תפילה 2.5.4:** [kivun-tefila-2.5.4.otzplugin](https://github.com/e0548433917-gif/otzaria/raw/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/kivun-tefila-2.5.4.otzplugin). זמין גם בחנות התוספים של אוצריא. קבצי המקור נמצאים בתיקייה [kivun-tefila](kivun-tefila).
-- **סידורון 3.7.2 התואם** (כפתור לפתיחת כיוון תפילה, ושליחת התפילה הפתוחה לבקשתו; התוסף של Y-PLONI, נערך באישורו): [com.moshenahari.siduron-3.7.2.otzplugin](https://github.com/e0548433917-gif/otzaria/raw/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/siduron/com.moshenahari.siduron-3.7.2.otzplugin). הוגש כבקשת מיזוג לריפו שלו: [Y-PLONI/siduron_plugin#1](https://github.com/Y-PLONI/siduron_plugin/pull/1). פירוט השינויים בתיקיית [siduron](siduron).
+- **כיוון תפילה 2.5.4:** [kivun-tefila-2.5.4.otzplugin](https://github.com/Hadabadra/Prayer-pointA/raw/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/kivun-tefila-2.5.4.otzplugin). זמין גם בחנות התוספים של אוצריא. קבצי המקור נמצאים בתיקייה [kivun-tefila](kivun-tefila).
+- **סידורון 3.7.2 התואם** (כפתור לפתיחת כיוון תפילה, ושליחת התפילה הפתוחה לבקשתו; התוסף של Y-PLONI, נערך באישורו): [com.moshenahari.siduron-3.7.2.otzplugin](https://github.com/Hadabadra/Prayer-pointA/raw/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/siduron/com.moshenahari.siduron-3.7.2.otzplugin). הוגש כבקשת מיזוג לריפו שלו: [Y-PLONI/siduron_plugin#1](https://github.com/Y-PLONI/siduron_plugin/pull/1). פירוט השינויים בתיקיית [siduron](siduron).
 
 ### קבצי נתונים להורדה (אופציונלי, להורדה פעם אחת מתוך ההגדרות בתוסף)
 | קובץ | גודל | מה יש בו | קישור |
 |------|------|----------|-------|
-| `geo-names.json` | כ-1MB | שמות נהרות בעולם, וכבישים בצפון אמריקה, לחיפוש בלי אינטרנט | [הורדה](https://github.com/e0548433917-gif/otzaria/raw/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/kivun-tefila-data/geo-names.json) |
-| `geo-extra.json` | כ-3MB | נהרות, אגמים וכבישים מפורטים למפה | [הורדה](https://github.com/e0548433917-gif/otzaria/raw/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/kivun-tefila-data/geo-extra.json) |
-| `roads/<קוד מדינה>.json` | 100-600KB | כבישים ראשיים של מדינה אחת, למשל `roads/ISR.json` | [התיקייה](https://github.com/e0548433917-gif/otzaria/tree/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/kivun-tefila-data/roads) |
-| כל התיקייה | | | [kivun-tefila-data](https://github.com/e0548433917-gif/otzaria/tree/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/kivun-tefila-data) |
+| `geo-names.json` | כ-1MB | שמות נהרות בעולם, וכבישים בצפון אמריקה, לחיפוש בלי אינטרנט | [הורדה](https://github.com/Hadabadra/Prayer-pointA/raw/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/kivun-tefila-data/geo-names.json) |
+| `geo-extra.json` | כ-3MB | נהרות, אגמים וכבישים מפורטים למפה | [הורדה](https://github.com/Hadabadra/Prayer-pointA/raw/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/kivun-tefila-data/geo-extra.json) |
+| `roads/<קוד מדינה>.json` | 100-600KB | כבישים ראשיים של מדינה אחת, למשל `roads/ISR.json` | [התיקייה](https://github.com/Hadabadra/Prayer-pointA/tree/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/kivun-tefila-data/roads) |
+| כל התיקייה | | | [kivun-tefila-data](https://github.com/Hadabadra/Prayer-pointA/tree/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/kivun-tefila-data) |
 
 קובצי הכבישים לפי מדינה נבנים אוטומטית ב-GitHub Actions (`build-roads.yml`) לפי הרשימה ב-`kivun-tefila-build/roads-request.txt`.
-כל הגרסאות, עם סידורון התואם מצורף: [דף ההורדות](https://github.com/e0548433917-gif/otzaria/releases?q=kivun-tefila&expanded=true).
+כל הגרסאות, עם סידורון התואם מצורף: [דף ההורדות](https://github.com/Hadabadra/Prayer-pointA/releases?q=kivun-tefila&expanded=true).
 
 ---
 
@@ -227,7 +227,7 @@
 - **מצפן המכשיר** (טלפון או טאבלט) מופעל מיד עם פתיחת התוסף. בגרסה 1.0.0 הוא הופעל רק אחרי זיהוי מיקום מוצלח, וזה לא קורה כרגע באוצריא.
 
 ## בקשות לאוצריא (לזיהוי מיקום אוטומטי ולהורדת רחובות בלבד; כל השאר עובד בלעדיהן)
-1. **PR – הוספה ל-`plugin_network_allowlist.txt`.** הענף [`kivun-tefila-allowlist`](https://github.com/e0548433917-gif/otzaria/tree/kivun-tefila-allowlist), והטקסט שלו ב-[requests/pr-allowlist.md](requests/pr-allowlist.md):
+1. **PR – הוספה ל-`plugin_network_allowlist.txt`.** הענף [`kivun-tefila-allowlist`](https://github.com/Hadabadra/Prayer-pointA/tree/kivun-tefila-allowlist), והטקסט שלו ב-[requests/pr-allowlist.md](requests/pr-allowlist.md):
    - https://get.geojs.io/v1/ip/geo.json
    - https://nominatim.openstreetmap.org/reverse
    - https://overpass-api.de/api/interpreter

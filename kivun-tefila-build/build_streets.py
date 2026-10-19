@@ -21,7 +21,7 @@ def fetch(q):
             try:
                 req = urllib.request.Request(
                     s, data=urllib.parse.urlencode({"data": q}).encode(),
-                    headers={"User-Agent": "kivun-tefila-otzaria-plugin/1.2 (build; github.com/e0548433917-gif/otzaria)",
+                    headers={"User-Agent": "kivun-tefila-otzaria-plugin/1.2 (build; github.com/Hadabadra/Prayer-pointA)",
                          "Accept": "application/json", "Content-Type": "application/x-www-form-urlencoded"})
                 with urllib.request.urlopen(req, timeout=180) as r:
                     return json.load(r)

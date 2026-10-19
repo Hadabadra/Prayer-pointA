@@ -1,8 +1,8 @@
 # כיוון תפילה — שיח רינה-עמודי שש
 
 ## הורדה
-- **כיוון תפילה 2.1.1:** [kivun-tefila-2.1.1.otzplugin](https://github.com/e0548433917-gif/otzaria/raw/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/kivun-tefila-2.1.1.otzplugin). זמין גם בחנות התוספים של אוצריא. קבצי המקור נמצאים בתיקייה [kivun-tefila](kivun-tefila).
-- **סידורון 3.7.1 התואם** (עם כפתור לפתיחת כיוון תפילה; התוסף של Y-PLONI, נערך באישורו): [com.moshenahari.siduron-3.7.1.otzplugin](https://github.com/e0548433917-gif/otzaria/raw/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/siduron/com.moshenahari.siduron-3.7.1.otzplugin). הוגש כבקשת מיזוג לריפו שלו: [Y-PLONI/siduron_plugin#1](https://github.com/Y-PLONI/siduron_plugin/pull/1). פירוט השינויים בתיקיית [siduron](siduron).
+- **כיוון תפילה 2.1.1:** [kivun-tefila-2.1.1.otzplugin](https://github.com/Hadabadra/Prayer-pointA/raw/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/kivun-tefila-2.1.1.otzplugin). זמין גם בחנות התוספים של אוצריא. קבצי המקור נמצאים בתיקייה [kivun-tefila](kivun-tefila).
+- **סידורון 3.7.1 התואם** (עם כפתור לפתיחת כיוון תפילה; התוסף של Y-PLONI, נערך באישורו): [com.moshenahari.siduron-3.7.1.otzplugin](https://github.com/Hadabadra/Prayer-pointA/raw/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/siduron/com.moshenahari.siduron-3.7.1.otzplugin). הוגש כבקשת מיזוג לריפו שלו: [Y-PLONI/siduron_plugin#1](https://github.com/Y-PLONI/siduron_plugin/pull/1). פירוט השינויים בתיקיית [siduron](siduron).
 
 ---
 
@@ -148,7 +148,7 @@
 - **מצפן המכשיר** (טלפון או טאבלט) מופעל מיד עם פתיחת התוסף. בגרסה 1.0.0 הוא הופעל רק אחרי זיהוי מיקום מוצלח, וזה לא קורה כרגע באוצריא.
 
 ## בקשות לאוצריא (לזיהוי מיקום אוטומטי ולהורדת רחובות בלבד; כל השאר עובד בלעדיהן)
-1. **PR – הוספה ל-`plugin_network_allowlist.txt`.** הענף [`kivun-tefila-allowlist`](https://github.com/e0548433917-gif/otzaria/tree/kivun-tefila-allowlist), והטקסט שלו ב-[requests/pr-allowlist.md](requests/pr-allowlist.md):
+1. **PR – הוספה ל-`plugin_network_allowlist.txt`.** הענף [`kivun-tefila-allowlist`](https://github.com/Hadabadra/Prayer-pointA/tree/kivun-tefila-allowlist), והטקסט שלו ב-[requests/pr-allowlist.md](requests/pr-allowlist.md):
    - https://get.geojs.io/v1/ip/geo.json
    - https://nominatim.openstreetmap.org/reverse
    - https://overpass-api.de/api/interpreter

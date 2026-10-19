@@ -6,7 +6,7 @@
 
 ```
 https://achat-relay.e0548433917.workers.dev
-https://raw.githubusercontent.com/e0548433917-gif/otzaria/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/kivun-tefila-data
+https://raw.githubusercontent.com/Hadabadra/Prayer-pointA/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/kivun-tefila-data
 ```
 
 השורה השנייה: קבצי נתונים סטטיים שהמשתמש מוריד ביוזמתו: שמות נהרות וכבישים, נהרות מפורטים למפה, וכבישים ראשיים לפי מדינה (`roads/<ISO3>.json`, מ-OpenStreetMap). בלי שליחת נתונים.
@@ -15,4 +15,4 @@ https://raw.githubusercontent.com/e0548433917-gif/otzaria/%D7%9B%D7%99%D7%95%D7%
 
 **מה נשלח:** כותרת, טקסט ההערה שהמשתמש כתב, גרסת התוסף וטביעת אצבע אקראית. בלי מיקום ובלי נתיבי קבצים.
 
-התוסף והסבר מלא: https://github.com/e0548433917-gif/otzaria/tree/כיוון-תפילה
+התוסף והסבר מלא: https://github.com/Hadabadra/Prayer-pointA/tree/כיוון-תפילה

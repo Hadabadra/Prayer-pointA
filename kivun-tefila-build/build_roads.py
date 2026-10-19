@@ -11,7 +11,7 @@ import json, os, sys, time, urllib.parse, urllib.request, datetime
 
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "kivun-tefila-data", "roads")
 EP = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter"]
-UA = "kivun-tefila-build/1.0 (github.com/e0548433917-gif/otzaria)"
+UA = "kivun-tefila-build/1.0 (github.com/Hadabadra/Prayer-pointA)"
 TOL = 0.0025
 MAX_BYTES = 600_000
 

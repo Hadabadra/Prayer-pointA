@@ -51,7 +51,7 @@ function globeMap() {
 
 /* הורדה אופציונלית: נהרות, אגמים וכבישים מפורטים (Natural Earth 1:10m), נשמרים במחשב */
 let GEOX = null;
-const GEOX_URL = "https://raw.githubusercontent.com/e0548433917-gif/otzaria/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/kivun-tefila-data/geo-extra.json";
+const GEOX_URL = "https://raw.githubusercontent.com/Hadabadra/Prayer-pointA/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/kivun-tefila-data/geo-extra.json";
 async function geoxLoad() {
   let t = null; try { if (O) { const r = dat(await O.call("fs.readFile", { path: "geo-extra.json" })); t = r && typeof r === "object" ? r.content : r } else t = localStorage.getItem("kivun-geo-extra") } catch (e) {}
   try { if (t) { const j = typeof t === "string" ? JSON.parse(t) : t; if (!j || !j.r) return; GEOX = j; $("geoMsg").textContent = "הורד ✓"; if (pos) map() } } catch (e) {}

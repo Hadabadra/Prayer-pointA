@@ -1,7 +1,7 @@
 /* כיוון תפילה 2.5.0 — תוספות ממשק: "עוד" בטלפון, ספינר, מצב לא מקוון, הדפסה/PDF, אודות וקיצור דרך, נגישות */
 (function () {
   const $ = id => document.getElementById(id), O = window.Otzaria;
-  const HOME = "https://github.com/e0548433917-gif/otzaria/tree/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94";
+  const HOME = "https://github.com/Hadabadra/Prayer-pointA/tree/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94";
   const bar = $("bar");
 
   /* גובה הפס נמדד, כדי שהחלוניות הצדדיות והמפה במסך מלא יתחילו מתחתיו */
