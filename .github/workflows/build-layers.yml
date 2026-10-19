@@ -1,0 +1,46 @@
+name: כיוון תפילה — שכבות (בתי כנסת, רכבות, שדות תעופה)
+
+# בונה kivun-tefila-data/layers/<ISO3>.json מ-OpenStreetMap (Overpass) ומחזיר לענף, עם שמירת ביניים.
+# הפעלה: דחיפה של שינוי ב-kivun-tefila-build/layers-request.txt, או "Run workflow" (רק מענף ברירת המחדל).
+on:
+  push:
+    branches: ['כיוון-תפילה']
+    paths:
+      - 'kivun-tefila-build/layers-request.txt'
+  workflow_dispatch:
+    inputs:
+      countries:
+        description: 'ISO3 מופרדים בפסיקים (ריק = כל העולם)'
+        required: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-layers
+  cancel-in-progress: false
+
+jobs:
+  layers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 'כיוון-תפילה'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build
+        env:
+          COUNTRIES: ${{ github.event.inputs.countries }}
+          MAX_MINUTES: '300'
+          COMMIT_EVERY: '10'
+        run: |
+          if [ -z "$COUNTRIES" ] && [ -f kivun-tefila-build/layers-request.txt ]; then
+            COUNTRIES="$(grep -v '^#' kivun-tefila-build/layers-request.txt | tr -s ' \n' ',' | sed 's/^,//;s/,$//')"
+          fi
+          export COUNTRIES
+          python3 kivun-tefila-build/build_layers.py
+      - name: Commit
+        run: bash kivun-tefila-build/commit_data.sh kivun-tefila-data/layers "שכבות"

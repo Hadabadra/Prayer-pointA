@@ -657,6 +657,7 @@ function map(){const b=bear(),near=$("mapMode").value==="near";let pts=[],x0,x1,
  if(window.HL&&HL.lines){let n=0;const W=HL.w?"#1f6fb2":"#d9480f";for(const l of HL.lines){const st=Math.max(1,Math.ceil(l.length/600));const q=l.filter((p,i)=>i%st===0||i===l.length-1);n+=q.length;if(n>6000)break;
   h+=`<polyline points="${q.map(P).join(" ")}" fill="none" stroke="${W}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" stroke-opacity=".85"/>`}
   if(HL.at){const m=P(HL.at);h+=`<circle cx="${m[0]}" cy="${m[1]}" r="4" fill="${W}"/><text x="${m[0]}" y="${+m[1]+16}" text-anchor="middle" font-size="12" font-weight="bold" fill="${W}" stroke="var(--color-surface)" stroke-width="3" paint-order="stroke">${String(HL.name).replace(/[<&>]/g,"")}</text>`}}
+ if(window.LAYERS_SVG)try{h+=LAYERS_SVG(P,x0,x1,y0,y1)}catch(e){}
  $("map").innerHTML=h+`<circle cx="${a[0]}" cy="${a[1]}" r="5" fill="var(--color-on-surface)"/>`+T(a,"אתה","on-surface")+`<text x="390" y="18" text-anchor="end" font-size="12" fill="var(--color-on-surface-dim)">↑ צפון</text>`}
 
 /* ---- רשת: דרך אוצריא, ובגיבוי fetch ---- */
@@ -749,6 +750,7 @@ else try{restore(localStorage.getItem("kivun-city"))}catch(e){}
 <script src="fly.js"></script>
 <script src="globe.js"></script>
 <script src="names.js"></script>
+<script src="layers.js"></script>
 <script src="kotel-dinim.js"></script>
 <script src="i18n.js"></script>
 <script>
