@@ -3,6 +3,17 @@
 השיחה שהכינה את זה לא הייתה מחוברת לריפו של e0548433917-gif, ולכן הכול כאן מוכן לדחיפה.
 כל commit ו-push בשם Claude בלבד (Claude <noreply@anthropic.com>), לעולם לא בשם TziporaStern או צפורה שטרן.
 
+## קבצים מוכנים בתיקייה הזו (20.10.2026)
+- `OtzariaBridge-1.0.1.exe` — נבנה מקומית (dotnet publish win-x64, עם שני התוספים מוטמעים). **לא חתום** (החתימה רק ב-CI) ולא נבדק ב-Windows. לשחרור הרשמי עדיף שה-CI יבנה מחדש אחרי החלת ה-patch-ים.
+- `com_chadbedera_pdfviewer-5_7_0.otzplugin` — הצופה 5.7.0.
+- `kivun-tefila-2.6.0.otzplugin` — כבר שוחרר ופורסם בחנות (לעיון בלבד).
+
+## מצב פרסום
+- כיוון תפילה 2.6.0: פורסם בחנות ✅ ו-Release ✅.
+- צופה PDF+OCR 5.7.0: **לא פורסם** — לא בגיט, לא ב-Release ולא בחנות.
+- גשר 1.0.1: **לא פורסם** — לא בגיט ולא ב-Release.
+- עינים למקרא: קישורי קבצי המוצר בענף links-hadabadra, ממתינים לאישור ב-issue #135.
+
 ## 1. גשר "אחת שאלתי" 1.0.1 — ריפו e0548433917-gif/achat-shaalti, ענף next
 - `0001-…patch`: `bridge/LocationApi.cs` (`/sys/location`, `/location`, `/sys/location/settings`, `/feedback`), `bridge/PdfApi.cs` (`/pdf/handlers`, `/pdf/open`), שורות רישום ב-`bridge/Server.cs`, תיעוד ב-`docs/BRIDGE_API.md`, `docs/PDF-INTEGRATION-SPEC.md` (הצעות תשובה לסעיף 9), `docs/STATUS.md`.
 - `0002-…patch`: גרסה 1.0.1 ב-csproj ובשני ה-manifest, וסעיף ב-CHANGELOG.md.
