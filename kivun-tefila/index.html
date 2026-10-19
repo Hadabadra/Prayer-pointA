@@ -704,7 +704,7 @@ $("fbSend").onclick=async()=>{const t=$("fbText").value.trim(),m=$("fbMsg");if(!
  if(!O){m.textContent="שליחת הארות זמינה רק מתוך אוצריא.";return}
  $("fbSend").disabled=true;m.textContent="שולח…";let v=null;
  try{const r=await O.call("feedback.report",{details:("כיוון תפילה "+VER+"\n\n"+t).slice(0,5000),reportType:$("fbType").value});v=r&&(r.data!==undefined?r.data:r)}catch(e){}
- if(v!=="cancelled"){try{/* גם ל-GitHub (issue ציבורי בריפו otzaria) דרך מתווך אחת שאלתי */const h=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t+Date.now()));const fp=[...new Uint8Array(h)].slice(0,8).map(b=>b.toString(16).padStart(2,"0")).join("");await fetch("https://achat-relay.e0548433917.workers.dev",{method:"POST",mode:"no-cors",body:JSON.stringify({title:"[משוב] כיוון תפילה: "+t.split("\n")[0].slice(0,80),body:t.slice(0,6000),fingerprint:fp,version:VER,kind:"manual",plugin:"כיוון תפילה",repo:"otzaria"})})}catch(e){}}
+ if(v!=="cancelled"){try{/* גם ל-GitHub (issue ציבורי בריפו otzaria) דרך מתווך אחת שאלתי */const h=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t+Date.now()));const fp=[...new Uint8Array(h)].slice(0,8).map(b=>b.toString(16).padStart(2,"0")).join("");await (window.ktRelay?ktRelay({title:"[משוב] כיוון תפילה: "+t.split("\n")[0].slice(0,80),body:t.slice(0,6000),fingerprint:fp,version:VER,kind:"manual",plugin:"כיוון תפילה",repo:"otzaria"}):fetch("https://achat-relay.e0548433917.workers.dev",{method:"POST",mode:"no-cors",body:JSON.stringify({title:"[משוב] כיוון תפילה: "+t.split("\n")[0].slice(0,80),body:t.slice(0,6000),fingerprint:fp,version:VER,kind:"manual",plugin:"כיוון תפילה",repo:"otzaria"})}))}catch(e){}}
  $("fbSend").disabled=false;
  if(v==="sent"||v==="queued"){m.textContent=v==="sent"?"נשלח. תודה!":"נשמר ויישלח כשיהיה חיבור. תודה!";$("fbText").value=""}
  else m.textContent=v==="cancelled"?"השליחה בוטלה.":"השליחה נכשלה. נסה שוב מאוחר יותר."};
@@ -745,6 +745,7 @@ else try{restore(localStorage.getItem("kivun-city"))}catch(e){}
 <script src="streets-data.js"></script>
 <script src="streets.js"></script>
 <script src="extras.js"></script>
+<script src="bridge.js"></script>
 <script src="ui.js"></script>
 <script src="printprev.js"></script>
 <script src="pcsend.js"></script>

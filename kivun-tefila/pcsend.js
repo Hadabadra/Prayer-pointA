@@ -31,7 +31,7 @@
     b.onclick = async () => {
       if (!confirm(`לשלוח את המיקוד ${raw} עם המיקום ${pos[0].toFixed(4)}, ${pos[1].toFixed(4)}? הם יפורסמו ב-GitHub כדי לעדכן את הטבלה לכולם.`)) return;
       const body = `מיקוד: ${z}\nמיקום: ${pos[0].toFixed(4)},${pos[1].toFixed(4)}\nמקור: ${String(typeof src !== "undefined" ? src : "").slice(0, 80)}`;
-      try { await fetch(RELAY, { method: "POST", mode: "no-cors", body: JSON.stringify({ title: "[מיקוד] " + z, body, fingerprint: "pc-" + z, version: typeof VER !== "undefined" ? VER : "", kind: "postcode", plugin: "כיוון תפילה", repo: "otzaria" }) }); b.textContent = "נשלח ✓ תודה" }
+      try { const P = ({ title: "[מיקוד] " + z, body, fingerprint: "pc-" + z, version: typeof VER !== "undefined" ? VER : "", kind: "postcode", plugin: "כיוון תפילה", repo: "otzaria" }); await (window.ktRelay ? ktRelay(P) : fetch(RELAY, { method: "POST", mode: "no-cors", body: JSON.stringify(P) })); b.textContent = "נשלח ✓ תודה" }
       catch (e) { b.textContent = "השליחה נכשלה (אין חיבור?)" }
       b.disabled = true;
     };
