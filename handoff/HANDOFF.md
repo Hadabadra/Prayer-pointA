@@ -60,10 +60,11 @@ Release `kivun-tefila-v2.6.0` נוצר ופורסם לחנות ב-20.10.2026. פ
 - `dotnet build` לא רץ בסשן הזה (אין dotnet); הבנייה נעשתה ב-CI. עדיין לא נבדק ב-Windows.
 - שימו לב: GitHub מודיע שהריפו הועבר ל-`Hadabadra/achat-shaalti`. הדחיפות עברו דרך הכתובת הישנה.
 
-### סעיף 2 — צופה PDF+OCR 5.7.0: **נדחף ל-main; הפרסום לחנות וה-Release נכשלו (סודות)**
-- הריפו של הצופה נמצא ב-`Hadabadra/pdf-viewer` (הועבר מ-`e0548433917-gif`). נבחר `main`: כל התגים הקיימים (3.5.1 עד 4.6.1) והמהדורה 5.5.4 מצביעים על הקצה של `main`, וה-workflow של הפרסום מופעל רק מ-`main`.
-- החבילה נפתחה ל-`main`, נשמרו README, docs, .github, build, icon, screenshots ורישיון pdf.js (`vendor/pdfjs-apache-license.txt`). נמחקו רק קבצים ישנים שאינם בחבילה: `css/style.css`, `vendor/pdf.js`, `vendor/pdf.worker.js`. commit אחד, בשם Claude: `b5cc5da`.
-- הוולידטור הרשמי (`src/cli.js`): 0 שגיאות, 0 אזהרות, 4 הערות עיצוב ב-`css/app.css`.
-- ריצת ה-workflow על `b5cc5da` (39335790048) **נכשלה** בשלב ההתחברות לחנות: "session ריק (בדוק את OTZARIA_USER / OTZARIA_PASSWORD)". גם הריצה הקודמת על `main` נכשלה באותה שגיאה, כך שנראה שהסודות חסרים או שגויים בריפו `Hadabadra/pdf-viewer`.
-- לכן **לא נוצרו** התג `v5.7.0`, ה-Release והפרסום לחנות.
-- להשלמה: לבדוק או להגדיר את `OTZARIA_USER` ו-`OTZARIA_PASSWORD` ב-Settings → Secrets and variables → Actions של `Hadabadra/pdf-viewer`, ואז להריץ ידנית את ה-workflow "ולידציה ופרסום לחנות אוצריא" (Actions → Run workflow, publish=auto). הוא ייצור את התג, את ה-Release עם החבילה ויפרסם לחנות. אין צורך בדחיפה חדשה.
+### סעיף 2 — צופה PDF+OCR 5.7.0: **בוצע (פורסם)**
+- הריפו: `Hadabadra/pdf-viewer` (הועבר מ-`e0548433917-gif`). נבחר `main`, כי כל התגים הקודמים והמהדורה 5.5.4 מצביעים עליו וה-workflow רץ רק ממנו.
+- commit `b5cc5da`: החבילה (נשמרו README, docs, .github, build, icon, screenshots ורישיון pdf.js; נמחקו רק `css/style.css`, `vendor/pdf.js`, `vendor/pdf.worker.js`).
+- ההתחברות לחנות נכשלה בהתחלה (סודות בריפו), ואחרי התיקון נכשל העדכון בגלל התגית "מראה תואם לאוצריא" (4 סטיות עיצוב ב-`css/app.css`).
+- commit `9cbd8d7`: ערכי CSS קשיחים הוחלפו במשתני `:root` עם אותם ערכים (בלי שינוי חזותי מכוון, **לא נבדק באוצריא**); `font-family: inherit` בשלושה שדות הוחלף ב-`var(--font-ui)`. ולידטור רשמי: 0 שגיאות, 0 אזהרות, 0 הערות.
+- ריצת ה-workflow על `9cbd8d7` הצליחה (39337726506), כולל שלב הפרסום לחנות. נוצרו התג `v5.7.0` ו-Release עם `com.chadbedera.pdfviewer-5.7.0.otzplugin`: https://github.com/Hadabadra/pdf-viewer/releases/tag/v5.7.0
+- התגית "מראה תואם לאוצריא" הוסרה ידנית מהחנות לפני כן; אפשר להחזיר אותה בעמוד התוסף.
+- החבילה 21.9MB, מעל הרף שה-workflow מזהיר עליו (16MB).
