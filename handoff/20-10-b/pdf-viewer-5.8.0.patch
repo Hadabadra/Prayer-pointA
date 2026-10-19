@@ -1,4 +1,4 @@
-From 74ab68082948d23276c22b2249d6e074297f8f88 Mon Sep 17 00:00:00 2001
+From 0d07fc8b2cf59ecf5714e1895efd3075cb2a3399 Mon Sep 17 00:00:00 2001
 From: Claude <noreply@anthropic.com>
 Date: Tue, 20 Oct 2026 02:12:05 +0300
 Subject: [PATCH] =?UTF-8?q?5.8.0:=20=D7=9B=D7=9C=D7=99=20PDF,=20=D7=A4?=
@@ -15,24 +15,24 @@ Content-Transfer-Encoding: 8bit
  docs/KNOWLEDGE.md |   5 +
  index.html        |  12 +-
  js/app.js         |   8 +-
- js/bridge.js      |  69 +++++++---
+ js/bridge.js      |  69 ++++++---
  js/files.js       |   1 +
  js/lang-en.js     |   3 +-
- js/pdftools.js    | 320 ++++++++++++++++++++++++++++++++++++++++++++++
+ js/pdftools.js    | 349 ++++++++++++++++++++++++++++++++++++++++++++++
  js/searchable.js  |   2 +-
  manifest.json     |   4 +-
- 11 files changed, 410 insertions(+), 25 deletions(-)
+ 11 files changed, 439 insertions(+), 25 deletions(-)
  create mode 100644 js/pdftools.js
 
 diff --git a/CHANGELOG.md b/CHANGELOG.md
-index 280f99b..7c41baa 100644
+index 280f99b..df0a375 100644
 --- a/CHANGELOG.md
 +++ b/CHANGELOG.md
 @@ -1,5 +1,11 @@
  # CHANGELOG — צופה PDF+OCR
  
 +## 5.8.0 (20.10.2026)
-+- **כלי PDF (כמו PDF24) בתפריט "פעולות נוספות":** בתוסף עצמו — חיבור קבצים ותמונות, פיצול (כל עמוד / כל N / טווחים, ל-ZIP), חילוץ עמודים, מחיקת עמודים, סיבוב קבוע, סידור מחדש והיפוך, הוספת עמוד ריק, תמונות ל-PDF, PDF לתמונות (JPG/PNG ב-ZIP), מספור עמודים, סימן מים בעברית, מאפייני מסמך. במנוע המותקן במחשב דרך גשר אחת שאלתי 1.0.2 (Ghostscript של PDF24, Ghostscript או qpdf): דחיסה, גווני אפור, PDF/A, תיקון קובץ פגום, הגנה בסיסמה, הסרת סיסמה, אופטימיזציה לרשת. התוצאה נשמרת כקובץ חדש ונפתחת בצופה; המקור לא משתנה.
++- **כלי PDF (כמו PDF24) בתפריט "פעולות נוספות":** בתוסף עצמו — חיבור קבצים ותמונות, פיצול (כל עמוד / כל N / טווחים, ל-ZIP), חילוץ עמודים, מחיקת עמודים, סיבוב קבוע, סידור מחדש והיפוך, הוספת עמוד ריק, תמונות ל-PDF, PDF לתמונות (JPG/PNG ב-ZIP), מספור עמודים, סימן מים בעברית, מאפייני מסמך. בתוכנות ה-PDF שמותקנות במחשב, דרך גשר אחת שאלתי 1.0.2: הגשר מזהה מה מותקן (PDF24/Ghostscript, qpdf, PDFtk, MuPDF, Poppler, LibreOffice, Word) ומציג רק את הפעולות שיש בהן, עם בחירה באיזו תוכנה — דחיסה, גווני אפור, PDF/A, תיקון קובץ פגום, הגנה והסרת סיסמה, אופטימיזציה לרשת, PDF לטקסט, PDF לתמונות, Word/Excel/PowerPoint ל-PDF. התוצאה נשמרת כקובץ חדש ונפתחת בצופה; המקור לא משתנה.
 +- **"פתח באמצעות" של Windows ← התוסף:** קובץ PDF שנבחר בו "צופה PDF+OCR (אוצריא)" נכנס לתור בגשר, אוצריא נפתחת בתוסף והקובץ נפתח בו עם כל היכולות (חיפוש, OCR, שמירה, פתיחה בתוכנה אחרת). נדרש גשר אחת שאלתי 1.0.2 (`/pdf/inbox`).
 +- **"פתיחה בתוכנה אחרת…"** זמינה גם לקובץ שנפתח דרך הגשר (חיפוש במחשב / "פתח באמצעות"), לא רק מתיקייה שנוספה.
 +- **גרסת הגשר:** המספור החדש של אחת שאלתי (1.0.x) נחשב חדש מ-3.x — לפני כן 1.0.1 זוהה בטעות כ"ישן" וכלי החיתוך נחסם. הטקסטים עודכנו ל"1.0.1 ומעלה", וקישור ההורדה ל-Hadabadra/achat-shaalti.
@@ -54,7 +54,7 @@ index 2870924..a207af4 100644
 +.pdftool[open] summary { margin-bottom: 0.5em; }
 +.pdftool .btn { margin-top: 0.5em; }
 diff --git a/docs/KNOWLEDGE.md b/docs/KNOWLEDGE.md
-index d0b069e..45fd272 100644
+index d0b069e..2fcf4ef 100644
 --- a/docs/KNOWLEDGE.md
 +++ b/docs/KNOWLEDGE.md
 @@ -9,3 +9,8 @@
@@ -65,9 +65,9 @@ index d0b069e..45fd272 100644
 +## 5.8.0 — "פתח באמצעות", כלי PDF, גרסת הגשר (20.10.2026)
 +- **גרסת הגשר:** אחת שאלתי התחיל מספור מחדש ב-1.0.0 (18.10.2026). `B.versionLt` ממפה 1.x/2.x מעל 3.x. `PV.BRIDGE_MIN=1.0.1`, `PV.BRIDGE_OPENWITH_MIN=1.0.2`, `PV.BRIDGE_WRITE_MIN=1.0.0`. קישור ההורדה: Hadabadra/achat-shaalti.
 +- **"פתח באמצעות":** הגשר (1.0.2, `PdfAssoc.cs`) נרשם ב-HKCU; `OtzariaBridge.exe --open-pdf` כותב לתור ופותח `otzaria://open/plugin/com.chadbedera.pdfviewer`. התוסף שולף `/pdf/inbox/list` ומאשר `/pdf/inbox/ack` (`B.startInbox` — בעלייה, כל 3 שנ' כשהמסך גלוי, וב-`plugin.resumed`). הקובץ נפתח ב-`B.openDiskFile` ומקבל `V.doc.diskPath`, ש-`Fs.diskPath` מחזיר — כך גם "פתיחה בתוכנה אחרת" עובדת.
-+- **כלי PDF (`js/pdftools.js`):** pdf-lib בתוסף לפעולות עמודים; פעולות מנוע דרך `/pdf/engines` ו-`/pdf/op/begin|chunk|run|read|end` בגשר (Ghostscript של PDF24 ב-Program Files\PDF24\gs\bin, Ghostscript, qpdf). שמירה: חלון Windows דרך הגשר, אחרת חלון אוצריא, אחרת הורדה. טקסט עברי (מספור/סימן מים) מצויר כתמונה כי לגופני pdf-lib אין עברית.
++- **כלי PDF (`js/pdftools.js`):** pdf-lib בתוסף לפעולות עמודים; פעולות מנוע דרך `/pdf/engines` (כל תוכנה מותקנת עם רשימת הפעולות שלה) ו-`/pdf/op/begin|chunk|run|read|end` (עם `engine` לבחירה) בגשר: Ghostscript (גם של PDF24), qpdf, MuPDF, PDFtk, Poppler, LibreOffice, Word (COM). בכל כלי ⚙ מוצגת בחירת "תוכנה במחשב" מבין המתאימות. שמירה: חלון Windows דרך הגשר, אחרת חלון אוצריא, אחרת הורדה. טקסט עברי (מספור/סימן מים) מצויר כתמונה כי לגופני pdf-lib אין עברית.
 diff --git a/index.html b/index.html
-index 4c84ae8..4040c05 100644
+index 4c84ae8..e9d7141 100644
 --- a/index.html
 +++ b/index.html
 @@ -311,7 +311,7 @@
@@ -85,7 +85,7 @@ index 4c84ae8..4040c05 100644
            <a href="#" data-url="https://otzaria.org/forum/post/43381">פוסט 43381</a></p>
 +        <span class="version-tag" data-t-skip>5.8.0</span>
 +        <ul>
-+          <li>כלי PDF כמו ב-PDF24: חיבור, פיצול, חילוץ, מחיקה, סיבוב וסידור עמודים, תמונות ל-PDF ובחזרה, מספור, סימן מים, מאפיינים — ובמנוע של PDF24 במחשב דרך הגשר: דחיסה, גווני אפור, PDF/A, תיקון, הגנה והסרת סיסמה.</li>
++          <li>כלי PDF כמו ב-PDF24: חיבור, פיצול, חילוץ, מחיקה, סיבוב וסידור עמודים, תמונות ל-PDF ובחזרה, מספור, סימן מים, מאפיינים — ובתוכנות ה-PDF שמותקנות במחשב (הגשר מזהה מה יש — PDF24, Ghostscript, qpdf, PDFtk, MuPDF, LibreOffice, Word ועוד): דחיסה, גווני אפור, PDF/A, תיקון, הגנה והסרת סיסמה, המרות.</li>
 +          <li>"פתח באמצעות" של Windows: אפשר לבחור "צופה PDF+OCR (אוצריא)" לקובץ PDF במחשב, והוא נפתח ישירות בתוסף עם כל היכולות (נדרש גשר אחת שאלתי 1.0.2).</li>
 +          <li>"פתיחה בתוכנה אחרת…" עובדת גם לקובץ שנפתח מחיפוש במחשב או מ"פתח באמצעות", וחלון בחירת התוכנה כבר לא נעלם (בגשר 1.0.2).</li>
 +          <li>תיקון: גשר אחת שאלתי במספור החדש (1.0.x) לא נחשב יותר "ישן".</li>
@@ -278,10 +278,10 @@ index 44c74ca..37d91d0 100644
    'נסו על העמוד הנוכחי': 'Try on the current page',
 diff --git a/js/pdftools.js b/js/pdftools.js
 new file mode 100644
-index 0000000..f5528c6
+index 0000000..d4361a4
 --- /dev/null
 +++ b/js/pdftools.js
-@@ -0,0 +1,320 @@
+@@ -0,0 +1,349 @@
 +/* 5.8.0 — "כלי PDF": הפעולות של PDF24 בתוך התוסף.
 +   בתוסף עצמו (pdf-lib, בלי גשר): חיבור, פיצול, חילוץ, מחיקה, סיבוב, סידור מחדש, הוספת עמוד ריק, תמונות ל-PDF,
 +   PDF לתמונות, מספור עמודים, סימן מים, מאפייני מסמך.
@@ -380,12 +380,13 @@ index 0000000..f5528c6
 +    g.globalAlpha = opacity; g.fillStyle = color; g.fillText(text, w / 2, c.height / 2);
 +    return { url: c.toDataURL('image/png'), w: c.width, h: c.height };
 +  }
-+  async function engine(op, params, label) {
-+    const bytes = await curBytes();
++  async function engine(op, params, label, opt) {
++    opt = opt || {};
++    const bytes = opt.bytes || await curBytes();
 +    if (!B || !(B.port || (await B.probe()))) throw new Error(T('הפעולה דורשת את גשר אחת שאלתי 1.0.2 ומעלה'));
 +    if (B.versionLt(B.info && B.info.version, '1.0.2')) throw new Error(T('הפעולה דורשת את גשר אחת שאלתי 1.0.2 ומעלה'));
 +    const eng = await B.call('/pdf/engines', {}, 15000);
-+    if (!eng || !(eng.ops || []).includes(op)) throw new Error(T('לא נמצא מנוע מתאים במחשב — התקינו את PDF24 (חינמי) או Ghostscript'));
++    if (!eng || !(eng.ops || []).includes(op)) throw new Error(T('לא נמצאה במחשב תוכנה שיודעת לבצע את הפעולה — למשל PDF24, Ghostscript, qpdf, PDFtk, MuPDF או LibreOffice'));
 +    let cancelled = false;
 +    PV.progress.show(label + '…', () => { cancelled = true; });
 +    const { id } = await B.call('/pdf/op/begin', {}, 15000);
@@ -399,7 +400,7 @@ index 0000000..f5528c6
 +        PV.progress.update(T('מעלה למנוע… {p}%', { p: Math.round((off + part.length) / bytes.length * 100) }), (off + part.length) / bytes.length * 0.3);
 +      }
 +      PV.progress.update(label + '…', 0.4);
-+      const r = await B.call('/pdf/op/run', { id, op, params: params || {} }, 600000);
++      const r = await B.call('/pdf/op/run', { id, op, engine: opt.engine || '', params: params || {} }, 600000);
 +      const out = new Uint8Array(r.size); let off = 0;
 +      while (off < r.size) {
 +        const c = await B.call('/pdf/op/read', { id, offset: off }, 60000);
@@ -407,7 +408,7 @@ index 0000000..f5528c6
 +        off = c.offset; PV.progress.update(T('מקבל את התוצאה…'), 0.7 + 0.3 * off / r.size);
 +        if (c.done) break;
 +      }
-+      return { bytes: out, inSize: r.inSize, engine: r.engine };
++      return { bytes: out, inSize: r.inSize, engine: r.engine, engineName: r.engineName, kind: r.kind };
 +    } finally { PV.progress.hide(); B.call('/pdf/op/end', { id }, 10000).catch(() => {}); }
 +  }
 +
@@ -509,20 +510,30 @@ index 0000000..f5528c6
 +        await finishPdf(await d.save(), stem());
 +      } },
 +    // ── במנוע המותקן דרך הגשר ──
-+    { id: 'compress', name: 'דחיסה', icon: 'document_arrow_down', engine: true, desc: 'מקטין את הקובץ (מנוע PDF24/Ghostscript דרך הגשר)', fields: [{ k: 'level', label: 'רמה', type: 'select', options: [['ebook', 'מאוזנת (150dpi)'], ['screen', 'חזקה (72dpi)'], ['printer', 'איכות הדפסה (300dpi)']] }],
-+      async run(v) { const r = await engine('compress', { level: v.level }, T('דוחס')); if (!r) return; PV.toast(T('הגודל: {a} ← {b}', { a: PV.formatSize(r.inSize), b: PV.formatSize(r.bytes.length) }), { long: true }); await finishPdf(r.bytes, stem() + ' - דחוס'); } },
-+    { id: 'gray', name: 'גווני אפור', icon: 'weather_moon', engine: true, desc: 'ממיר את כל המסמך לשחור-לבן', fields: [],
-+      async run() { const r = await engine('grayscale', {}, T('ממיר')); if (r) await finishPdf(r.bytes, stem() + ' - אפור'); } },
-+    { id: 'pdfa', name: 'המרה ל-PDF/A', icon: 'document_pdf', engine: true, desc: 'פורמט לשמירה ארוכת טווח', fields: [],
-+      async run() { const r = await engine('pdfa', {}, T('ממיר')); if (r) await finishPdf(r.bytes, stem() + ' - PDFA'); } },
-+    { id: 'repair', name: 'תיקון קובץ פגום', icon: 'settings', engine: true, desc: 'בונה מחדש קובץ שלא נפתח כראוי', fields: [],
-+      async run() { const r = await engine('repair', {}, T('מתקן')); if (r) await finishPdf(r.bytes, stem() + ' - מתוקן'); } },
-+    { id: 'protect', name: 'הגנה בסיסמה', icon: 'warning', engine: true, desc: 'סיסמה לפתיחת הקובץ', fields: [{ k: 'pw', label: 'סיסמה', type: 'password' }],
-+      async run(v) { if (!v.pw) throw new Error(T('יש להזין סיסמה')); const r = await engine('protect', { userPassword: v.pw }, T('מצפין')); if (r) await finishPdf(r.bytes, stem() + ' - מוגן', false); } },
-+    { id: 'unlock', name: 'הסרת סיסמה', icon: 'open', engine: true, desc: 'שומר עותק בלי הסיסמה (נדרשת הסיסמה)', fields: [{ k: 'pw', label: 'הסיסמה הנוכחית', type: 'password' }],
-+      async run(v) { const r = await engine('unlock', { password: v.pw || '' }, T('מסיר סיסמה')); if (r) await finishPdf(r.bytes, stem() + ' - ללא סיסמה'); } },
-+    { id: 'linearize', name: 'אופטימיזציה לרשת', icon: 'arrow_download', engine: true, desc: 'פתיחה מהירה מהאינטרנט (qpdf)', fields: [],
-+      async run() { const r = await engine('linearize', {}, T('מבצע אופטימיזציה')); if (r) await finishPdf(r.bytes, stem() + ' - לרשת'); } },
++    { id: 'compress', op: 'compress', name: 'דחיסה', icon: 'document_arrow_down', engine: true, desc: 'מקטין את הקובץ (מנוע PDF24/Ghostscript דרך הגשר)', fields: [{ k: 'level', label: 'רמה', type: 'select', options: [['ebook', 'מאוזנת (150dpi)'], ['screen', 'חזקה (72dpi)'], ['printer', 'איכות הדפסה (300dpi)']] }],
++      async run(v) { const r = await engine('compress', { level: v.level }, T('דוחס'), { engine: v.__engine }); if (!r) return; PV.toast(T('הגודל: {a} ← {b}', { a: PV.formatSize(r.inSize), b: PV.formatSize(r.bytes.length) }), { long: true }); await finishPdf(r.bytes, stem() + ' - דחוס'); } },
++    { id: 'gray', op: 'grayscale', name: 'גווני אפור', icon: 'weather_moon', engine: true, desc: 'ממיר את כל המסמך לשחור-לבן', fields: [],
++      async run(v) { const r = await engine('grayscale', {}, T('ממיר'), { engine: v.__engine }); if (r) await finishPdf(r.bytes, stem() + ' - אפור'); } },
++    { id: 'pdfa', op: 'pdfa', name: 'המרה ל-PDF/A', icon: 'document_pdf', engine: true, desc: 'פורמט לשמירה ארוכת טווח', fields: [],
++      async run(v) { const r = await engine('pdfa', {}, T('ממיר'), { engine: v.__engine }); if (r) await finishPdf(r.bytes, stem() + ' - PDFA'); } },
++    { id: 'repair', op: 'repair', name: 'תיקון קובץ פגום', icon: 'settings', engine: true, desc: 'בונה מחדש קובץ שלא נפתח כראוי', fields: [],
++      async run(v) { const r = await engine('repair', {}, T('מתקן'), { engine: v.__engine }); if (r) await finishPdf(r.bytes, stem() + ' - מתוקן'); } },
++    { id: 'protect', op: 'protect', name: 'הגנה בסיסמה', icon: 'warning', engine: true, desc: 'סיסמה לפתיחת הקובץ', fields: [{ k: 'pw', label: 'סיסמה', type: 'password' }],
++      async run(v) { if (!v.pw) throw new Error(T('יש להזין סיסמה')); const r = await engine('protect', { userPassword: v.pw }, T('מצפין'), { engine: v.__engine }); if (r) await finishPdf(r.bytes, stem() + ' - מוגן', false); } },
++    { id: 'unlock', op: 'unlock', name: 'הסרת סיסמה', icon: 'open', engine: true, desc: 'שומר עותק בלי הסיסמה (נדרשת הסיסמה)', fields: [{ k: 'pw', label: 'הסיסמה הנוכחית', type: 'password' }],
++      async run(v) { const r = await engine('unlock', { password: v.pw || '' }, T('מסיר סיסמה'), { engine: v.__engine }); if (r) await finishPdf(r.bytes, stem() + ' - ללא סיסמה'); } },
++    { id: 'linearize', op: 'linearize', name: 'אופטימיזציה לרשת', icon: 'arrow_download', engine: true, desc: 'פתיחה מהירה מהאינטרנט (qpdf)', fields: [],
++      async run(v) { const r = await engine('linearize', {}, T('מבצע אופטימיזציה'), { engine: v.__engine }); if (r) await finishPdf(r.bytes, stem() + ' - לרשת'); } },
++    { id: 'office2pdf', op: 'office2pdf', name: 'Word/Excel/PowerPoint ל-PDF', icon: 'document_pdf', engine: true, desc: 'ממיר מסמך משרדי ל-PDF (LibreOffice או Word במחשב)', fields: [],
++      async run(v) {
++        const f = (await pickFiles(['doc', 'docx', 'odt', 'rtf', 'xls', 'xlsx', 'ods', 'ppt', 'pptx', 'odp'], false))[0]; if (!f) return;
++        const r = await engine('office2pdf', { ext: f.name.split('.').pop().toLowerCase() }, T('ממיר'), { engine: v.__engine, bytes: f.bytes });
++        if (r) await finishPdf(r.bytes, f.name.replace(/\.[^.]+$/, ''));
++      } },
++    { id: 'totext', op: 'totext', name: 'PDF לטקסט', icon: 'document_text', engine: true, desc: 'חילוץ הטקסט המוטבע לקובץ TXT (Poppler)', fields: [],
++      async run(v) { const r = await engine('totext', {}, T('מחלץ טקסט'), { engine: v.__engine }); if (!r) return; const w = await save(r.bytes, stem(), 'txt', 'text/plain'); if (w) PV.toast(T('נשמר: {p}', { p: w }), { long: true }); } },
++    { id: 'pdf2pngEng', op: 'pdf2png', name: 'PDF לתמונות במנוע המחשב', icon: 'image', engine: true, desc: 'כל העמודים ל-PNG (ZIP) — מהיר במסמכים גדולים', fields: [],
++      async run(v) { const r = await engine('pdf2png', {}, T('ממיר'), { engine: v.__engine }); if (!r) return; const w = await save(r.bytes, stem() + ' - תמונות', 'zip', 'application/zip'); if (w) PV.toast(T('נשמר: {p}', { p: w }), { long: true }); } },
 +  ];
 +
 +  async function pagesOp(str, pick, suffix, allowEmptyAll) {
@@ -550,14 +561,14 @@ index 0000000..f5528c6
 +  async function render() {
 +    sec.innerHTML = '';
 +    const intro = document.createElement('p'); intro.className = 'muted';
-+    intro.textContent = T('הפעולות פועלות על המסמך הפתוח ושומרות קובץ חדש — המקור לא משתנה. פעולות שמסומנות ⚙ משתמשות במנוע המותקן במחשב (PDF24 או Ghostscript) דרך גשר אחת שאלתי.');
++    intro.textContent = T('הפעולות פועלות על המסמך הפתוח ושומרות קובץ חדש — המקור לא משתנה. פעולות שמסומנות ⚙ משתמשות בתוכנות ה-PDF שמותקנות במחשב (PDF24, Ghostscript, qpdf, PDFtk, MuPDF, Poppler, LibreOffice, Word) דרך גשר אחת שאלתי — מה שמזוהה מופיע, ואפשר לבחור באיזו תוכנה.');
 +    sec.appendChild(intro);
 +    if (engines === null) {
 +      engines = [];
 +      try { if (B && (B.port || (await B.probe())) && !B.versionLt(B.info && B.info.version, '1.0.2')) engines = (await B.call('/pdf/engines', {}, 10000)).engines || []; } catch (e) { /* */ }
 +    }
 +    const st = document.createElement('p'); st.className = 'muted';
-+    st.textContent = engines.length ? T('מנוע במחשב: {e}', { e: engines.map((x) => x.name).join(', ') }) : T('לא נמצא מנוע במחשב (או שהגשר אינו 1.0.2) — הפעולות המסומנות ⚙ לא יעבדו. התקינו את PDF24 החינמי.');
++    st.textContent = engines.length ? T('תוכנות PDF שזוהו במחשב: {e}', { e: engines.map((x) => x.name).join(', ') }) : T('לא זוהתה במחשב תוכנה מתאימה (או שהגשר אינו 1.0.2) — הפעולות המסומנות ⚙ לא יעבדו. למשל PDF24 החינמי מוסיף אותן.');
 +    sec.appendChild(st);
 +    for (const t of TOOLS) {
 +      const card = document.createElement('details'); card.className = 'card pdftool';
@@ -577,9 +588,27 @@ index 0000000..f5528c6
 +        if (f.meta) card.addEventListener('toggle', async () => { if (card.open) try { el.value = (await load(await curBytes()))[f.meta]() || ''; } catch (e) { /* */ } }, { once: true });
 +        vals[f.k] = el; row.appendChild(el); card.appendChild(row);
 +      }
++      // מנוע: כל התוכנות שמותקנות במחשב ויודעות את הפעולה (הבחירה הראשונה = המועדפת)
++      let engSel = null;
++      if (t.engine) {
++        const able = engines.filter((e) => (e.ops || []).includes(t.op));
++        const row = document.createElement('div'); row.className = 'setting-row';
++        const lab = document.createElement('div'); lab.className = 'sr-text'; lab.innerHTML = '<b></b><span></span>';
++        lab.querySelector('b').textContent = T('תוכנה במחשב');
++        lab.querySelector('span').textContent = able.length ? '' : T('לא נמצאה תוכנה מותקנת לפעולה הזו');
++        row.appendChild(lab);
++        if (able.length) {
++          engSel = document.createElement('select'); engSel.className = 'select';
++          able.forEach((e) => { const o = document.createElement('option'); o.value = e.id; o.textContent = e.name; engSel.appendChild(o); });
++          row.appendChild(engSel);
++        }
++        card.appendChild(row);
++        if (!able.length) card.classList.add('disabled');
++      }
 +      const go = document.createElement('button'); go.className = 'btn primary'; go.textContent = T('ביצוע');
 +      go.addEventListener('click', async () => {
 +        const v = {}; for (const k in vals) v[k] = vals[k].type === 'checkbox' ? vals[k].checked : vals[k].value;
++        if (engSel) v.__engine = engSel.value;
 +        go.disabled = true;
 +        try { if (!t.engine) PV.progress.show(T(t.name) + '…'); await t.run(v); }
 +        catch (e) { PV.error(PV.errMsg(e)); }

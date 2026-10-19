@@ -1,4 +1,4 @@
-From 1814ea49fc57a1ca310c3131576c67d3d62b4d2c Mon Sep 17 00:00:00 2001
+From 5ab0c0e9f748d9d433903d96f727f02344f5efc0 Mon Sep 17 00:00:00 2001
 From: Claude <noreply@anthropic.com>
 Date: Tue, 20 Oct 2026 02:12:05 +0300
 Subject: [PATCH] =?UTF-8?q?1.0.2:=20=D7=A4=D7=AA=D7=97=20=D7=91=D7=90?=
@@ -14,16 +14,16 @@ Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 ---
- CHANGELOG.md                         |   9 ++
+ CHANGELOG.md                         |   9 +
  bridge/CompassApi.cs                 |  40 +++++
  bridge/Extras.cs                     |   2 +-
  bridge/FsApi.cs                      |   2 +-
  bridge/HardLock.cs                   |   3 +
  bridge/Installer.cs                  |   1 +
  bridge/OtzariaBridge.csproj          |   2 +-
- bridge/PdfApi.cs                     |   4 +-
- bridge/PdfAssoc.cs                   | 214 +++++++++++++++++++++++++++
- bridge/PdfOps.cs                     | 186 +++++++++++++++++++++++
+ bridge/PdfApi.cs                     |  12 +-
+ bridge/PdfAssoc.cs                   | 214 +++++++++++++++++++++++
+ bridge/PdfOps.cs                     | 250 +++++++++++++++++++++++++++
  bridge/Program.cs                    |   3 +
  bridge/Server.cs                     |   3 +
  bridge/Support.cs                    |   7 +-
@@ -37,13 +37,13 @@ Content-Transfer-Encoding: 8bit
  system-settings/js/lang-en.js        |   2 +-
  system-settings/js/sections/kiosk.js |   2 +-
  system-settings/manifest.json        |   4 +-
- 23 files changed, 500 insertions(+), 25 deletions(-)
+ 23 files changed, 572 insertions(+), 25 deletions(-)
  create mode 100644 bridge/CompassApi.cs
  create mode 100644 bridge/PdfAssoc.cs
  create mode 100644 bridge/PdfOps.cs
 
 diff --git a/CHANGELOG.md b/CHANGELOG.md
-index 23d87a2..39ee393 100644
+index 23d87a2..35a71a0 100644
 --- a/CHANGELOG.md
 +++ b/CHANGELOG.md
 @@ -6,6 +6,15 @@
@@ -53,7 +53,7 @@ index 23d87a2..39ee393 100644
 +## 1.0.2 — 20.10.2026
 +- **"פתח באמצעות" ← צופה PDF+OCR:** הגשר נרשם ב-Windows (HKCU, בלי הרשאות מנהל) כאפשרות פתיחה לקובצי PDF, וגם ב"אפליקציות ברירת מחדל". בחירה בו פותחת את אוצריא ישירות בתוסף "צופה PDF+OCR" עם הקובץ, עם כל יכולות התוסף. נקודות קצה: `/pdf/assoc/status|register|unregister|open-settings`, `/pdf/inbox/list|ack`; שורת פקודה `--open-pdf "<path>"`. הרישום מוסר בהסרת הגשר.
 +- **תיקון: חלון "בחירת תוכנה" נעלם מאחור ונסגר אחרי כמה שניות** — נפתח עכשיו בחזית (SHOpenWithDialog מחוט STA עם חלון בעלים) ונשאר עד שבוחרים. גם בסייר הקבצים.
-+- **פעולות PDF במנוע מותקן (שלב ג):** `/pdf/engines`, `/pdf/op/begin|chunk|run|read|end` — דחיסה, גווני אפור, PDF/A, תיקון, הגנה/הסרת סיסמה (Ghostscript של PDF24, Ghostscript רגיל) ואופטימיזציה לרשת (qpdf). הקובץ עובר בחתיכות, בלי צורך בנתיב בדיסק. משמש את "כלי PDF" בצופה PDF+OCR 5.8.0.
++- **פעולות PDF בכל תוכנה מותקנת (שלב ג):** `/pdf/engines` מזהה את תוכנות ה-PDF שבמחשב ואת הפעולות של כל אחת — Ghostscript (גם זה של PDF24), qpdf, MuPDF, PDFtk, Poppler, LibreOffice, Word. `/pdf/op/begin|chunk|run|read|end` עם `engine` לבחירה: דחיסה, גווני אפור, PDF/A, תיקון, הגנה/הסרת סיסמה, אופטימיזציה לרשת, PDF לתמונות (ZIP), PDF לטקסט, מסמך משרדי ל-PDF. ב"פתיחה בתוכנה אחרת" נוספו PDF-XChange, Nitro, PDF24, PDFsam, Edge ו-WPS. הקובץ עובר בחתיכות, בלי צורך בנתיב בדיסק. משמש את "כלי PDF" בצופה PDF+OCR 5.8.0.
 +- **תוספי הגדרות מערכת וסייר קבצים 1.0.2:** "אודות" הציג גרסה 3.4.0 — עכשיו 1.0.2; הוסר "מגרסה 3.0" מהסבר הצימוד; קישורי עדכון ל-Hadabadra/achat-shaalti.
 +- **מצפן:** `POST /sys/compass` מחזיר את כיוון הצפון מחיישן המכשיר (טאבלטים), עבור "כיוון תפילה".
 +- **דיווחים אוטומטיים מיותרים (#81–#92):** קריסת הבדיקה העצמית לא נמסרת יותר לשליחה דרך התוסף; קריאה מצינור רכיב ההקשחה אחרי פסק זמן לא מדווחת יותר כ-task-error.
@@ -174,10 +174,25 @@ index bdeba29..a1352e8 100644
      <AssemblyTitle>אחת שאלתי - תוכנת חסימת מחשב לתוכנות תורניות בלבד</AssemblyTitle>
      <Company>גמח תורת אסתר</Company>
 diff --git a/bridge/PdfApi.cs b/bridge/PdfApi.cs
-index a17f178..98ad3e0 100644
+index a17f178..c6316ba 100644
 --- a/bridge/PdfApi.cs
 +++ b/bridge/PdfApi.cs
-@@ -115,9 +115,7 @@ internal static class PdfApi
+@@ -56,6 +56,14 @@ internal static class PdfApi
+                 "AcroRd32.exe", Path.Combine(pf86, "Adobe", "Acrobat Reader DC", "Reader", "AcroRd32.exe"), Path.Combine(pf, "Adobe", "Acrobat Reader DC", "Reader", "AcroRd32.exe"));
+         Add("foxit", "Foxit PDF Reader", "viewer", new[] { "open" },
+             "FoxitPDFReader.exe", Path.Combine(pf86, "Foxit Software", "Foxit PDF Reader", "FoxitPDFReader.exe"), Path.Combine(pf, "Foxit Software", "Foxit PDF Reader", "FoxitPDFReader.exe"));
++        // 1.0.2: עוד תוכנות PDF נפוצות — כל מה שמותקן מופיע ב"פתיחה בתוכנה אחרת"
++        Add("pdfxchange", "PDF-XChange Editor", "editor", new[] { "open" },
++            "PDFXEdit.exe", Path.Combine(pf, "Tracker Software", "PDF Editor", "PDFXEdit.exe"));
++        Add("nitro", "Nitro PDF", "editor", new[] { "open" }, "NitroPDF.exe", Path.Combine(pf, "Nitro", "PDF Pro", "14", "NitroPDF.exe"));
++        Add("pdf24", "PDF24", "tool", new[] { "open" }, Path.Combine(pf, "PDF24", "pdf24-Toolbox.exe"), Path.Combine(pf, "PDF24", "pdf24.exe"));
++        Add("pdfsam", "PDFsam", "tool", new[] { "open" }, Path.Combine(pf, "PDFsam Basic", "pdfsam.exe"));
++        Add("edge", "Microsoft Edge", "viewer", new[] { "open" }, "msedge.exe", Path.Combine(pf86, "Microsoft", "Edge", "Application", "msedge.exe"));
++        Add("wps", "WPS PDF", "editor", new[] { "open" }, Path.Combine(la, "Kingsoft", "WPS Office", "ksolaunch.exe"));
+         _cache = (DateTime.UtcNow, list);
+         return list;
+     }
+@@ -115,9 +123,7 @@ internal static class PdfApi
          else if (h.Id == "windows-chooser")
          {
              if (FxPolicy.IsRestricted) throw FxPolicy.Outside("במצב מוגבל אי אפשר לבחור תוכנה");
@@ -410,10 +425,10 @@ index 0000000..43b2d08
 +}
 diff --git a/bridge/PdfOps.cs b/bridge/PdfOps.cs
 new file mode 100644
-index 0000000..c6f9942
+index 0000000..c89aed4
 --- /dev/null
 +++ b/bridge/PdfOps.cs
-@@ -0,0 +1,186 @@
+@@ -0,0 +1,250 @@
 +using System.Collections.Concurrent;
 +using System.Diagnostics;
 +using System.Text.Json;
@@ -429,8 +444,8 @@ index 0000000..c6f9942
 +///   POST /pdf/op/run { id, op, params } → { size, engine }
 +///   POST /pdf/op/read { id, offset } → { data (base64, עד 1MB), offset, size, done }
 +///   POST /pdf/op/end { id } → { removed }
-+/// פעולות: compress {level: screen|ebook|printer|prepress}, grayscale, pdfa, repair, protect {userPassword, ownerPassword},
-+/// unlock {password}, linearize. קבצים זמניים ב-%TEMP%\OtzariaBridge-pdfops, נמחקים ב-end או אחרי שעה.</summary>
++/// כל מנוע מותקן מזוהה עם הפעולות שהוא יודע (Detect): Ghostscript (גם של PDF24), qpdf, MuPDF, PDFtk, Poppler, LibreOffice, Word.
++/// פעולות: compress, grayscale, pdfa, repair, protect, unlock, linearize, pdf2png (ZIP), totext, office2pdf {ext}. run מקבל engine לבחירת מנוע. קבצים זמניים ב-%TEMP%\OtzariaBridge-pdfops, נמחקים ב-end או אחרי שעה.</summary>
 +internal static class PdfOps
 +{
 +    private static string Root => Path.Combine(Path.GetTempPath(), "OtzariaBridge-pdfops");
@@ -477,16 +492,47 @@ index 0000000..c6f9942
 +        return null;
 +    }
 +
++    // ── כל מנוע מותקן והפעולות שלו. ההעדפה לפי הסדר ברשימה; התוסף יכול לבחור מנוע מסוים (engine) ─────────
++    private sealed record Engine(string Id, string Name, string Exe, string[] Ops);
++
++    private static string FindIn(params string[] cands) => cands.FirstOrDefault(c => c != null && File.Exists(c));
++    private static IEnumerable<string> Sub(string root, string pattern, params string[] rel)
++    {
++        var res = new List<string>();
++        try { if (Directory.Exists(root)) foreach (var d in Directory.GetDirectories(root, pattern).OrderByDescending(x => x)) res.Add(Path.Combine(new[] { d }.Concat(rel).ToArray())); } catch { }
++        return res;
++    }
++
++    private static List<Engine> Detect()
++    {
++        string pf = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), pf86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
++               la = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
++        var list = new List<Engine>();
++        void Add(string id, string name, string exe, params string[] ops) { if (exe != null) list.Add(new(id, name, exe, ops)); }
++
++        string gs = Gs();
++        Add("ghostscript", gs != null && gs.Contains("PDF24", StringComparison.OrdinalIgnoreCase) ? "Ghostscript (PDF24)" : "Ghostscript", gs,
++            "compress", "grayscale", "pdfa", "repair", "protect", "unlock", "pdf2png");
++        Add("qpdf", "qpdf", Qpdf(), "linearize", "protect", "unlock", "repair");
++        Add("mutool", "MuPDF (mutool)", FindIn(Sub(pf, "MuPDF*", "mutool.exe").Concat(new[] { OnPath("mutool.exe") }).ToArray()), "repair", "unlock", "compress", "pdf2png");
++        Add("pdftk", "PDFtk", FindIn(Path.Combine(pf86, "PDFtk", "bin", "pdftk.exe"), Path.Combine(pf, "PDFtk", "bin", "pdftk.exe"), Path.Combine(pf86, "PDFtk Server", "bin", "pdftk.exe"), OnPath("pdftk.exe")),
++            "protect", "unlock", "repair");
++        Add("poppler", "Poppler", FindIn(Sub(pf, "poppler*", "Library", "bin", "pdftotext.exe").Concat(Sub(pf, "poppler*", "bin", "pdftotext.exe")).Concat(new[] { OnPath("pdftotext.exe") }).ToArray()), "totext");
++        Add("libreoffice", "LibreOffice", FindIn(Path.Combine(pf, "LibreOffice", "program", "soffice.exe"), Path.Combine(pf86, "LibreOffice", "program", "soffice.exe"), OnPath("soffice.exe")), "office2pdf");
++        Add("word", "Microsoft Word", FindIn(Path.Combine(pf, "Microsoft Office", "root", "Office16", "WINWORD.EXE"), Path.Combine(pf86, "Microsoft Office", "root", "Office16", "WINWORD.EXE")), "office2pdf");
++
++        return list;
++    }
++
 +    private static object Engines()
 +    {
-+        var list = new List<object>();
-+        string gs = Gs(), q = Qpdf();
-+        if (gs != null) list.Add(new { id = "ghostscript", name = gs.Contains("PDF24", StringComparison.OrdinalIgnoreCase) ? "Ghostscript (PDF24)" : "Ghostscript", path = gs });
-+        if (q != null) list.Add(new { id = "qpdf", name = "qpdf", path = q });
-+        var ops = new List<string>();
-+        if (gs != null) ops.AddRange(new[] { "compress", "grayscale", "pdfa", "repair", "protect", "unlock" });
-+        if (q != null) ops.AddRange(new[] { "linearize", "protect", "unlock", "repair" });
-+        return new { engines = list, ops = ops.Distinct() };
++        var list = Detect();
++        // תוכנות PDF גרפיות שמותקנות (לפתיחה בלבד — אין להן ממשק פקודות) — מ-PdfApi
++        return new
++        {
++            engines = list.Select(e => new { id = e.Id, name = e.Name, path = e.Exe, ops = e.Ops }),
++            ops = list.SelectMany(e => e.Ops).Distinct(),
++        };
 +    }
 +
 +    // ── העברת קבצים ─────────────────────────────────────────────────────
@@ -538,50 +584,73 @@ index 0000000..c6f9942
 +        string id = Id(b), dir = Dir(id), inp = Path.Combine(dir, "in.pdf"), outp = Path.Combine(dir, "out.pdf");
 +        if (!File.Exists(inp)) throw BridgeException.BadRequest("לא הועלה קובץ");
 +        try { File.Delete(outp); } catch { }
-+        string op = b.Req("op");
++        string op = b.Req("op"), want = b.Str("engine", "");
 +        JsonElement p = b.TryGetProperty("params", out var pp) && pp.ValueKind == JsonValueKind.Object ? pp : default;
 +        string P(string k, string def = "") => p.ValueKind == JsonValueKind.Object ? (p.Str(k, def) ?? def) : def;
-+        string gs = Gs(), q = Qpdf();
-+        var a = new List<string>();
-+        string exe, engine;
-+
-+        bool useQpdf = q != null && (op == "linearize" || ((op == "protect" || op == "unlock" || op == "repair") && gs == null));
-+        if (useQpdf)
++        var all = Detect().Where(e => e.Ops.Contains(op)).ToList();
++        var eng = all.FirstOrDefault(e => e.Id == want) ?? all.FirstOrDefault()
++                  ?? throw BridgeException.Unsupported("לא נמצאה במחשב תוכנה שיודעת לבצע את הפעולה (" + op + ")");
++        string ext = P("ext", "pdf").ToLowerInvariant();
++        if (op == "office2pdf")
 +        {
-+            exe = q; engine = "qpdf";
-+            switch (op)
-+            {
-+                case "linearize": a.AddRange(new[] { "--linearize", inp, outp }); break;
-+                case "repair": a.AddRange(new[] { inp, outp }); break;
-+                case "unlock": a.Add("--password=" + P("password")); a.AddRange(new[] { "--decrypt", inp, outp }); break;
-+                case "protect":
-+                    string up = P("userPassword"), own = P("ownerPassword");
-+                    if (own.Length == 0) own = up.Length > 0 ? up : Guid.NewGuid().ToString("N");
-+                    a.AddRange(new[] { "--encrypt", up, own, "256", "--", inp, outp }); break;
-+            }
++            if (!new[] { "doc", "docx", "odt", "rtf", "xls", "xlsx", "ods", "ppt", "pptx", "odp", "txt" }.Contains(ext)) throw BridgeException.BadRequest("סוג קובץ לא נתמך: " + ext);
++            string src = Path.Combine(dir, "in." + ext); File.Move(inp, src, true); inp = src;
 +        }
-+        else
++        string up = P("userPassword"), own = P("ownerPassword");
++        if (own.Length == 0) own = up.Length > 0 ? up : Guid.NewGuid().ToString("N");
++        var a = new List<string>();
++        string exe = eng.Exe, resultFile = outp;
++        switch (eng.Id)
 +        {
-+            if (gs == null) throw BridgeException.Unsupported("לא נמצא מנוע PDF: יש להתקין את PDF24 או Ghostscript");
-+            exe = gs; engine = gs.Contains("PDF24", StringComparison.OrdinalIgnoreCase) ? "ghostscript-pdf24" : "ghostscript";
-+            a.AddRange(new[] { "-dBATCH", "-dNOPAUSE", "-dQUIET", "-dSAFER", "-sDEVICE=pdfwrite", "-dCompatibilityLevel=1.7" });
-+            switch (op)
-+            {
-+                case "compress":
-+                    string lvl = P("level", "ebook");
-+                    if (!new[] { "screen", "ebook", "printer", "prepress" }.Contains(lvl)) lvl = "ebook";
-+                    a.Add("-dPDFSETTINGS=/" + lvl); a.Add("-dDetectDuplicateImages=true"); break;
-+                case "grayscale": a.AddRange(new[] { "-sColorConversionStrategy=Gray", "-dProcessColorModel=/DeviceGray" }); break;
-+                case "pdfa": a.AddRange(new[] { "-dPDFA=2", "-dPDFACompatibilityPolicy=1", "-sColorConversionStrategy=RGB" }); break;
-+                case "repair": break;
-+                case "unlock": a.Add("-sPDFPassword=" + P("password")); break;
-+                case "protect":
-+                    string up = P("userPassword"), own = P("ownerPassword");
-+                    if (own.Length == 0) own = up.Length > 0 ? up : Guid.NewGuid().ToString("N");
-+                    a.Add("-sOwnerPassword=" + own); if (up.Length > 0) a.Add("-sUserPassword=" + up); a.Add("-dEncryptionR=3"); a.Add("-dKeyLength=128"); break;
-+                default: throw BridgeException.BadRequest("פעולה לא מוכרת: " + op);
-+            }
-+            a.Add("-sOutputFile=" + outp); a.Add(inp);
++            case "ghostscript":
++                a.AddRange(new[] { "-dBATCH", "-dNOPAUSE", "-dQUIET", "-dSAFER" });
++                if (op == "pdf2png")
++                {
++                    Directory.CreateDirectory(Path.Combine(dir, "png"));
++                    a.AddRange(new[] { "-sDEVICE=png16m", "-r" + Math.Clamp((int)b.Long("dpi", 150), 50, 600), "-sOutputFile=" + Path.Combine(dir, "png", "p%04d.png"), inp });
++                    break;
++                }
++                a.AddRange(new[] { "-sDEVICE=pdfwrite", "-dCompatibilityLevel=1.7" });
++                switch (op)
++                {
++                    case "compress":
++                        string lvl = P("level", "ebook"); if (!new[] { "screen", "ebook", "printer", "prepress" }.Contains(lvl)) lvl = "ebook";
++                        a.Add("-dPDFSETTINGS=/" + lvl); a.Add("-dDetectDuplicateImages=true"); break;
++                    case "grayscale": a.AddRange(new[] { "-sColorConversionStrategy=Gray", "-dProcessColorModel=/DeviceGray" }); break;
++                    case "pdfa": a.AddRange(new[] { "-dPDFA=2", "-dPDFACompatibilityPolicy=1", "-sColorConversionStrategy=RGB" }); break;
++                    case "unlock": a.Add("-sPDFPassword=" + P("password")); break;
++                    case "protect": a.Add("-sOwnerPassword=" + own); if (up.Length > 0) a.Add("-sUserPassword=" + up); a.Add("-dEncryptionR=3"); a.Add("-dKeyLength=128"); break;
++                }
++                a.Add("-sOutputFile=" + outp); a.Add(inp); break;
++            case "qpdf":
++                if (op == "linearize") a.AddRange(new[] { "--linearize", inp, outp });
++                else if (op == "repair") a.AddRange(new[] { inp, outp });
++                else if (op == "unlock") { a.Add("--password=" + P("password")); a.AddRange(new[] { "--decrypt", inp, outp }); }
++                else if (op == "protect") a.AddRange(new[] { "--encrypt", up, own, "256", "--", inp, outp });
++                break;
++            case "mutool":
++                if (op == "pdf2png") { Directory.CreateDirectory(Path.Combine(dir, "png")); a.AddRange(new[] { "draw", "-r", Math.Clamp((int)b.Long("dpi", 150), 50, 600).ToString(), "-o", Path.Combine(dir, "png", "p%04d.png"), inp }); break; }
++                a.Add("clean");
++                if (op == "unlock") { a.Add("-p"); a.Add(P("password")); a.Add("-D"); }
++                if (op == "compress") a.Add("-gggz");
++                a.AddRange(new[] { inp, outp }); break;
++            case "pdftk":
++                if (op == "unlock") a.AddRange(new[] { inp, "input_pw", P("password"), "output", outp });
++                else if (op == "protect") { a.AddRange(new[] { inp, "output", outp, "owner_pw", own }); if (up.Length > 0) { a.Add("user_pw"); a.Add(up); } a.Add("encrypt_128bit"); }
++                else a.AddRange(new[] { inp, "output", outp });
++                break;
++            case "poppler":
++                resultFile = Path.Combine(dir, "out.txt"); a.AddRange(new[] { "-enc", "UTF-8", "-layout", inp, resultFile }); break;
++            case "libreoffice":
++                a.AddRange(new[] { "--headless", "--norestore", "--convert-to", "pdf", "--outdir", dir, inp }); break;
++            case "word":
++                // וורד בלי ממשק פקודות להמרה — דרך PowerShell ו-COM
++                exe = "powershell.exe";
++                a.AddRange(new[] { "-NoProfile", "-NonInteractive", "-Command",
++                    "$w=New-Object -ComObject Word.Application;$w.Visible=$false;try{$d=$w.Documents.Open($args[0],$false,$true);$d.ExportAsFixedFormat($args[1],17);$d.Close($false)}finally{$w.Quit()}", inp, outp }); break;
++            case "tesseract":
++                Directory.CreateDirectory(Path.Combine(dir, "png"));
++                throw BridgeException.Unsupported("זיהוי ב-Tesseract המותקן יתווסף בהמשך — בינתיים ה-OCR המובנה בתוסף");
 +        }
 +        if (a.Count == 0) throw BridgeException.BadRequest("פעולה לא מוכרת: " + op);
 +
@@ -590,14 +659,24 @@ index 0000000..c6f9942
 +        using var pr = Process.Start(psi);
 +        var err = pr.StandardError.ReadToEndAsync(); _ = pr.StandardOutput.ReadToEndAsync();
 +        if (!pr.WaitForExit(10 * 60 * 1000)) { try { pr.Kill(true); } catch { } throw new BridgeException("timeout", "הפעולה ארכה יותר מדי", 504); }
-+        // qpdf מחזיר 3 על אזהרות — התוצאה תקינה
-+        if (!File.Exists(outp) || new FileInfo(outp).Length == 0 || (pr.ExitCode != 0 && !(engine == "qpdf" && pr.ExitCode == 3)))
++
++        if (op == "office2pdf") { var made = Path.Combine(dir, "in.pdf"); if (eng.Id == "libreoffice" && File.Exists(made)) File.Move(made, outp, true); }
++        if (op == "pdf2png")
++        {
++            // התמונות נארזות ל-ZIP אחד ונקראות כמו כל תוצאה
++            var pngs = Directory.Exists(Path.Combine(dir, "png")) ? Directory.GetFiles(Path.Combine(dir, "png"), "*.png").OrderBy(x => x).ToArray() : Array.Empty<string>();
++            if (pngs.Length > 0) { resultFile = outp; if (File.Exists(outp)) File.Delete(outp); System.IO.Compression.ZipFile.CreateFromDirectory(Path.Combine(dir, "png"), outp); }
++        }
++        if (resultFile != outp && File.Exists(resultFile)) File.Move(resultFile, outp, true);
++        bool okExit = pr.ExitCode == 0 || (eng.Id == "qpdf" && pr.ExitCode == 3); // qpdf: 3 = אזהרות, התוצאה תקינה
++        if (!File.Exists(outp) || new FileInfo(outp).Length == 0 || !okExit)
 +        {
 +            string msg = (err.Result ?? "").Trim();
 +            if (op == "unlock" && msg.Contains("password", StringComparison.OrdinalIgnoreCase)) throw new BridgeException("wrong_password", "סיסמה שגויה", 401);
-+            throw new BridgeException("op_failed", "הפעולה נכשלה: " + (msg.Length > 300 ? msg[..300] : msg), 500);
++            throw new BridgeException("op_failed", "הפעולה נכשלה (" + eng.Name + "): " + (msg.Length > 300 ? msg[..300] : msg), 500);
 +        }
-+        return new { size = new FileInfo(outp).Length, inSize = new FileInfo(inp).Length, engine };
++        string kind = op == "pdf2png" ? "zip" : op == "totext" ? "txt" : "pdf";
++        return new { size = new FileInfo(outp).Length, inSize = new FileInfo(inp).Length, engine = eng.Id, engineName = eng.Name, kind };
 +    }
 +}
 diff --git a/bridge/Program.cs b/bridge/Program.cs
@@ -660,7 +739,7 @@ index bb2a379..fc6a944 100644
      public const string AllReleasesUrl = "https://github.com/" + Repo + "/releases";
      private const string ApiUrl = "https://api.github.com/repos/" + Repo + "/releases?per_page=20";
 diff --git a/docs/BRIDGE_API.md b/docs/BRIDGE_API.md
-index 26ddd18..07b671a 100644
+index 26ddd18..ee2ef9f 100644
 --- a/docs/BRIDGE_API.md
 +++ b/docs/BRIDGE_API.md
 @@ -262,3 +262,16 @@ Win / Alt+Tab / Alt+Esc / Ctrl+Esc / Alt+F4 על חלון אוצריא, מעקב
@@ -676,8 +755,8 @@ index 26ddd18..07b671a 100644
 +| `/pdf/assoc/open-settings` | `{}` | פותח `ms-settings:defaultapps` |
 +| `/pdf/inbox/list` | `{}` | `{ items: [{ id, path, name, size, at, source }] }` (תוקף 10 דק', אחרי FxPolicy) |
 +| `/pdf/inbox/ack` | `{ ids }` | `{ removed }` |
-+| `/pdf/engines` | `{}` | `{ engines: [{id,name,path}], ops }` |
-+| `/pdf/op/begin` → `chunk {id,data}` → `run {id,op,params}` → `read {id,offset}` → `end {id}` | | פעולות: compress {level}, grayscale, pdfa, repair, protect {userPassword,ownerPassword}, unlock {password}, linearize |
++| `/pdf/engines` | `{}` | `{ engines: [{id,name,path,ops}], ops }` — ghostscript, qpdf, mutool, pdftk, poppler, libreoffice, word |
++| `/pdf/op/begin` → `chunk {id,data}` → `run {id,op,params}` → `read {id,offset}` → `end {id}` | | `run` מקבל `engine`. פעולות: compress {level}, grayscale, pdfa, repair, protect, unlock, linearize, pdf2png (ZIP), totext, office2pdf {ext} |
 +| `/sys/compass` (וגם `/compass`) | `{}` | `{ available, headingTrue, headingMagnetic, accuracy, time }` — רק במכשיר עם חיישן מצפן |
 +שורת פקודה: `OtzariaBridge.exe --open-pdf "<path>"` (שם הקובץ בתור, פותח את אוצריא בתוסף הצופה).
 diff --git a/docs/PDF-INTEGRATION-SPEC.md b/docs/PDF-INTEGRATION-SPEC.md

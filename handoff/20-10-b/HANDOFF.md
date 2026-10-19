@@ -20,7 +20,7 @@
 ### גשר 1.0.2 (`Hadabadra/achat-shaalti`)
 - `PdfAssoc.cs` — "פתח באמצעות" של Windows: רישום ב-HKCU (Applications, ProgId `OtzariaBridge.pdf`, OpenWithProgids, RegisteredApplications), אוטומטי בעלייה (`pdf.assoc=false` מבטל), הסרה ב-uninstall. `--open-pdf "<path>"` → תור ב-`%LOCALAPPDATA%\OtzariaBridge\pdf-inbox` → `otzaria://open/plugin/com.chadbedera.pdfviewer`. `/pdf/assoc/*`, `/pdf/inbox/list|ack`.
 - חלון "בחירת תוכנה" — `SHOpenWithDialog` מחוט STA עם חלון בעלים בחזית (במקום rundll32 שנעלם אחרי כמה שניות). גם בסייר (`FsApi.cs`).
-- `PdfOps.cs` — פעולות PDF במנוע מותקן: Ghostscript של PDF24 (`Program Files\PDF24\gs\bin`), Ghostscript רגיל, qpdf. `/pdf/engines`, `/pdf/op/begin|chunk|run|read|end`: compress, grayscale, pdfa, repair, protect, unlock, linearize.
+- `PdfOps.cs` — פעולות PDF בכל תוכנה שמותקנת במחשב: `/pdf/engines` מזהה Ghostscript (גם של PDF24), qpdf, MuPDF, PDFtk, Poppler, LibreOffice, Word ואת הפעולות של כל אחת; `/pdf/op/begin|chunk|run|read|end` עם `engine` לבחירה: compress, grayscale, pdfa, repair, protect, unlock, linearize, pdf2png, totext, office2pdf. ב-`PdfApi.cs` נוספו לפתיחה PDF-XChange, Nitro, PDF24, PDFsam, Edge, WPS.
 - `CompassApi.cs` — `/sys/compass` מחיישן המצפן (רק במכשיר עם חיישן).
 - דיווחים אוטומטיים #81–#92: קריסת הבדיקה העצמית לא נמסרת ב-`/diag/pending`; קריאת צינור אחרי פסק זמן מסומנת כנצפית (`HardLock.Call`).
 - תוספי המערכת: "אודות" הציג 3.4.0 → 1.0.2; הוסר "מגרסה 3.0"; קישורים ל-Hadabadra/achat-shaalti.
@@ -55,8 +55,22 @@ git push origin main
 ## לבדוק ב-Windows
 1. התקנת הגשר 1.0.2 → קליק ימני על PDF → "פתח באמצעות" → "צופה PDF+OCR (אוצריא)" → אוצריא נפתחת בתוסף עם הקובץ.
 2. בצופה: "פתיחה בתוכנה אחרת…" → "בחירת תוכנה" — החלון נשאר.
-3. "כלי PDF": חיבור, פיצול, דחיסה (עם PDF24 מותקן).
+3. "כלי PDF": חיבור, פיצול; בכלים המסומנים ⚙ — רשימת התוכנות שזוהו במחשב, ודחיסה/המרה בכל אחת.
 4. כיוון תפילה: בלי עיר שמורה — מיקום מ-Windows מופיע לבד; הגשר מציג את התוסף כמחובר.
 
 ## מה לא אפשרי
 - **צפון בלי חיישן:** במחשב בלי חיישן מצפן אין מקור לכיוון הצפון (גם תוספי דפדפן קוראים חיישן). נשארת החוגה ודרכי הזיהוי הידניות.
+
+## בדיקת השלמה (כל הבקשות מהשיחה)
+| בקשה | מצב |
+|---|---|
+| "גשר 3.1" בצופה → המספור החדש | ✅ 5.8.0 |
+| "פתח באמצעות" ב-Windows ישירות לתוסף | ✅ גשר 1.0.2 + צופה 5.8.0 |
+| חלון בחירת תוכנה נעלם ונסגר | ✅ גשר 1.0.2 |
+| כל פונקציות הגשר זמינות בתוסף (היו חסומות בגלל מספר הגרסה) | ✅ 5.8.0 |
+| בעיות בגיט של הגשר | ✅ כולן דיווחים אוטומטיים — שני המקורות תוקנו |
+| כיוון תפילה מחובר לגשר, שולח מיקום וצפון | ✅ 2.6.1 נדחף (צפון רק עם חיישן) |
+| הגדרות מערכת מציג "גשר 3" | ✅ 1.0.2 |
+| כל פעולות PDF כמו PDF24, בכל תוכנה מותקנת | ✅ 5.8.0 + גשר 1.0.2 |
+| תיעוד בגיט וביומני השינויים | ✅ CHANGELOG + docs בכל ריפו |
+| דחיפה | כיוון תפילה ✅; גשר וצופה — מהתיקייה הזו (אין גישה לריפו שלהם בשיחה זו) |
