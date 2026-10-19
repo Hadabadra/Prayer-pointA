@@ -48,3 +48,17 @@ Release `kivun-tefila-v2.6.0` נוצר ופורסם לחנות ב-20.10.2026. פ
 הכנס את צופה PDF+OCR 5.7.0 ל-e0548433917-gif/pdf-viewer, צור Release ופרסם לחנות.
 כל commit בשם Claude בלבד. בסוף עדכן את handoff/HANDOFF.md במה שבוצע, ואשר.
 ```
+
+## סטטוס ביצוע (20.10.2026, סשן עם גישה לריפו)
+
+### סעיף 1 — גשר 1.0.1: **בוצע**
+- שני ה-patch-ים הוחלו נקי (0001 ואז 0002) על `next` ונדחפו; כל ה-commit-ים בשם Claude <noreply@anthropic.com>.
+- ל-`main` היה commit מיזוג של PR #80 שלא היה ב-`next`, ולכן fast-forward ישיר לא היה אפשרי. מוזג `main` ל-`next` (ללא שינוי תוכן, אומת ש-main לא מכיל תוכן ייחודי), ואז `main` קודם ב-fast-forward ל-`e494ee8`. בלי force.
+- ה-CI יצר את התג `v1.0.1` (על `e494ee8`) ואת המהדורה, שאינה טיוטה: https://github.com/e0548433917-gif/achat-shaalti/releases/tag/v1.0.1
+- קבצי המהדורה (5 קבצים מועלים, לא 4): `OtzariaBridge-Setup-1.0.1.exe`, `OtzariaBridge.exe`, `file-explorer.otzplugin`, `system-settings.otzplugin`, `SHA256SUMS.txt`.
+- לא פורסם לחנות (כמתוכנן). `docs/STATUS.md` בריפו הגשר עודכן ב-`next`.
+- `dotnet build` לא רץ בסשן הזה (אין dotnet); הבנייה נעשתה ב-CI. עדיין לא נבדק ב-Windows.
+- שימו לב: GitHub מודיע שהריפו הועבר ל-`Hadabadra/achat-shaalti`. הדחיפות עברו דרך הכתובת הישנה.
+
+### סעיף 2 — צופה PDF+OCR 5.7.0: **לא בוצע**
+- ממתין לתשובה לאיזה ענף של `e0548433917-gif/pdf-viewer` לשייך את 5.7.0 (ענפים קיימים: main, redesign, unified-pdf-library, unified-pdf-library_co, upgrade-998, viewer-3.3.3, viewer-4.6, bridge-pairing-search). לא נדחף דבר, לא נוצר Release ולא פורסם לחנות.
