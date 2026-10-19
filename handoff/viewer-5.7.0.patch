@@ -1,0 +1,137 @@
+diff -ruN orig/CHANGELOG.md src/CHANGELOG.md
+--- a/CHANGELOG.md	2026-10-19 13:03:24.000000000 +0300
++++ b/CHANGELOG.md	2026-10-20 00:44:48.912007961 +0300
+@@ -1,5 +1,9 @@
+ # CHANGELOG — צופה PDF+OCR
+ 
++## 5.7.0 (20.10.2026)
++- פתיחה מהספרייה עוברת עכשיו למסך התוסף (לפני כן המסמך נפתח ברקע והמסך נשאר בספרייה).
++- "פתיחה בתוכנה אחרת…" בתפריט הפעולות: לקובץ מתיקייה, דרך גשר אחת שאלתי (SumatraPDF/Acrobat בעמוד הנוכחי, Foxit, ברירת המחדל של Windows או בחירת תוכנה). דורש גרסת גשר עם /pdf.
++
+ ## 5.6.3
+ 
+ * **שחזור המצב בפתיחה:** ב-5.6.0 הוסר הכפתור `btn-rashi-page`, אך `boot` המשיך להסתיר אותו וקרס לפני שחזור הלשוניות — התוסף נפתח ריק. השורה הוסרה; שחזור הלשוניות והעמוד עובד שוב.
+diff -ruN orig/index.html src/index.html
+--- a/index.html	2026-10-19 12:56:00.000000000 +0300
++++ b/index.html	2026-10-20 00:44:59.609830214 +0300
+@@ -372,7 +372,7 @@
+         <p class="muted">תיקונים לפי הערות המשתמשים בפורום:
+           <a href="#" data-url="https://otzaria.org/forum/post/43255">פוסט 43255</a> ·
+           <a href="#" data-url="https://otzaria.org/forum/post/43381">פוסט 43381</a></p>
+-        <span class="version-tag" data-t-skip>5.6.3</span>
++        <span class="version-tag" data-t-skip>5.7.0</span>
+         <ul>
+           <li>מודלי הרש"י הם המודלים שאומנו כפי שהועלו: "מדויק" מפעיל את heb_rashi_plus ו"מהיר" מפעיל את heb_rashi_all.</li>
+         </ul>
+@@ -635,5 +635,6 @@
+ <script src="./js/capture.js"></script>
+ <script src="./js/tabs.js"></script>
+ <script src="./js/app.js"></script>
++<script src="./js/openwith.js"></script>
+ </body>
+ </html>
+diff -ruN orig/js/app.js src/js/app.js
+--- a/js/app.js	2026-10-18 22:33:20.000000000 +0300
++++ b/js/app.js	2026-10-20 00:43:44.277615299 +0300
+@@ -614,7 +614,7 @@
+       const i = st && Array.isArray(st.openTabs) ? st.openTabs.findIndex((t) => t && t.isSelf) : -1;
+       if (i >= 0) await PV.tryCall('reader.activateTab', { index: i });
+     } catch (e) { /* ממשיכים */ }
+-    if (PV.granted && PV.granted.indexOf('navigation.write') >= 0) await PV.tryCall('plugin.openSelf', {});
++    if (!PV.granted || PV.granted.indexOf('navigation.write') >= 0) await PV.tryCall('plugin.openSelf', {});
+   }
+ 
+   async function openBookFromReader(data) {
+@@ -812,7 +812,7 @@
+     O2.on('reader.context_menu_item_clicked', onContextMenu);
+     O2.on('plugin.page_opened', onPageOpened);
+     O2.on('app.command', onCommand);
+-    O2.on('library.providerBook.openRequested', (ev) => Fs.openProviderBook(ev));
++    O2.on('library.providerBook.openRequested', (ev) => { PV.tryCall('plugin.openSelf', {}); Fs.openProviderBook(ev); });   // 5.7.0: לעבור ממסך הספרייה לתוסף
+     O2.on('plugin.resumed', () => { if (sidebarTab.current === 'files') Fs.refreshOpenBooks(); });
+     // גיבוי: אם ה-boot כבר עבר לפני שהסקריפט נרשם
+     setTimeout(() => { if (!booted) PV.tryCall('app.getTheme', {}).then((t) => boot({ theme: t })); }, 1500);
+diff -ruN orig/js/core.js src/js/core.js
+--- a/js/core.js	2026-10-19 12:56:00.000000000 +0300
++++ b/js/core.js	2026-10-20 00:44:59.612666372 +0300
+@@ -3,7 +3,7 @@
+   'use strict';
+ 
+   const PV = (window.PV = window.PV || {});
+-  PV.version = '5.6.3';
++  PV.version = '5.7.0';
+   const $ = (PV.$ = (id) => document.getElementById(id));
+ 
+   // ── אייקונים ──────────────────────────────────────────────────────────
+diff -ruN orig/js/files.js src/js/files.js
+--- a/js/files.js	2026-10-18 22:33:06.000000000 +0300
++++ b/js/files.js	2026-10-20 00:44:18.422186456 +0300
+@@ -239,6 +239,14 @@
+     PV.store.set('recents', recents);
+     Fs.renderRecents();
+   };
++  /** 5.7.0: נתיב מלא בדיסק של המסמך הנוכחי (רק לקובץ מתיקייה שנוספה), לפתיחה בתוכנה אחרת דרך הגשר */
++  Fs.diskPath = function () {
++    const s = V.doc && V.doc.source;
++    if (!s || s.type !== 'folder' || !s.path) return null;
++    const f = folders.find((x) => x.folderToken === s.folderToken);
++    if (!f || !f.path) return null;
++    return f.path.replace(/[\\/]+$/, '') + '\\' + String(s.path).replace(/^[\\/]+/, '').replace(/\//g, '\\');
++  };
+   Fs.currentRecent = () => (V.doc && V.doc.source ? recents.find((r) => r.key === keyOf(V.doc.source)) : null);
+   Fs.rememberPage = PV.debounce(() => {
+     const r = Fs.currentRecent();
+diff -ruN orig/js/openwith.js src/js/openwith.js
+--- a/js/openwith.js	1970-01-01 02:00:00.000000000 +0200
++++ b/js/openwith.js	2026-10-20 00:44:39.109618558 +0300
+@@ -0,0 +1,38 @@
++/* 5.7.0 — "פתיחה בתוכנה אחרת…" דרך הגשר (POST /pdf/handlers, /pdf/open; docs/PDF-INTEGRATION-SPEC.md בגשר).
++   זמין רק לקובץ מתיקייה שנוספה (יש לו נתיב בדיסק) ורק כשהגשר מותקן ותומך ב-/pdf. */
++(function () {
++  const PV = window.PV, $ = PV.$, V = PV.viewer, B = PV.bridge, Fs = PV.files;
++  const menu = $('more-menu');
++  if (!menu || !B || !Fs) return;
++  const item = document.createElement('button');
++  item.className = 'menu-item doc-only'; item.id = 'mi-openwith'; item.setAttribute('data-keep-open', '');
++  item.innerHTML = '<i data-icon="open"></i><span class="mi-text"></span>';
++  item.querySelector('.mi-text').textContent = PV.t('פתיחה בתוכנה אחרת…');
++  const list = document.createElement('div'); list.id = 'openwith-list'; list.hidden = true;
++  const sep = menu.querySelector('.menu-sep:last-of-type');
++  menu.insertBefore(item, sep); menu.insertBefore(list, sep);
++  const close = () => { list.hidden = true; list.innerHTML = ''; };
++  item.addEventListener('click', async () => {
++    if (!list.hidden) { close(); return; }
++    const path = Fs.diskPath && Fs.diskPath();
++    if (!path) { PV.toast(PV.t('אפשר לפתוח בתוכנה אחרת רק קובץ מתיקייה שנוספה לצופה')); menu.classList.remove('open'); return; }
++    let r;
++    try { r = await B.call('/pdf/handlers', {}, 15000); }
++    catch (e) { PV.toast(e && e.code === 'not_found' ? PV.t('הגשר המותקן ישן — נדרשת גרסה שתומכת בפתיחה בתוכנות PDF') : PV.t('הגשר אינו זמין: {e}', { e: PV.errMsg(e) })); menu.classList.remove('open'); return; }
++    list.innerHTML = ''; list.hidden = false;
++    (r.handlers || []).forEach((h) => {
++      const b = document.createElement('button'); b.className = 'menu-item';
++      b.innerHTML = '<span class="mi-text"></span>';
++      b.querySelector('.mi-text').textContent = '  ' + h.name + (h.isDefault ? ' ★' : '');
++      b.addEventListener('click', async () => {
++        close(); menu.classList.remove('open');
++        try {
++          const o = await B.call('/pdf/open', { path, handlerId: h.id, page: V.page || 1 }, 15000);
++          PV.toast(o && o.pageHonored ? PV.t('נפתח בעמוד {p}', { p: V.page || 1 }) : PV.t('נפתח'));
++        } catch (e) { PV.toast(e && e.code === 'locked' ? PV.t('במצב נעילה אי אפשר לפתוח בתוכנה אחרת') : PV.t('הפתיחה נכשלה: {e}', { e: PV.errMsg(e) })); }
++      });
++      list.appendChild(b);
++    });
++  });
++  document.addEventListener('click', (e) => { if (!menu.contains(e.target)) close(); });
++})();
+diff -ruN orig/manifest.json src/manifest.json
+--- a/manifest.json	2026-10-19 13:03:24.000000000 +0300
++++ b/manifest.json	2026-10-20 00:44:48.911156041 +0300
+@@ -2,7 +2,7 @@
+   "schemaVersion": 1,
+   "id": "com.chadbedera.pdfviewer",
+   "name": "צופה PDF+OCR",
+-  "version": "5.6.3",
++  "version": "5.7.0",
+   "description": "צופה PDF, תמונות ומסמכים בעיצוב אוצריא: חיפוש, תוכן עניינים, OCR בעברית, התיקיות שלי בחיפוש הספרייה ופתיחת ספרי PDF בעמוד הנוכחי.",
+   "author": "חד בדרא",
+   "homepage": "https://github.com/e0548433917-gif/pdf-viewer",

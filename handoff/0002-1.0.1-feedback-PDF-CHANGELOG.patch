@@ -1,0 +1,78 @@
+From 8254cae383eb2e9188f41945bb5d40121bd18eb3 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Tue, 20 Oct 2026 00:47:35 +0300
+Subject: [PATCH 2/2] =?UTF-8?q?=D7=92=D7=A8=D7=A1=D7=94=201.0.1:=20=D7=9E?=
+ =?UTF-8?q?=D7=99=D7=A7=D7=95=D7=9D,=20/feedback=20=D7=95-PDF=20=D7=91?=
+ =?UTF-8?q?=D7=92=D7=A9=D7=A8=20(CHANGELOG,=20=D7=92=D7=A8=D7=A1=D7=90?=
+ =?UTF-8?q?=D7=95=D7=AA)?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ CHANGELOG.md                  | 6 ++++++
+ bridge/OtzariaBridge.csproj   | 2 +-
+ file-explorer/manifest.json   | 2 +-
+ system-settings/manifest.json | 2 +-
+ 4 files changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 72c6e02..23d87a2 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -6,6 +6,12 @@
+ ---
+ 
+ 
++## 1.0.1 — 20.10.2026
++- **גשר — מיקום מ-Windows:** `POST /sys/location` (וגם `/location`) מחזיר קו רוחב, קו אורך, דיוק ומקור. כשהמיקום כבוי — הסבר איך להפעיל, ו-`/sys/location/settings` פותח את ההגדרה. משמש את "כיוון תפילה" 2.6.0.
++- **גשר — `/feedback`:** כינוי ל-`/sys/feedback`, כדי שתוספים שהמתווך לא מאושר להם ישלחו הערות דרך הגשר.
++- **גשר — PDF בתוכנות מותקנות:** `/pdf/handlers` ו-`/pdf/open` (שלבים א-ב של docs/PDF-INTEGRATION-SPEC.md): ברירת המחדל של Windows, בחירת תוכנה, SumatraPDF ו-Acrobat בעמוד מסוים, Foxit. משמש את "צופה PDF+OCR" 5.7.0.
++- טרם נבדק ב-Windows.
++
+ ## 1.0.0 — 18.10.2026 (הגרסה הרשמית הראשונה)
+ - **גרסה 1.0.0:** מספור הגרסאות מתחיל מחדש. הגשר, שני התוספים וקובץ ההתקנה (Inno Setup) כולם 1.0.0. מי שהתקין בעבר גרסת 3.x (בדיקות פנימיות בלבד) צריך להסיר את שני התוספים מאוצריא ואת הגשר, ולהתקין את 1.0.0 מקובץ ההתקנה.
+ - **קובץ התקנה (Inno Setup) מצורף לכל שחרור**, והפורק מפרסם pre-release מתגלגל לכל ענף. מסך הנעילה של Windows נשמר ומשוחזר בביטול האפשרות וביציאה מהתוכנה (ברירת המחדל כבויה).
+diff --git a/bridge/OtzariaBridge.csproj b/bridge/OtzariaBridge.csproj
+index e93d8dd..bdeba29 100644
+--- a/bridge/OtzariaBridge.csproj
++++ b/bridge/OtzariaBridge.csproj
+@@ -10,7 +10,7 @@
+     <Nullable>disable</Nullable>
+     <AssemblyName>OtzariaBridge</AssemblyName>
+     <RootNamespace>OtzariaBridge</RootNamespace>
+-    <Version>1.0.0</Version>
++    <Version>1.0.1</Version>
+     <Product>אחת שאלתי</Product>
+     <AssemblyTitle>אחת שאלתי - תוכנת חסימת מחשב לתוכנות תורניות בלבד</AssemblyTitle>
+     <Company>גמח תורת אסתר</Company>
+diff --git a/file-explorer/manifest.json b/file-explorer/manifest.json
+index b3532aa..81fa0fb 100644
+--- a/file-explorer/manifest.json
++++ b/file-explorer/manifest.json
+@@ -1,7 +1,7 @@
+ {
+   "id": "com.chadbedera.fileexplorer",
+   "name": "סייר קבצים",
+-  "version": "1.0.0",
++  "version": "1.0.1",
+   "description": "סייר קבצים מתוך אוצריא: עיון, העתקה, גזירה, הדבקה, מחיקה, שינוי שם, תצוגה מקדימה וחיפוש קבצים. דורש את אחת שאלתי; בלעדיה — תיקיות שאושרו.",
+   "author": "חד בדרא, יאיר דניאל",
+   "schemaVersion": 1,
+diff --git a/system-settings/manifest.json b/system-settings/manifest.json
+index 349f027..3774196 100644
+--- a/system-settings/manifest.json
++++ b/system-settings/manifest.json
+@@ -1,7 +1,7 @@
+ {
+   "id": "com.chadbedera.systemsettings",
+   "name": "הגדרות מערכת",
+-  "version": "1.0.0",
++  "version": "1.0.1",
+   "description": "כל הגדרות המחשב מתוך אוצריא: מסך, שמע, חשמל, שעה, מקלדת, עכבר, מדפסות, USB, רשת, ומצב נעילה ללימוד. דורש את אחת שאלתי.",
+   "author": "חד בדרא, יאיר דניאל",
+   "homepage": "https://github.com/e0548433917-gif/achat-shaalti",
+-- 
+2.43.0
+

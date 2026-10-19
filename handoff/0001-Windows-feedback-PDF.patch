@@ -1,0 +1,318 @@
+From a7618ad45586cea486c7ba336e547ce2bb05b203 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Tue, 20 Oct 2026 00:40:26 +0300
+Subject: [PATCH 1/2] =?UTF-8?q?=D7=92=D7=A9=D7=A8:=20=D7=9E=D7=99=D7=A7?=
+ =?UTF-8?q?=D7=95=D7=9D=20=D7=9E-Windows,=20/feedback=20=D7=95=D7=A4=D7=AA?=
+ =?UTF-8?q?=D7=99=D7=97=D7=AA=20PDF=20=D7=91=D7=AA=D7=95=D7=9B=D7=A0=D7=95?=
+ =?UTF-8?q?=D7=AA=20=D7=9E=D7=95=D7=AA=D7=A7=D7=A0=D7=95=D7=AA=20(=D7=9C?=
+ =?UTF-8?q?=D7=90=20=D7=90=D7=A8=D7=95=D7=96)?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ bridge/LocationApi.cs        |  78 +++++++++++++++++++++
+ bridge/PdfApi.cs             | 132 +++++++++++++++++++++++++++++++++++
+ bridge/Server.cs             |   2 +
+ docs/BRIDGE_API.md           |  14 ++++
+ docs/PDF-INTEGRATION-SPEC.md |  10 +++
+ docs/STATUS.md               |   2 +
+ 6 files changed, 238 insertions(+)
+ create mode 100644 bridge/LocationApi.cs
+ create mode 100644 bridge/PdfApi.cs
+
+diff --git a/bridge/LocationApi.cs b/bridge/LocationApi.cs
+new file mode 100644
+index 0000000..4dbe26e
+--- /dev/null
++++ b/bridge/LocationApi.cs
+@@ -0,0 +1,78 @@
++using System.Text.Json;
++using Windows.Devices.Geolocation;
++
++namespace OtzariaBridge;
++
++/// <summary>מיקום מ-Windows Location (Windows.Devices.Geolocation), ו-/feedback ככינוי ל-/sys/feedback.
++/// בתוך אוצריא navigator.geolocation נדחה, ולכן תוספים (כיוון תפילה, זמנים) מבקשים את המיקום מהגשר.
++/// POST /sys/location (וגם /location): { maxAgeSec?: 600, timeoutSec?: 15 }
++///   → { lat, lon, accuracy (מטרים), source ("gnss"|"wifi"|"cellular"|"ip"|"satellite"|"default"|"unknown"), time }
++/// שירות כבוי או ללא הרשאה → שגיאה location_off עם הסבר איך להפעיל.</summary>
++internal static class LocationApi
++{
++    private const string HowTo =
++        "המיקום ב-Windows כבוי או חסום. להפעלה: הגדרות ← פרטיות ואבטחה ← מיקום: להפעיל את \"שירותי מיקום\" ואת \"אפשר לאפליקציות שולחן עבודה לגשת למיקום\". " +
++        "Windows location is off. Turn it on in Settings > Privacy & security > Location (Location services + Let desktop apps access your location).";
++
++    public static void Register()
++    {
++        Server.Route("/sys/location", Get);
++        Server.Route("/location", Get);
++        Server.Route("/sys/location/settings", _ => { OpenSettings(); return new { opened = true }; });
++        Server.Route("/feedback", b =>
++        {
++            // אותו פורמט כמו /sys/feedback (GhFeedback.cs): { text, plugin, version, repo? }
++            string text = b.Req("text");
++            if (text.Length > 5000) text = text[..5000];
++            string repo = System.Text.RegularExpressions.Regex.Replace(b.Str("repo", ""), @"[^A-Za-z0-9_.\-/]", "");
++            string meta = "#meta kind=" + (b.Str("kind", "manual") == "postcode" ? "postcode" : "manual") + ";repo=" + repo
++                        + ";plugin=" + b.Str("plugin", "").Replace(";", " ") + ";pv=" + b.Str("version", "").Replace(";", " ");
++            string title = b.Str("title", "");
++            if (title.Length > 0) meta += ";title=" + title.Replace(";", " ").Replace("\n", " ")[..Math.Min(title.Length, 120)];
++            GhRelay.Queue("fb-" + DateTime.UtcNow.ToString("yyyyMMddHHmmssfff"), meta + "\n\n" + text);
++            GhRelay.Kick();
++            return new { queued = true };
++        });
++    }
++
++    private static async Task<object> Get(JsonElement b)
++    {
++        int maxAge = (int)Math.Clamp(b.Long("maxAgeSec", 600), 0, 86400);
++        int timeout = (int)Math.Clamp(b.Long("timeoutSec", 15), 3, 60);
++        GeolocationAccessStatus access;
++        try { access = await Geolocator.RequestAccessAsync(); }
++        catch (Exception ex) { throw new BridgeException("location_unavailable", "שירות המיקום של Windows אינו זמין במחשב הזה: " + ex.Message, 503); }
++        if (access != GeolocationAccessStatus.Allowed)
++            throw new BridgeException("location_off", HowTo, 403);
++        try
++        {
++            var g = new Geolocator { DesiredAccuracy = PositionAccuracy.Default };
++            var p = await g.GetGeopositionAsync(TimeSpan.FromSeconds(maxAge), TimeSpan.FromSeconds(timeout));
++            var c = p.Coordinate;
++            return new
++            {
++                lat = Math.Round(c.Point.Position.Latitude, 6),
++                lon = Math.Round(c.Point.Position.Longitude, 6),
++                accuracy = Math.Round(c.Accuracy),
++                source = c.PositionSource switch
++                {
++                    PositionSource.Satellite => "gnss",
++                    PositionSource.WiFi => "wifi",
++                    PositionSource.Cellular => "cellular",
++                    PositionSource.IPAddress => "ip",
++                    PositionSource.Default => "default",
++                    _ => "unknown",
++                },
++                time = c.Timestamp.ToString("o"),
++            };
++        }
++        catch (UnauthorizedAccessException) { throw new BridgeException("location_off", HowTo, 403); }
++        catch (Exception ex) when (ex is TimeoutException || ex is TaskCanceledException || (uint)ex.HResult == 0x800705B4)
++        { throw new BridgeException("location_timeout", "המיקום לא התקבל בזמן. נסו שוב, או בדקו שהמיקום פועל ב-Windows.", 504); }
++    }
++
++    private static void OpenSettings()
++    {
++        try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("ms-settings:privacy-location") { UseShellExecute = true }); } catch { }
++    }
++}
+diff --git a/bridge/PdfApi.cs b/bridge/PdfApi.cs
+new file mode 100644
+index 0000000..a17f178
+--- /dev/null
++++ b/bridge/PdfApi.cs
+@@ -0,0 +1,132 @@
++using System.Diagnostics;
++using System.Text.Json;
++using Microsoft.Win32;
++
++namespace OtzariaBridge;
++
++/// <summary>שילוב תוכנות PDF — שלבים א ו-ב של docs/PDF-INTEGRATION-SPEC.md.
++/// POST /pdf/handlers { force? } → { defaultId, handlers: [{ id, name, kind, exists, isDefault, capabilities }] }
++/// POST /pdf/open { path, handlerId?, page? } → { opened, handlerId, pageHonored }
++/// אבטחה: פתיחה לפי id מרשימה סגורה בלבד; הנתיב עובר FxPolicy; ארגומנטים כרשימה (ArgumentList);
++/// בנעילה /pdf/open חסום אלא אם pdf ב-kiosk.allowOpenExtensions, ואז רק לתוכנת ברירת המחדל.</summary>
++internal static class PdfApi
++{
++    private sealed record Handler(string Id, string Name, string Kind, string Exe, string[] Caps);
++
++    private static (DateTime at, List<Handler> list)? _cache;
++
++    public static void Register()
++    {
++        Server.Route("/pdf/handlers", b => Handlers(b.Bool("force")));
++        Server.Route("/pdf/open", Open);
++    }
++
++    private static object Handlers(bool force)
++    {
++        var list = Detect(force);
++        string def = DefaultId(list);
++        return new
++        {
++            defaultId = def,
++            handlers = list.Select(h => new { id = h.Id, name = h.Name, kind = h.Kind, exists = true, isDefault = h.Id == def, capabilities = h.Caps }),
++        };
++    }
++
++    private static List<Handler> Detect(bool force)
++    {
++        if (!force && _cache is { } c && DateTime.UtcNow - c.at < TimeSpan.FromMinutes(5)) return c.list;
++        var list = new List<Handler>
++        {
++            new("windows-default", "ברירת המחדל של Windows", "viewer", null, new[] { "open" }),
++            new("windows-chooser", "בחירת תוכנה (פתח באמצעות)", "viewer", null, new[] { "open" }),
++        };
++        void Add(string id, string name, string kind, string[] caps, params string[] exes)
++        {
++            string exe = exes.Select(Find).FirstOrDefault(p => p != null);
++            if (exe != null) list.Add(new(id, name, kind, exe, caps));
++        }
++        string pf = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), pf86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
++               la = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
++        Add("sumatra", "SumatraPDF", "viewer", new[] { "open", "openAtPage", "print" },
++            "SumatraPDF.exe", Path.Combine(la, "SumatraPDF", "SumatraPDF.exe"), Path.Combine(pf, "SumatraPDF", "SumatraPDF.exe"));
++        Add("acrobat", "Adobe Acrobat", "editor", new[] { "open", "openAtPage", "print" },
++            "Acrobat.exe", Path.Combine(pf, "Adobe", "Acrobat DC", "Acrobat", "Acrobat.exe"));
++        if (!list.Any(h => h.Id == "acrobat"))
++            Add("acrobat-reader", "Adobe Acrobat Reader", "viewer", new[] { "open", "openAtPage", "print" },
++                "AcroRd32.exe", Path.Combine(pf86, "Adobe", "Acrobat Reader DC", "Reader", "AcroRd32.exe"), Path.Combine(pf, "Adobe", "Acrobat Reader DC", "Reader", "AcroRd32.exe"));
++        Add("foxit", "Foxit PDF Reader", "viewer", new[] { "open" },
++            "FoxitPDFReader.exe", Path.Combine(pf86, "Foxit Software", "Foxit PDF Reader", "FoxitPDFReader.exe"), Path.Combine(pf, "Foxit Software", "Foxit PDF Reader", "FoxitPDFReader.exe"));
++        _cache = (DateTime.UtcNow, list);
++        return list;
++    }
++
++    /// <summary>נתיב מלא קיים, או שם exe שנמצא ב-App Paths (HKCU ואז HKLM)</summary>
++    private static string Find(string p)
++    {
++        try
++        {
++            if (Path.IsPathFullyQualified(p)) return File.Exists(p) ? p : null;
++            foreach (var root in new[] { Registry.CurrentUser, Registry.LocalMachine })
++            {
++                using var k = root.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\App Paths\" + p);
++                if (k?.GetValue(null) is string v) { v = Environment.ExpandEnvironmentVariables(v.Trim('"')); if (File.Exists(v)) return v; }
++            }
++        }
++        catch { }
++        return null;
++    }
++
++    /// <summary>התוכנה שמשויכת ל-.pdf אצל המשתמש (UserChoice), אם היא אחת מהרשימה; אחרת windows-default</summary>
++    private static string DefaultId(List<Handler> list)
++    {
++        try
++        {
++            using var k = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.pdf\UserChoice");
++            string prog = (k?.GetValue("ProgId") as string ?? "").ToLowerInvariant();
++            if (prog.Contains("sumatra") && list.Any(h => h.Id == "sumatra")) return "sumatra";
++            if (prog.Contains("acro") && list.Any(h => h.Id.StartsWith("acrobat"))) return list.First(h => h.Id.StartsWith("acrobat")).Id;
++            if (prog.Contains("foxit") && list.Any(h => h.Id == "foxit")) return "foxit";
++        }
++        catch { }
++        return "windows-default";
++    }
++
++    private static object Open(JsonElement b)
++    {
++        string raw = b.Req("path");
++        raw = Environment.ExpandEnvironmentVariables(raw.Trim());
++        if (!Path.IsPathFullyQualified(raw)) throw BridgeException.BadRequest("נדרש נתיב מלא");
++        string path = Path.GetFullPath(raw);
++        FxPolicy.EnsurePathAllowed(path);
++        if (!File.Exists(path)) throw new BridgeException("not_found", "הקובץ לא נמצא", 404);
++        if (!path.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase)) throw BridgeException.BadRequest("רק קובצי PDF");
++
++        string id = b.Str("handlerId", "windows-default");
++        if (Kiosk.IsActive)
++        {
++            if (!Kiosk.AllowedExtensions.Any(x => x.Equals("pdf", StringComparison.OrdinalIgnoreCase))) throw BridgeException.Locked();
++            id = "windows-default"; // בנעילה: לא בוחרים תוכנה אחרת
++        }
++        var h = Detect(false).FirstOrDefault(x => x.Id == id) ?? throw new BridgeException("no_handler", "התוכנה אינה ברשימה: " + id, 400);
++        long page = b.Long("page", 0);
++        bool atPage = page > 0 && h.Caps.Contains("openAtPage");
++
++        if (h.Id == "windows-default") { Process.Start(new ProcessStartInfo(path) { UseShellExecute = true }); }
++        else if (h.Id == "windows-chooser")
++        {
++            if (FxPolicy.IsRestricted) throw FxPolicy.Outside("במצב מוגבל אי אפשר לבחור תוכנה");
++            var psi = new ProcessStartInfo("rundll32.exe") { UseShellExecute = false };
++            psi.ArgumentList.Add("shell32.dll,OpenAs_RunDLL"); psi.ArgumentList.Add(path);
++            Process.Start(psi);
++        }
++        else
++        {
++            var psi = new ProcessStartInfo(h.Exe) { UseShellExecute = false };
++            if (atPage && h.Id == "sumatra") { psi.ArgumentList.Add("-page"); psi.ArgumentList.Add(page.ToString()); }
++            if (atPage && h.Id.StartsWith("acrobat")) { psi.ArgumentList.Add("/A"); psi.ArgumentList.Add("page=" + page); }
++            psi.ArgumentList.Add(path);
++            Process.Start(psi);
++        }
++        return new { opened = true, handlerId = h.Id, pageHonored = atPage };
++    }
++}
+diff --git a/bridge/Server.cs b/bridge/Server.cs
+index 30df39e..e3b5ae6 100644
+--- a/bridge/Server.cs
++++ b/bridge/Server.cs
+@@ -70,6 +70,8 @@ public static class Server
+         Theme.Register();
+         AdminLog.Register();
+         SettingsIO.Register();
++        PdfApi.Register();      // שלבים א-ב של docs/PDF-INTEGRATION-SPEC.md
++        LocationApi.Register(); // מיקום מ-Windows ו-/feedback (כיוון תפילה 2.6)
+ 
+         int port = FindPort();
+         var builder = WebApplication.CreateSlimBuilder(new WebApplicationOptions { ContentRootPath = AppContext.BaseDirectory });
+diff --git a/docs/BRIDGE_API.md b/docs/BRIDGE_API.md
+index c50aa5f..26ddd18 100644
+--- a/docs/BRIDGE_API.md
++++ b/docs/BRIDGE_API.md
+@@ -248,3 +248,17 @@ Win / Alt+Tab / Alt+Esc / Ctrl+Esc / Alt+F4 על חלון אוצריא, מעקב
+ 
+ כל שלב מדווח בכנות `success`/`message` גם כשהפעולה נכשלת (למשל הגדרה לא נמצאה בדגם הזה, או שכבר מוגדרת סיסמה אחרת) —
+ אין החזרת "הצלחה" ללא אישור בפועל מה-WMI.
++
++## מיקום, משוב ו-PDF (20.10.2026, לא ארוז עדיין)
++
++כל הנקודות POST עם `X-Otzaria-Bridge: 1` ו-`X-Otzaria-Token` (צימוד), כמו כל השאר.
++
++| נתיב | גוף | תשובה |
++|---|---|---|
++| `/sys/location` (וגם `/location`) | `{ maxAgeSec?: 600, timeoutSec?: 15 }` | `{ lat, lon, accuracy, source: "gnss"\|"wifi"\|"cellular"\|"ip"\|"default"\|"unknown", time }`. מיקום כבוי או חסום → `location_off` (403) עם הסבר איך להפעיל; לא התקבל בזמן → `location_timeout` (504) |
++| `/sys/location/settings` | `{}` | פותח את הגדרות המיקום של Windows (`ms-settings:privacy-location`) |
++| `/feedback` | `{ text, plugin, version, repo?, title?, kind? }` | `{ queued: true }`. כינוי ל-`/sys/feedback`: נכנס לתור ונשלח למתווך `achat-relay` |
++| `/pdf/handlers` | `{ force? }` | `{ defaultId, handlers: [{ id, name, kind, exists, isDefault, capabilities }] }`. מזהים: `windows-default`, `windows-chooser`, `sumatra`, `acrobat`/`acrobat-reader`, `foxit` |
++| `/pdf/open` | `{ path, handlerId?, page? }` | `{ opened, handlerId, pageHonored }`. נתיב עובר `FxPolicy`; בנעילה רק אם `pdf` ב-`kiosk.allowOpenExtensions`, ותמיד בתוכנת ברירת המחדל |
++
++הערה: בתוכנית "כיוון תפילה" נכתב `GET /location`. בגשר כל הבקשות (חוץ מ-`/health`) הן POST עם צימוד, ולכן המימוש הוא `POST /location`.
+diff --git a/docs/PDF-INTEGRATION-SPEC.md b/docs/PDF-INTEGRATION-SPEC.md
+index 2b58684..cdbf44a 100644
+--- a/docs/PDF-INTEGRATION-SPEC.md
++++ b/docs/PDF-INTEGRATION-SPEC.md
+@@ -1,5 +1,7 @@
+ # מפרט: שילוב תוכנות PDF בגשר (הצעה)
+ 
++> **20.10.2026:** שלבים א ו-ב מומשו ב-`bridge/PdfApi.cs` (`/pdf/handlers`, `/pdf/open` עם `sumatra -page N` ו-`acrobat /A page=N`). עדיין לא נבדקו ב-Windows ולא נארזו. שלבים ג-ה ממתינים לתשובות לשאלות הפתוחות (סעיף 9; הצעות תשובה שם).
++
+ > סטטוס: **הצעה, לא ממומש.** נכתב ב-19.10.2026 מול גרסה 1.0.0, על סמך `docs/BRIDGE_API.md` ועל סמך קריאה חלקית של `bridge/` (`Programs.cs`, `FsApi.cs`, `Installer.cs`).
+ > רכיבים שלא נבדקו בקוד מסומנים **[לאמת]**.
+ > הצד השני של התוכנית (התוסף "ספריית PDF+OCR") מתועד במאגר שלו: `docs/PDF-HANDLER-PLAN.md` ב-[pdf-viewer](https://github.com/e0548433917-gif/pdf-viewer). שני המסמכים חייבים להישאר עקביים, ושינוי בחוזה כאן מחייב עדכון שם.
+@@ -135,3 +137,11 @@
+ 3. האם להרחיב את `kiosk.allowOpenExtensions` או להגדיר רשימה נפרדת ל-PDF?
+ 4. האם בעלי המאגר מוכנים לקוד רישום ל-`HKCU\Software\Classes` (הוא כבר רושם `Run` ו-`otzaria://` נקרא)?
+ 5. צירוף `qpdf` או הסתמכות על התקנה של המשתמש.
++
++
++### הצעות תשובה (20.10.2026)
++1. מופע יחיד: יש mutex (`Local\OtzariaBridge` ב-`Program.cs`) שעוצר עותק שני, ויש pipe רק לנעילה המוקשחת (`HardLock.cs`). לשלב ד: pipe קטן חדש בקובץ נפרד, שהעותק השני שולח בו את הנתיב ויוצא.
++2. `/pdf/handlers` בנעילה: לא לחסום (קריאה בלבד). `/pdf/open` בנעילה פותח רק בברירת המחדל וכשהסיומת מותרת (כך מומש).
++3. להרחיב את `kiosk.allowOpenExtensions`, לא רשימה נפרדת.
++4. רישום ב-`HKCU\Software\Classes`: יש תקדים (HKCU Run, `LockScreenImage.cs`). רק בלחיצת משתמש, וביטול שמחזיר את המצב הקודם.
++5. qpdf: לא לצרף בשלב ראשון. התוסף עושה חיבור/חלוקה/סיבוב ב-pdf-lib; הגשר ישתמש ב-qpdf רק אם מותקן.
+diff --git a/docs/STATUS.md b/docs/STATUS.md
+index 457cce2..a1710a4 100644
+--- a/docs/STATUS.md
++++ b/docs/STATUS.md
+@@ -32,3 +32,5 @@
+ - 14.10: סבב E חלקי — E5/E6/E7 ✅; E9 חלקי (README); נותרו E1–E4, E8 (Windows/SignPath).
+ - 14.10: E1/E4 בדיקות עצמיות אוטומטיות (SelfTestMore.cs); E2 ממצא 8 — עדכון עצמי מאומת של השירות (SvcUpdate.cs). שליחה ל-GitHub — ממתינה (A7).
+ - 14.10: נוסף סבב F (ניקוי GitHub + גרסה רשמית) ב-ROUNDS-3.7.1.md.
++- 20.10: נוספו בלי אריזה: `LocationApi.cs` (`/sys/location`, `/location`, `/sys/location/settings`, `/feedback`) ו-`PdfApi.cs` (`/pdf/handlers`, `/pdf/open`, שלבים א-ב של PDF-INTEGRATION-SPEC). נבנה בהצלחה (dotnet build), לא נבדק ב-Windows.
++  **נשאר לאריזה הבאה:** בדיקה ב-Windows (מיקום כבוי/דלוק, אישור הרשאת מיקום לאפליקציות שולחן עבודה, Sumatra/Acrobat בעמוד מסוים, נעילה); הוספת `/location` ו-`/pdf/*` לבדיקה העצמית; כפתור "מיקום" בהגדרות מערכת (לא חובה); שלבים ג-ה של PDF לפי תשובות לסעיף 9.
+-- 
+2.43.0
+
