@@ -1,10 +1,26 @@
 # כיוון תפילה — שיח רינה-עמודי שש
 
 ## הורדה
-- **כיוון תפילה 2.5.0:** [kivun-tefila-2.5.0.otzplugin](https://github.com/e0548433917-gif/otzaria/raw/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/kivun-tefila-2.5.0.otzplugin). זמין גם בחנות התוספים של אוצריא. קבצי המקור נמצאים בתיקייה [kivun-tefila](kivun-tefila).
+- **כיוון תפילה 2.5.1:** [kivun-tefila-2.5.1.otzplugin](https://github.com/e0548433917-gif/otzaria/raw/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/kivun-tefila-2.5.1.otzplugin). זמין גם בחנות התוספים של אוצריא. קבצי המקור נמצאים בתיקייה [kivun-tefila](kivun-tefila).
 - **סידורון 3.7.2 התואם** (כפתור לפתיחת כיוון תפילה, ושליחת התפילה הפתוחה לבקשתו; התוסף של Y-PLONI, נערך באישורו): [com.moshenahari.siduron-3.7.2.otzplugin](https://github.com/e0548433917-gif/otzaria/raw/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/siduron/com.moshenahari.siduron-3.7.2.otzplugin). הוגש כבקשת מיזוג לריפו שלו: [Y-PLONI/siduron_plugin#1](https://github.com/Y-PLONI/siduron_plugin/pull/1). פירוט השינויים בתיקיית [siduron](siduron).
 
+### קבצי נתונים להורדה (אופציונלי, להורדה פעם אחת מתוך ההגדרות בתוסף)
+| קובץ | גודל | מה יש בו | קישור |
+|------|------|----------|-------|
+| `geo-names.json` | כ-1MB | שמות נהרות בעולם, וכבישים בצפון אמריקה, לחיפוש בלי אינטרנט | [הורדה](https://github.com/e0548433917-gif/otzaria/raw/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/kivun-tefila-data/geo-names.json) |
+| `geo-extra.json` | כ-3MB | נהרות, אגמים וכבישים מפורטים למפה | [הורדה](https://github.com/e0548433917-gif/otzaria/raw/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/kivun-tefila-data/geo-extra.json) |
+| `roads/<קוד מדינה>.json` | 100-600KB | כבישים ראשיים של מדינה אחת, למשל `roads/ISR.json` | [התיקייה](https://github.com/e0548433917-gif/otzaria/tree/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/kivun-tefila-data/roads) |
+| כל התיקייה | | | [kivun-tefila-data](https://github.com/e0548433917-gif/otzaria/tree/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/kivun-tefila-data) |
+
+קובצי הכבישים לפי מדינה נבנים אוטומטית ב-GitHub Actions (`build-roads.yml`) לפי הרשימה ב-`kivun-tefila-build/roads-request.txt`.
+כל הגרסאות, עם סידורון התואם מצורף: [דף ההורדות](https://github.com/e0548433917-gif/otzaria/releases?q=kivun-tefila&expanded=true).
+
 ---
+
+## מה חדש ב-2.5.1
+
+* **קישורים מדויקים בהגדרות:** "פתח את התיקייה" מוביל לתיקיית קבצי הנתונים בגיט, ו"דף ההורדה" מוביל לכל גרסאות התוסף, עם סידורון התואם מצורף לכל גרסה.
+* **סידורון 3.7.2:** הקוד המלא שלו נמצא עכשיו בענף של כיוון תפילה, בתיקייה siduron/src, והחבילה נבדקת מולו בכל העלאה.
 
 ## מה חדש ב-2.5.0
 

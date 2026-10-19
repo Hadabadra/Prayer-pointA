@@ -6,7 +6,7 @@
 ## הורדה
 - התוסף המעודכן: [com.moshenahari.siduron-3.7.2.otzplugin](com.moshenahari.siduron-3.7.2.otzplugin)
 - כל השינויים מול 3.7.0 (כולל 3.7.2): [siduron-kivun-tefila.diff](siduron-kivun-tefila.diff)
-- הקבצים ששונו בלבד: תיקיית [src](src)
+- קוד המקור המלא של 3.7.2: תיקיית [src](src) (עותק של הפורק `e0548433917-gif/siduron_plugin`, ענף `master`)
 
 ## מה חדש ב-3.7.2
 - כש"כיוון תפילה" מבקש (`plugin.page_opened` עם `param.type = "send-prayer"`), סידורון ממתין שהתפילה תיטען ושולח אותה בחזרה.
@@ -21,3 +21,10 @@
 
 נבדק מול טבלאות הגרסאות וההרשאות של אוצריא (ענף dev) ונבדק בפועל באוצריא.
 הערה: קישור `otzaria://open/plugin/...` אינו עובד מתוך דף תוסף — לכן נעשה שימוש ב-`plugin.openOther`.
+
+## בנייה מחדש (3.7.2 ומעלה)
+החבילה נבנית מהתיקייה `src` באריזה דטרמיניסטית, כך שאותו קוד תמיד נותן קובץ זהה:
+```bash
+python3 kivun-tefila-build/pack.py siduron/src siduron/com.moshenahari.siduron-<גרסה>.otzplugin README.md
+```
+ה-Action `kivun-release.yml` בודק בכל דחיפה שהחבילות בענף תואמות לקוד שלהן, ומצרף את סידורון ל-Release של כיוון תפילה.

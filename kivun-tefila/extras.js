@@ -175,7 +175,9 @@ setInterval(compassNote, 1000);
 $("setDl").onclick = () => { if (!pos) return; pop("bSet", "set", false); $("mapMode").value = "street"; map(); setTimeout(() => stDownload(), 300) };
 
 /* ---- דף ההורדה: פותח בדפדפן, ומעתיק את הכתובת ללוח ---- */
-const DL_URL = "https://github.com/e0548433917-gif/otzaria/tree/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94";
+const DL_URL = "https://github.com/e0548433917-gif/otzaria/releases?q=kivun-tefila&expanded=true";
+const DATA_URL = "https://github.com/e0548433917-gif/otzaria/tree/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/kivun-tefila-data";
+if ($("dataLink")) $("dataLink").onclick = () => { copyText(DATA_URL).then(ok => $("dataMsg").textContent = ok ? "הכתובת הועתקה ללוח." : DATA_URL); let w = null; try { w = window.open(DATA_URL, "_blank", "noopener") } catch (e) {} if (!w && O) O.call("app.openUrl", { url: DATA_URL }).catch(() => {}) };
 $("dlLink").onclick = () => { copyText(DL_URL); let w = null; try { w = window.open(DL_URL, "_blank", "noopener") } catch (e) {} if (!w && O) O.call("app.openUrl", { url: DL_URL }).catch(() => {}); $("dlLink").textContent = "הכתובת הועתקה ללוח" };
 
 /* ---- הסבר השימוש במפה מוצג בשורה התחתונה, רק בתצוגת הרחובות ---- */

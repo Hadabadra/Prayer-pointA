@@ -1,0 +1,407 @@
+/* test-features.js — covers the v3.6 fixes, one section per reported issue:
+ *
+ *   1. RTL icon           — manifest tool-tab glyph + the mirrored icon/icon.png
+ *   2. תפילה ללא מניין     — minyan-only sections/קדיש/ברכו are dropped, the rest stays
+ *   3. קיצור דרך           — the real host error surfaces (not a blanket "no permission")
+ *   4. תצוגת שם ה׳         — ה׳ / יְיָ / יְדֹוָד, vowels carried over, mid-word guard kept
+ *   5. מודל היום לערבית    — Otzaria's date rolls over at שקיעה; ערבית follows the night
+ *   6. תשעה באב            — no תחנון and no אבינו מלכנו (also fixes mincha on any
+ *                            day without תחנון)
+ *
+ * Run: node tools/test-features.js
+ */
+'use strict';
+const vm = require('vm');
+const fs = require('fs');
+const zlib = require('zlib');
+const path = require('path');
+const ROOT = path.resolve(__dirname, '..');
+const { JSDOM } = require(path.join(ROOT, 'references/hebcal-build/node_modules/jsdom'));
+
+let pass = 0, fail = 0;
+function check(label, ok, extra) {
+  if (ok) { pass++; console.log('  ✓ ' + label); }
+  else { fail++; console.log('  ✗ ' + label + (extra ? '  → ' + extra : '')); }
+}
+function section(title) { console.log('\n══ ' + title + ' ══'); }
+
+/* Nikud/te'amim-insensitive view of rendered HTML, for content assertions. */
+function norm(html) {
+  return String(html).replace(/<[^>]*>/g, ' ').replace(/\p{Mn}/gu, '')
+    .replace(/[׳״'"־׀׃]/g, '').replace(/\s+/g, ' ');
+}
+
+/* ────────────────────────── 1. RTL icon ────────────────────────── */
+section('1. סמל התוסף — כיוון ימין→שמאל');
+const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'manifest.json'), 'utf8'));
+const iconName = manifest.contributes.toolTab.iconName;
+// book_24_regular is drawn as a closed book bound on the LEFT — an LTR book.
+// Fluent has no book_rtl glyph, and a plugin cannot ask the host to mirror one,
+// so the tool tab must use a glyph that reads the same in both directions.
+check('tool-tab icon is not the left-bound book', iconName !== 'book_24_regular', iconName);
+check('tool-tab icon is the direction-neutral open book', iconName === 'book_open_24_regular', iconName);
+check('tool-tab icon is a valid Fluent 24px name', /^[a-z0-9_]+_24_(regular|filled)$/.test(iconName));
+
+// icon/icon.png: text lines must be RIGHT-aligned (RTL) — every line ends at the
+// same right edge, and the short last line is the one that stops early on the left.
+function readPng(file) {
+  const buf = fs.readFileSync(file);
+  let off = 8, w = 0, h = 0, idat = [];
+  while (off < buf.length) {
+    const len = buf.readUInt32BE(off), type = buf.toString('ascii', off + 4, off + 8);
+    const data = buf.slice(off + 8, off + 8 + len);
+    if (type === 'IHDR') { w = data.readUInt32BE(0); h = data.readUInt32BE(4); }
+    if (type === 'IDAT') idat.push(data);
+    off += len + 12;
+  }
+  const raw = zlib.inflateSync(Buffer.concat(idat));
+  const bpp = 4, stride = w * bpp, out = Buffer.alloc(h * stride);
+  for (let y = 0; y < h; y++) {
+    const filter = raw[y * (stride + 1)];
+    const line = raw.slice(y * (stride + 1) + 1, (y + 1) * (stride + 1));
+    for (let x = 0; x < stride; x++) {
+      const a = x >= bpp ? out[y * stride + x - bpp] : 0;
+      const b = y > 0 ? out[(y - 1) * stride + x] : 0;
+      const c = x >= bpp && y > 0 ? out[(y - 1) * stride + x - bpp] : 0;
+      let v = line[x];
+      if (filter === 1) v += a;
+      else if (filter === 2) v += b;
+      else if (filter === 3) v += (a + b) >> 1;
+      else if (filter === 4) {
+        const p = a + b - c, pa = Math.abs(p - a), pb = Math.abs(p - b), pc = Math.abs(p - c);
+        v += (pa <= pb && pa <= pc) ? a : (pb <= pc ? b : c);
+      }
+      out[y * stride + x] = v & 0xff;
+    }
+  }
+  return { w: w, h: h, px: out };
+}
+const png = readPng(path.join(ROOT, 'icon', 'icon.png'));
+const rows = [];
+for (let y = 0; y < png.h; y++) {
+  const xs = [];
+  for (let x = 0; x < png.w; x++) {
+    const i = (y * png.w + x) * 4;
+    if (png.px[i + 3] > 100 && png.px[i] > 200 && png.px[i + 1] > 200 && png.px[i + 2] > 200) xs.push(x);
+  }
+  if (xs.length) rows.push({ y: y, left: xs[0], right: xs[xs.length - 1], n: xs.length });
+}
+check('icon has text lines', rows.length > 0);
+if (rows.length) {
+  const rightEdges = rows.map(r => r.right);
+  const widest = Math.max.apply(null, rows.map(r => r.n));
+  const shortRows = rows.filter(r => r.n < widest);
+  const longRows = rows.filter(r => r.n === widest);
+  check('all icon lines share the same right edge (right-aligned = RTL)',
+    Math.max.apply(null, rightEdges) - Math.min.apply(null, rightEdges) <= 1);
+  check('the short line stops early on the LEFT, not on the right',
+    shortRows.length > 0 && shortRows.every(r => r.left > longRows[0].left),
+    JSON.stringify({ short: shortRows[0], long: longRows[0] }));
+}
+
+/* ─────────────── 2. תפילה ללא מניין (js/services.js) ─────────────── */
+section('2. תפילה ללא מניין');
+const svcCtx = vm.createContext({ console });
+svcCtx.window = svcCtx;
+['data/services-data.js', 'data/shabbat-data.js', 'js/services.js'].forEach(f =>
+  vm.runInContext(fs.readFileSync(path.join(ROOT, f), 'utf8'), svcCtx));
+const SVC = svcCtx.SiduronServices;
+const CORPORA = {
+  weekday: { data: () => svcCtx.SIDURON_SERVICES, render: SVC.render, services: ['shacharit', 'mincha', 'arvit'],
+    flags: ['day_monday', 'monday_thursday', 'kriat_hatorah', 'kriat_hatorah_mon_thu'] },
+  shabbat: { data: () => svcCtx.SIDURON_SHABBAT, render: SVC.renderShabbat, services: ['maariv', 'shacharit', 'mincha'],
+    flags: ['shabbat', 'day_shabbat', 'musaf_day', 'kriat_hatorah'] },
+  yomtov: { data: () => svcCtx.SIDURON_YOMTOV, render: SVC.renderYomtov, services: ['maariv', 'shacharit', 'mincha'],
+    flags: ['pesach', 'day_tuesday', 'musaf_day', 'kriat_hatorah', 'full_hallel'] },
+};
+const NUSACHIM = ['edot_mizrach', 'sfard', 'ashkenaz'];
+// A segment that may only be said with a מניין, recognised independently of the
+// implementation (so the test would catch a filter that silently stops working).
+function isMinyanOnlySeg(text) {
+  const t = norm(text).trim();
+  if (/^.{0,30}?יתגדל ויתקדש/.test(t)) return 'קדיש';
+  if (t.length <= 60 && /ברכו את (יהוה|השם|ה|הי) המברך/.test(t)) return 'ברכו';
+  return null;
+}
+let leftovers = 0, shrank = 0, corporaChecked = 0, notesSeen = 0;
+Object.keys(CORPORA).forEach(kind => {
+  const C = CORPORA[kind];
+  NUSACHIM.forEach(nusach => C.services.forEach(svc => {
+    const segs = C.data()[nusach] && C.data()[nusach][svc];
+    if (!segs) return;
+    corporaChecked++;
+    const withM = C.render(nusach, svc, { flags: C.flags.concat(['with_minyan']) });
+    const noM = C.render(nusach, svc, { flags: C.flags });
+    if (noM.html.length < withM.html.length) shrank++;
+    if (/s-minyan-note/.test(noM.html)) notesSeen++;
+    const body = norm(noM.html);
+    segs.forEach(s => {
+      const why = isMinyanOnlySeg(s.text);
+      if (!why) return;
+      const needle = norm(s.text).trim().slice(0, 40);
+      if (needle.length > 12 && body.indexOf(needle) >= 0) {
+        leftovers++;
+        if (leftovers <= 3) console.log('    leftover ' + why + ' in ' + kind + '/' + nusach + '/' + svc);
+      }
+    });
+  }));
+});
+check('all corpora rendered (3 nuschaot × 3 corpora × services)', corporaChecked === 27, String(corporaChecked));
+check('no קדיש/ברכו survives without a minyan, anywhere', leftovers === 0, String(leftovers));
+check('every service gets shorter without a minyan', shrank === corporaChecked, shrank + '/' + corporaChecked);
+check('every service explains what was skipped', notesSeen === corporaChecked, notesSeen + '/' + corporaChecked);
+
+// The individual's own prayer must survive untouched.
+NUSACHIM.forEach(nusach => {
+  const noM = norm(SVC.render(nusach, 'shacharit', { flags: CORPORA.weekday.flags }).html);
+  check('[' + nusach + '] שמע ישראל kept without a minyan', /שמע ישראל/.test(noM));
+  check('[' + nusach + '] the silent עמידה kept without a minyan', /(שים שלום|שלום רב)/.test(noM));
+  check('[' + nusach + '] עלינו לשבח kept without a minyan', /עלינו לשבח/.test(noM));
+  const withM = norm(SVC.render(nusach, 'shacharit', { flags: CORPORA.weekday.flags.concat(['with_minyan']) }).html);
+  check('[' + nusach + '] קדיש + חזרת הש״ץ present WITH a minyan',
+    /יתגדל ויתקדש/.test(withM) && /(נקדישך|נקדש את שמך|נקדישך ונעריצך)/.test(withM));
+  check('[' + nusach + '] no skip notes WITH a minyan',
+    !/s-minyan-note/.test(SVC.render(nusach, 'shacharit', { flags: CORPORA.weekday.flags.concat(['with_minyan']) }).html));
+});
+// Torah reading needs ten; Monday's reading must go, and be announced.
+const monNoMinyan = SVC.render('ashkenaz', 'shacharit', { flags: CORPORA.weekday.flags });
+check('קריאת התורה of Monday is skipped and announced',
+  /נאמר(ים)? במניין בלבד/.test(monNoMinyan.html) && !/הוצאת ספר תורה/.test(monNoMinyan.html));
+check('jump-to-section list drops the skipped headers',
+  monNoMinyan.nav.every(n => !/חזרת הש|קדושה|מודים דרבנן|ברכת כהנים/.test(n.label)));
+// A section that does not apply today must not be announced either.
+check('a section irrelevant today is not announced (הפטרה on a Monday)',
+  !/הפטרה/.test(monNoMinyan.html));
+
+/* ─────────────── 5+6. flags: sunset day model & תשעה באב ─────────────── */
+section('6. תשעה באב — אין תחנון ואין אבינו מלכנו');
+const calCtx = vm.createContext({ console });
+calCtx.window = calCtx;
+vm.runInContext(fs.readFileSync(path.join(ROOT, 'vendor/hebcal.js'), 'utf8'), calCtx);
+vm.runInContext(fs.readFileSync(path.join(ROOT, 'js/calendar.js'), 'utf8'), calCtx);
+const baseUser = { nusach: 'edot_mizrach', gender: 'male', isInIsrael: true, withMinyan: true, purimDate: 'fourteenth' };
+function flagsOn(iso, over) {
+  const user = Object.assign({}, baseUser, over || {});
+  const mk = vm.runInContext('(function(y,m,d){return new Date(y,m,d,12,0,0);})', calCtx);
+  const p = iso.split('-').map(Number);
+  return calCtx.SiduronCalendar.flagsFor(mk(p[0], p[1] - 1, p[2]), user);
+}
+const TB = '2026-07-23';                     // ט' באב תשפ"ו (Thursday)
+const tb = flagsOn(TB).flags;
+check('תשעה באב detected', tb.indexOf('tisha_beav') >= 0);
+check('תשעה באב: no תחנון in shacharit', tb.indexOf('skip_tachanun') >= 0);
+check('תשעה באב: no תחנון in mincha', tb.indexOf('skip_tachanun_mincha') >= 0);
+check('תשעה באב: no למנצח יענך', tb.indexOf('skip_lamenatzeach') >= 0);
+check('תשעה באב: no אבינו מלכנו flag', tb.indexOf('avinu_malkeinu') < 0);
+// …and the rendered service really has neither. Section names are read off the
+// jump-to-section list: the words themselves also occur inside אהבת עולם
+// ("אבינו מלכנו, בעבור שמך הגדול…"), which is of course still said.
+function sections(nusach, svc, flags) {
+  return SVC.render(nusach, svc, flags).nav.map(n => norm(n.label).trim());
+}
+NUSACHIM.forEach(nusach => {
+  ['shacharit', 'mincha'].forEach(svc => {
+    const secs = sections(nusach, svc, flagsOn(TB));
+    check('[' + nusach + '/' + svc + '] no אבינו מלכנו section on תשעה באב',
+      secs.indexOf('אבינו מלכנו') < 0, secs.join(', '));
+    check('[' + nusach + '/' + svc + '] no תחנון section on תשעה באב', secs.indexOf('תחנון') < 0);
+  });
+  const kinot = norm(SVC.render(nusach, 'shacharit', flagsOn(TB)).html);
+  check('[' + nusach + '] תשעה באב content still shown (קינות/איכה/הפטרה/ציון)',
+    /(קינות|איכה|הפטרה|ציון)/.test(kinot));
+});
+// Regression: a day without תחנון in shacharit must not show it at mincha either
+// (this used to leak — the mincha tag was keyed to a flag that was only set for
+// the ערב-שבועות case, so ראש חודש/חנוכה/ניסן mincha showed תחנון).
+['2026-07-15' /* ר"ח אב */, '2026-12-08' /* חנוכה */, '2026-04-15' /* ניסן */].forEach(iso => {
+  const f = flagsOn(iso).flags;
+  check('no תחנון at mincha on ' + iso,
+    f.indexOf('skip_tachanun') >= 0 && f.indexOf('skip_tachanun_mincha') >= 0);
+  NUSACHIM.forEach(nusach => {
+    const secs = sections(nusach, 'mincha', flagsOn(iso));
+    check('[' + nusach + '] mincha of ' + iso + ' has no תחנון/אבינו מלכנו section',
+      secs.indexOf('תחנון') < 0 && secs.indexOf('אבינו מלכנו') < 0, secs.join(', '));
+  });
+});
+// The invariant behind that fix, over a whole year.
+let violations = 0, tachanunDays = 0;
+for (let m = 1; m <= 12; m++) for (let d = 1; d <= 28; d++) {
+  const f = flagsOn('2026-' + String(m).padStart(2, '0') + '-' + String(d).padStart(2, '0')).flags;
+  if (f.indexOf('skip_tachanun') >= 0 && f.indexOf('skip_tachanun_mincha') < 0) violations++;
+  if (f.indexOf('skip_tachanun') < 0) tachanunDays++;
+}
+check('no day skips תחנון in shacharit but says it at mincha', violations === 0, String(violations));
+check('most days still say תחנון (the fix did not silence everything)', tachanunDays > 150, String(tachanunDays));
+// A plain weekday still says תחנון.
+const plain = flagsOn('2026-06-25').flags;
+check('a plain weekday still says תחנון',
+  plain.indexOf('skip_tachanun') < 0 && plain.indexOf('skip_tachanun_mincha') < 0);
+NUSACHIM.forEach(nusach => {
+  const secs = sections(nusach, 'shacharit', flagsOn('2026-06-25'));
+  check('[' + nusach + '] a plain weekday shows the תחנון section', secs.indexOf('תחנון') >= 0);
+});
+check('a plain weekday says nothing about מוצאי שבת', plain.indexOf('motzaei_shabbat') < 0);
+check('Sunday is flagged מוצאי שבת (for אתה חוננתנו/הבדלה)',
+  flagsOn('2026-06-21').flags.indexOf('motzaei_shabbat') >= 0);
+check('אתה חוננתנו/הבדלה now keyed to מוצאי שבת, not to שבת',
+  SVC._evalTag('chonantanu', f => f === 'motzaei_shabbat') === true &&
+  SVC._evalTag('chonantanu', f => f === 'shabbat') === false);
+
+/* ───────── 3+4+5 in the live UI (jsdom) ───────── */
+section('4. תצוגת שם ה׳ (יחידה)');
+const dom = new JSDOM(fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8'),
+  { runScripts: 'dangerously', url: 'file://' + ROOT + '/index.html' });
+const win = dom.window, doc = win.document;
+const errors = [];
+win.addEventListener('error', e => errors.push(String(e.error && e.error.stack || e.message)));
+// jsdom does not fetch <script src> — inject index.html's scripts in order.
+['vendor/hebcal.js', 'data/siddur-data.js', 'data/services-data.js', 'data/shabbat-data.js',
+  'data/extras-data.js', 'data/locations.js', 'js/calendar.js', 'js/assembler.js', 'js/render.js',
+  'js/services.js', 'js/extras.js', 'js/app.js'].forEach(f => {
+    const s = doc.createElement('script');
+    s.textContent = fs.readFileSync(path.join(ROOT, f), 'utf8');
+    doc.body.appendChild(s);
+  });
+
+setTimeout(async function () {
+  const I = win.SiduronApp._internals;
+
+  // The Name as printed in siddurim, with the source vowels carried over.
+  const NAME = 'יְהֹוָה';
+  check('ה׳ mode', I.renderDivineName(NAME, 'hashem') === 'ה׳');
+  check('two yods keep the שוא and take the ו\'s קמץ', I.renderDivineName(NAME, 'yy') === 'יְיָ',
+    JSON.stringify(I.renderDivineName(NAME, 'yy')));
+  check('ידוד keeps every mark in place', I.renderDivineName(NAME, 'yedovid') === 'יְדֹוָד',
+    JSON.stringify(I.renderDivineName(NAME, 'yedovid')));
+  check('unvocalised source stays unvocalised', I.renderDivineName('יהוה', 'yy') === 'יי');
+  check('unvocalised ידוד', I.renderDivineName('יהוה', 'yedovid') === 'ידוד');
+  check('four style options offered', I.divineNames.length === 4);
+  // Whole-text behaviour: prefixes are replaced, mid-word matches are not
+  // (וַיַּגְבִּיהוּהוּ contains the skeleton but is not the Name).
+  win.SiduronApp.state.divineName = 'yy';
+  const midWord = 'וַיַּגְבִּיהוּהוּ';
+  check('mid-word skeleton left alone', I.applyDivineName(midWord) === midWord);
+  check('a one-letter prefix is still replaced', /לַיְיָ|לַיָי|לַיי/.test(I.applyDivineName('לַיהֹוָה')),
+    JSON.stringify(I.applyDivineName('לַיהֹוָה')));
+  win.SiduronApp.state.divineName = 'source';
+  check('"as written" leaves the text untouched', I.applyDivineName('בָּרוּךְ ' + NAME) === 'בָּרוּךְ ' + NAME);
+  win.SiduronApp.state.divineName = 'yy';
+
+  section('5. מודל היום — התאריך מתגלגל בשקיעה');
+  const times = { shkiah: '19:45', chatzot: '12:40' };
+  const D = (y, m, d, hh, mm) => new win.Date(y, m - 1, d, hh || 0, mm || 0);
+  // Thursday 20:00 — Otzaria already reports Friday.
+  check('host date == today → not advanced (still daytime)',
+    I.hostDayAdvanced(D(2026, 7, 23), times, D(2026, 7, 23, 14, 0)) === false);
+  check('host date == tomorrow after שקיעה → advanced',
+    I.hostDayAdvanced(D(2026, 7, 24), times, D(2026, 7, 23, 20, 0)) === true);
+  check('host date == tomorrow BEFORE שקיעה → user picked that date, not advanced',
+    I.hostDayAdvanced(D(2026, 7, 24), times, D(2026, 7, 23, 14, 0)) === false);
+  check('a date further away is never treated as the sunset roll-over',
+    I.hostDayAdvanced(D(2026, 7, 30), times, D(2026, 7, 23, 20, 0)) === false);
+  check('advanced → ערבית belongs to the reported day itself',
+    I.maarivDateFor(D(2026, 7, 24), true).getDate() === 24);
+  check('not advanced → ערבית belongs to the coming night',
+    I.maarivDateFor(D(2026, 7, 24), false).getDate() === 25);
+
+  // End-to-end: pick the maariv tab in each situation and inspect what renders.
+  function tab(name) {
+    let t = null;
+    doc.querySelectorAll('#tabs .tab').forEach(x => { if (x.textContent === name) t = x; });
+    if (t) t.onclick.call(t);
+    return doc.getElementById('content').innerHTML;
+  }
+  function maarivAt(hostIso, now) {
+    win.SiduronApp.setDate(hostIso);
+    win.SiduronApp.state.times = times;
+    I.setPrayerDays(now);
+    return tab('מעריב');
+  }
+  const KABALAT = /לכה דודי/;                       // only in the Shabbat maariv
+  const CHONANTANU = /אתה חוננתנו/;                 // only in מוצאי שבת
+
+  // ליל שישי (Thursday night): the reported bug — this used to show ערבית לשבת.
+  let html = norm(maarivAt('2026-07-24', D(2026, 7, 23, 20, 0)));
+  check('ליל שישי (Thu 20:00): weekday ערבית, no קבלת שבת', !KABALAT.test(html));
+  check('ליל שישי: not מוצאי שבת either', !CHONANTANU.test(html));
+  check('ליל שישי: title says nothing about שבת', !/ליל שבת/.test(doc.getElementById('hdr-title').textContent));
+
+  // ליל שבת (Friday night, after sunset the host says Saturday).
+  html = norm(maarivAt('2026-07-25', D(2026, 7, 24, 20, 0)));
+  check('ליל שבת (Fri 20:00): קבלת שבת + ערבית לשבת', KABALAT.test(html));
+  check('ליל שבת: title names the night', /ליל שבת/.test(doc.getElementById('hdr-title').textContent));
+
+  // Friday afternoon — the night ahead is שבת, so מעריב is still ערבית לשבת.
+  html = norm(maarivAt('2026-07-24', D(2026, 7, 24, 14, 0)));
+  check('Friday 14:00: מעריב is already ערבית לשבת', KABALAT.test(html));
+
+  // מוצאי שבת (Saturday night, host says Sunday).
+  html = norm(maarivAt('2026-07-26', D(2026, 7, 25, 20, 30)));
+  check('מוצאי שבת: weekday ערבית with אתה חוננתנו', CHONANTANU.test(html) && !KABALAT.test(html));
+  check('מוצאי שבת: title says מוצאי שבת', /מוצאי שבת/.test(doc.getElementById('hdr-title').textContent));
+
+  // Shabbat morning is unaffected by all of this.
+  win.SiduronApp.setDate('2026-07-25');
+  I.setPrayerDays(D(2026, 7, 25, 8, 0));
+  check('Shabbat morning still uses the Shabbat שחרית',
+    I.shabbatServiceKey('shacharit', win.SiduronApp.state.dayFlags) === 'shacharit');
+  check('after שקיעה the auto-picked service is מעריב',
+    (function () {
+      win.SiduronApp.state.dayAdvanced = true;
+      const r = I.pickServiceByTime(times);
+      win.SiduronApp.state.dayAdvanced = false;
+      return r === 'maariv';
+    })());
+  check('before חצות the auto-picked service is שחרית',
+    I.pickServiceByTime({ chatzot: '23:59', shkiah: '23:59' }) === 'shacharit');
+
+  section('3. קיצור דרך בשולחן העבודה');
+  check('permission denial names the permissions screen',
+    /ניהול הרשאות/.test(I.shortcutErrorMessage({ code: 'permission_denied', message: 'Permission denied: ui.create_shortcut' })));
+  check('an old host is reported as an old host, not as a permission problem',
+    /עדכנו את אוצריא/.test(I.shortcutErrorMessage({ code: 'error', message: 'Unknown action in shortcut: create' })));
+  check('a missing Desktop folder is reported as such',
+    /שולחן העבודה/.test(I.shortcutErrorMessage({ code: 'error', message: 'error.unsupported: target folder not found' })) &&
+    !/הרשאה/.test(I.shortcutErrorMessage({ code: 'error', message: 'error.unsupported: target folder not found' })));
+  check('rate limiting is reported as such',
+    /המתינו/.test(I.shortcutErrorMessage({ code: 'error.rate_limited', message: 'Rate limit exceeded' })));
+  check('an unknown failure still shows the host message',
+    /USERPROFILE/.test(I.shortcutErrorMessage({ code: 'error', message: 'error.internal: USERPROFILE not set' })));
+
+  // The host's error must actually reach the user through ui.showError.
+  const calls = [];
+  win.Otzaria = {
+    call: (m, p) => {
+      calls.push([m, p]);
+      if (m === 'shortcut.create') {
+        return Promise.resolve({ success: false, error: { code: 'permission_denied', message: 'Permission denied: ui.create_shortcut' } });
+      }
+      return Promise.resolve({ success: true, data: null });
+    },
+    on() {}, off() {},
+  };
+  win.SiduronApp.state.platform = 'windows';
+  win.SiduronApp.state.permissions = ['calendar.read'];         // grant list without the shortcut
+  const btnSettings = doc.getElementById('btn-settings');
+  btnSettings.onclick.call(btnSettings);
+  check('a missing grant is flagged before clicking',
+    /ניהול הרשאות/.test(doc.getElementById('set-shortcut-note').textContent) &&
+    doc.getElementById('set-shortcut-note').classList.contains('warn'));
+  const sBtn = doc.getElementById('set-shortcut');
+  sBtn.onclick.call(sBtn);
+  await new Promise(r => setTimeout(r, 20));
+  const errCall = calls.filter(c => c[0] === 'ui.showError').pop();
+  check('the host error is shown to the user', !!errCall);
+  check('the message is actionable, not a blanket "no permission"',
+    !!errCall && /ניהול הרשאות/.test(errCall[1].message) && errCall[1].message.length > 40,
+    errCall && errCall[1].message);
+  check('the button is re-enabled after a failure', sBtn.disabled === false);
+  win.SiduronApp.state.permissions = ['ui.create_shortcut'];
+  btnSettings.onclick.call(btnSettings);
+  check('with the grant present the hint goes back to normal',
+    !doc.getElementById('set-shortcut-note').classList.contains('warn'));
+
+  check('no runtime errors in the UI', errors.length === 0, errors[0]);
+  console.log('\n=== FEATURES: ' + (fail === 0 ? 'PASS' : 'FAIL') + ' (' + pass + ' passed, ' + fail + ' failed) ===');
+  process.exit(fail === 0 ? 0 : 1);
+}, 400);

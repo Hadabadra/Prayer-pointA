@@ -15,6 +15,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Check packages match source (deterministic packing)
+        run: |
+          v="$(node -p "require('./kivun-tefila/manifest.json').version")"
+          python3 kivun-tefila-build/pack.py kivun-tefila /tmp/k.otzplugin
+          cmp /tmp/k.otzplugin "kivun-tefila-$v.otzplugin" || { echo "::error::kivun-tefila-$v.otzplugin אינו תואם לקוד בתיקייה kivun-tefila. ארזו מחדש."; exit 1; }
+          sv="$(node -p "require('./siduron/src/manifest.json').version")"
+          python3 kivun-tefila-build/pack.py siduron/src /tmp/s.otzplugin README.md
+          cmp /tmp/s.otzplugin "siduron/com.moshenahari.siduron-$sv.otzplugin" || { echo "::error::חבילת סידורון אינה תואמת לקוד בתיקייה siduron/src."; exit 1; }
       - name: Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -26,4 +34,7 @@ jobs:
           if [ ! -f "$file" ]; then echo "::warning::$file לא נמצא בענף"; exit 0; fi
           awk -v h="## מה חדש ב-$v" 'index($0,h)==1{f=1;next} /^## /{if(f)exit} f' README.md > notes.md
           printf '\n### התקנה\nבאוצריא: כלים ← תוספים ← התקן תוסף חדש, ובחירת הקובץ. או מחנות התוספים של אוצריא.\n' >> notes.md
-          gh release create "$tag" "$file" --target "$GITHUB_SHA" --title "כיוון תפילה $v" --notes-file notes.md --latest
+          sv="$(node -p "require('./siduron/src/manifest.json').version")"
+          sfile="siduron/com.moshenahari.siduron-$sv.otzplugin"
+          printf '\n### סידורון התואם\n%s מצורף ל-Release הזה (נדרש לכפתור "תפילה").\n' "$(basename "$sfile")" >> notes.md
+          gh release create "$tag" "$file" "$sfile" --target "$GITHUB_SHA" --title "כיוון תפילה $v" --notes-file notes.md --latest
