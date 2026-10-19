@@ -5,7 +5,7 @@
   --color-on-surface-variant:#5f5644;
   --color-on-surface-dim:var(--color-on-surface-variant);
   --color-surface-container-high:#efe8d8;
-  --color-error:#b3261e;--color-on-error:#fff;
+  --color-error:#b3261e;--color-shadow:#0000002e;--color-on-error:#fff;
   --color-primary-subtle:color-mix(in srgb,var(--color-primary) 12%,transparent);
   --color-secondary-subtle:color-mix(in srgb,var(--color-on-surface) 7%,transparent);
   --radius-lg:16px;--radius-pill:999px;
@@ -49,7 +49,7 @@ body.mapfull .pair>div{background:none;border:0;border-radius:0;padding:0}
   #bMore{display:inline-block}
   #bar .sec{display:none}
   #bar.more .sec:not([hidden]){display:inline-block}
-  #help.pop,#set.pop,#fb.pop,#hal.pop,#fly.pop,#minyan.pop{top:auto;bottom:0;inset-inline:0;width:100%;max-height:78vh;border-radius:var(--radius-lg) var(--radius-lg) 0 0;border-width:1px 0 0;border-inline-start:0;box-shadow:0 -4px 16px rgb(0 0 0/.18)}
+  #help.pop,#set.pop,#fb.pop,#hal.pop,#fly.pop,#minyan.pop{top:auto;bottom:0;inset-inline:0;width:100%;max-height:78vh;border-radius:var(--radius-lg) var(--radius-lg) 0 0;border-width:1px 0 0;border-inline-start:0;box-shadow:0 -4px 16px var(--color-shadow)}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
@@ -65,7 +65,7 @@ body.mapfull .pair>div{background:none;border:0;border-radius:0;padding:0}
 input[type=checkbox]{appearance:none;-webkit-appearance:none;position:relative;flex:none;inline-size:2.5em;block-size:1.4em;margin:0 0 0 .5em;margin-inline-end:.5em;border-radius:var(--radius-pill);background:var(--color-outline);border:0;vertical-align:-.3em;cursor:pointer;transition:background-color .15s}
 input[type=checkbox]::before{content:"";position:absolute;inset-block-start:.2em;inset-inline-start:.2em;inline-size:1em;block-size:1em;border-radius:50%;background:var(--color-surface);transition:inset-inline-start .15s}
 input[type=checkbox]:checked{background:var(--color-primary)}
-input[type=checkbox]:checked::before{inset-inline-start:1.3em;background:var(--color-on-primary,#fff)}
+input[type=checkbox]:checked::before{inset-inline-start:1.3em;background:var(--color-on-primary)}
 input[type=checkbox]:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px}
 input[type=checkbox]:disabled{opacity:.45;cursor:default}
 
@@ -83,7 +83,7 @@ input[type=checkbox]:disabled{opacity:.45;cursor:default}
 #spBox{position:relative;text-align:center;padding:2rem 1.5rem;display:grid;gap:.9rem;justify-items:center}
 #spBox h1{font-size:clamp(2rem,6vw,3.4rem);margin:0;color:var(--color-on-surface)}
 #spBox p{margin:0;color:var(--color-on-surface-variant);font-size:1.1rem}
-#spGo{font-size:1.2rem;padding:.7rem 3rem;border-radius:var(--radius-pill);background:var(--color-primary);color:var(--color-on-primary,#fff);border:0}
+#spGo{font-size:1.2rem;padding:.7rem 3rem;border-radius:var(--radius-pill);background:var(--color-primary);color:var(--color-on-primary);border:0}
 #spBox small{color:var(--color-on-surface-variant)}
 @media print{#splash{display:none!important}}
 
@@ -95,8 +95,16 @@ input[type=checkbox]:disabled{opacity:.45;cursor:default}
 @media print{#tfila{display:none!important}}
 
 /* 2.5.0: כפתור "!" כשאין מצפן */
-#bNoComp{font-weight:700;min-width:2em;color:var(--color-error,#b3261e);border-color:var(--color-error,#b3261e)}
+#bNoComp{font-weight:700;min-width:2em;color:var(--color-error);border-color:var(--color-error)}
 #bNoComp[hidden]{display:none}
 /* 2.5.0: בחירת סוג החיפוש, עיר, רחוב, מדינה וכבישים בשורה אחת */
 #plRow{flex-wrap:wrap}
 #nsRes li button{margin-inline-end:.3rem}
+
+/* 2.6.0: רקע הכותל גם במצב תפילה */
+#prWall{position:absolute;inset:0;opacity:.18;background:var(--color-on-surface);-webkit-mask-position:center bottom;mask-position:center bottom;-webkit-mask-size:cover;mask-size:cover;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;pointer-events:none;z-index:0}
+#pray>*:not(#prWall){position:relative;z-index:1}
+#pray>#prayX{position:absolute}
+
+/* 2.5.4: דיני הכותל, רשימה מדורגת */
+.kd{margin:.2em 0;padding-inline-start:1.1em}.kd ul{padding-inline-start:1.1em;margin:.1em 0}.kd li{margin:.12em 0}.kd .kd0{font-weight:600;margin-top:.45em}

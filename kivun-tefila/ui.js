@@ -152,6 +152,12 @@
     })();
     if (sw) sw.onchange = () => { const x = sw.checked ? "1" : "0"; try { O ? O.call("storage.set", { key: "kivun-splash", value: x }).catch(() => {}) : localStorage.setItem("kivun-splash", x) } catch (e) {} };
   }
+  /* 2.6.0: מצב תפילה על רקע הכותל, כמו מסך הפתיחה */
+  (function () {
+    const pr = $("pray"); if (!pr) return;
+    const w = document.createElement("div"); w.id = "prWall"; w.setAttribute("aria-hidden", "true"); pr.prepend(w);
+    try { const m = $("wall").style.maskImage || $("wall").style.webkitMaskImage; if (m) { w.style.maskImage = m; w.style.webkitMaskImage = m } } catch (e) {}
+  })();
   /* תפילה מסידורון (2.5.0): לחיצה על "תפילה" כאן מבקשת מסידורון (3.7.2 ומעלה) לשלוח את התפילה שפתוחה בו.
      סידורון נפתח לרגע ומחזיר את התפילה עם plugin.openOther (אין באוצריא ערוץ שקט בין תוספים).
      סידורון שולח שוב אחרי שנייה ושלוש, ליתר ביטחון; כפילויות מזוהות לפי id. */
