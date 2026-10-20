@@ -1,7 +1,7 @@
 {
   "id": "com.shiachrina.kivuntefila",
   "name": "כיוון תפילה",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "description": "הכיוון לירושלים לפי מיקום, עיר או רחוב: חוגה, מצפן, מפות וכדור הארץ בלי אינטרנט, מצב טיסה, הלכות עם מקורות, וממשק באנגלית.",
   "author": "שיח רינה-עמודי שש",
   "schemaVersion": 1,
@@ -25,7 +25,8 @@
     "ui.create_shortcut",
     "reader.toolbar",
     "app.startup_contributions",
-    "library.books.provide"
+    "library.books.provide",
+    "published_data.write"
   ],
   "network": {
     "enabled": true,

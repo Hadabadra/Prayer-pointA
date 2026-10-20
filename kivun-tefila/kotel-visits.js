@@ -20,8 +20,7 @@
    <div class="row" style="flex-wrap:wrap;gap:.3rem"><button id="kvToday" type="button" style="font-weight:700">✔ הייתי בכותל היום</button>
     <label style="font-size:.85rem">תאריך אחר: <input id="kvDate" type="date"></label><button id="kvAdd" type="button">הוסף</button></div>
    <label style="display:block;margin:.35rem 0;font-size:.9rem"><input id="kvRem" type="checkbox"> תזכורת 30 יום אחרי הביקור האחרון (הודעת מערכת של אוצריא)</label>
-   <div class="row" style="flex-wrap:wrap;gap:.3rem"><button id="kvIcs" type="button">📅 שליחה ללוח השנה (קובץ .ics)</button></div>
-   <p style="font-size:.8rem;margin:.15rem 0;opacity:.8">הקובץ נפתח ביומן של Outlook, Google או הטלפון. לוח השנה של אוצריא עדיין אינו מאפשר לתוספים להוסיף אירועים; התזכורת של 30 יום מופיעה כהודעת מערכת של אוצריא.</p>
+   <div class="row" style="flex-wrap:wrap;gap:.3rem"><button id="kvCal" type="button">📅 שליחה ללוח השנה של אוצריא</button><button id="kvIcs" type="button">קובץ ליומן חיצוני (.ics)</button></div>
    <p id="kvMsg" style="font-size:.85rem;min-height:1.1em" aria-live="polite"></p>
    <details><summary style="font-size:.9rem">כל הביקורים</summary><ul id="kvList" style="margin:.2rem 0"></ul></details>
    <p><small>התזכורת עוזרת לזכור את ענין הקריעה כשעברו שלושים יום. מתי חייבים ומי פטור (למשל תושבי ירושלים) — ראו בנקודות למעלה ובמקורות, ובשאלה מעשית יש לשאול רב.</small></p>`;
@@ -42,7 +41,7 @@
     const ul = $k("kvList"); ul.replaceChildren(...V.map((t, i) => { const li = document.createElement("li"), x = document.createElement("button"); li.textContent = fmt(t) + " ";
       x.type = "button"; x.textContent = "מחק"; x.style.fontSize = ".75rem"; x.onclick = () => { V.splice(i, 1); save(); draw(); schedule() }; li.appendChild(x); return li }));
   }
-  const save = () => set("kivun-kotel-visits", V);
+  let save = () => set("kivun-kotel-visits", V);
   function add(t) { t = new Date(new Date(t).toDateString()).getTime(); if (V.includes(t)) { msg("התאריך הזה כבר רשום."); return } V.push(t); save(); draw(); schedule(); msg("נרשם: " + fmt(t)) }
 
   async function schedule() {
@@ -81,6 +80,23 @@
   $k("kvToday").onclick = () => add(Date.now());
   $k("kvAdd").onclick = () => { const v = $k("kvDate").value; if (!v) { msg("בחרו תאריך."); return } if (Date.parse(v) > Date.now()) { msg("התאריך בעתיד."); return } add(v + "T12:00") };
   $k("kvRem").onchange = schedule; $k("kvIcs").onclick = ics;
+  /* 3.0.2: לוח השנה של אוצריא — publishedData.upsert מסוג calendar.event (כמו "ערך היום" בעינים למקרא).
+     נשלחים: כל ביקור, ומועד "שלושים יום" אחרי הביקור האחרון. אחרי השליחה הראשונה מתעדכן לבד בכל שינוי. */
+  const pad = n => String(n).padStart(2, "0"), isoD = t => { const d = new Date(t); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) };
+  const startsAt = t => { const d = new Date(t), z = -d.getTimezoneOffset(); return isoD(t) + "T00:00:00" + (z >= 0 ? "+" : "-") + pad(Math.floor(Math.abs(z) / 60)) + ":" + pad(Math.abs(z) % 60) };
+  async function calSync(manual) {
+    if (typeof O === "undefined" || !O) { if (manual) msg("לוח השנה של אוצריא זמין רק בתוך אוצריא. אפשר להשתמש בקובץ ליומן חיצוני."); return }
+    const items = V.slice(0, 30).map(t => ({ key: "kivun:kotel:visit:" + isoD(t), payload: { title: "ביקור בכותל", startsAt: startsAt(t), source: "כיוון תפילה", importance: "low", description: "ביקור בכותל המערבי — נרשם בתוסף כיוון תפילה." } }));
+    if (V[0]) items.push({ key: "kivun:kotel:due", payload: { title: "שלושים יום מהביקור בכותל", startsAt: startsAt(V[0] + 30 * DAY), source: "כיוון תפילה", importance: "normal", description: "עברו שלושים יום מהביקור האחרון בכותל (" + fmt(V[0]) + "). הלכות הקריעה — בכפתור \"✂ קריעה\" בתוסף כיוון תפילה." } });
+    const prev = (await get("kivun-kotel-calkeys")) || [], now = items.map(i => i.key);
+    for (const k of prev) if (!now.includes(k)) await O.call("publishedData.remove", { type: "calendar.event", scope: "global", key: k }).catch(() => {});
+    let ok = 0;
+    for (const it of items) { const r = await O.call("publishedData.upsert", { type: "calendar.event", scope: "global", key: it.key, payload: it.payload }).catch(() => null); if (r && r.success !== false) ok++ }
+    set("kivun-kotel-calkeys", now); set("kivun-kotel-cal", true);
+    if (manual) msg(ok ? "נשלח ללוח השנה של אוצריא ✓ (" + ok + " פריטים). מעכשיו הלוח יתעדכן לבד בכל שינוי." : "השליחה ללוח השנה נכשלה. ייתכן שגרסת אוצריא אינה תומכת בזה; אפשר להשתמש בקובץ ליומן חיצוני.");
+  }
+  $k("kvCal").onclick = () => calSync(true);
+  const save0 = save; save = () => { save0(); get("kivun-kotel-cal").then(on => { if (on) calSync(false) }) };
 
   /* 3.0.0: טוענים גם אחרי plugin.boot — לפניו storage של אוצריא עוד לא זמין, והרשימה נטענה ריקה */
   let loaded = false;
