@@ -5,6 +5,7 @@
    התוסף אינו פוסק הלכה למעשה. */
 (function () {
   const body = document.getElementById("kotelBody"); if (!body) return;
+  const kBody = document.getElementById("kriaBody") || body, zBody = document.getElementById("zecherBody") || body;
   const F = window.KOTEL_FULL || [];
 
   /* ---- קיצורים → שם הספר בספרייה. q יכול להכיל כמה חלופות מופרדות ב-| ---- */
@@ -73,8 +74,7 @@
 
   /* ---- 1. קריעה בכותל ---- */
   const S61 = F.find(s => s.sa === "תקסא");
-  const kb = document.createElement("button"); kb.type = "button"; kb.textContent = "✂ קריעה בכותל"; kb.style.cssText = "font-weight:700;margin:.2rem 0 .4rem";
-  const kr = document.createElement("div"); kr.className = "kria"; kr.hidden = true;
+  const kr = document.createElement("div"); kr.className = "kria";
   const V = [["הרואה ערי יהודה בחורבנן", "ערי קדשך היו מדבר"], ["ירושלים בחורבנה", "ציון מדבר היתה ירושלים שממה"],
     ["בית המקדש בחורבנו", "בית קדשנו ותפארתנו אשר הללוך אבתינו היה לשרפת אש וכל מחמדינו היה לחרבה"]];
   kr.innerHTML = "<h3 style='margin:.2rem 0'>מה אומרים בשעת הקריעה</h3>";
@@ -90,13 +90,12 @@
       li.appendChild(sub); ul.appendChild(li) }
     kr.appendChild(ul);
   }
-  const kn = document.createElement("p"); kn.innerHTML = "<small>הנקודות מתוך החיבור \"דור המלקטים\". הפירוט, השיטות ומראי המקומות ב\"כל הנושאים\" שלמטה. התוסף אינו פוסק הלכה למעשה; לשאלה במקרה מסוים יש לפנות לרב מוסמך.</small>"; kr.appendChild(kn);
-  kb.onclick = () => { kr.hidden = !kr.hidden };
-  body.prepend(kb, kr);
+  const kn = document.createElement("p"); kn.innerHTML = "<small>הנקודות מתוך החיבור \"דור המלקטים\". הפירוט, השיטות ומראי המקומות בכפתור \"זכר לחורבן\" שבסרגל העליון. התוסף אינו פוסק הלכה למעשה; לשאלה במקרה מסוים יש לפנות לרב מוסמך.</small>"; kr.appendChild(kn);
+  kBody.appendChild(kr);
 
   /* ---- 2. כל הנושאים, עם חיפוש ---- */
   if (!F.length) return;
-  const d = document.createElement("details"); d.className = "sd";
+  const d = document.createElement("details"); d.className = "sd"; d.open = true;
   const sm = document.createElement("summary"); sm.innerHTML = "<b>זכר לחורבן וקריעה — כל הנושאים והמקורות</b>"; d.appendChild(sm);
   const q = document.createElement("input"); q.type = "search"; q.className = "kfq"; q.placeholder = "חיפוש: נושא, פוסק או מילה (למשל: נגיעה, שבת, מ\"ב)"; q.setAttribute("aria-label", "חיפוש בהלכות");
   const cnt = document.createElement("p"); cnt.style.cssText = "font-size:.85rem;margin:.1rem 0"; cnt.setAttribute("aria-live", "polite");
@@ -109,7 +108,7 @@
   bOpen.textContent = "פתח הכול"; bClose.textContent = "סגור הכול"; bPr.textContent = "🖨 הדפסת הפתוח"; bPdf.textContent = "PDF של הפתוח";
   [bOpen, bClose, bPr, bPdf].forEach(b => { b.type = "button"; tools.appendChild(b) });
   const nav = document.createElement("nav"); nav.className = "kfnav"; nav.setAttribute("aria-label", "ניווט בנושאים");
-  d.append(nt, q, dl, tools, nav, cnt, out); body.appendChild(d);
+  d.append(nt, q, dl, tools, nav, cnt, out); zBody.appendChild(d);
   bOpen.onclick = () => out.querySelectorAll("details").forEach(x => { x.open = true; x.dispatchEvent(new Event("toggle")) });
   bClose.onclick = () => out.querySelectorAll("details").forEach(x => x.open = false);
   function printOpen(pdf) {
@@ -160,4 +159,5 @@
   let T = 0, T2 = 0; q.oninput = () => { clearTimeout(T); T = setTimeout(render, 200); clearTimeout(T2);
     T2 = setTimeout(() => { const v = q.value.trim(); if (v.length < 2) return; RECENT = [v, ...RECENT.filter(x => x !== v && !v.startsWith(x))].slice(0, 10); kvSet("kivun-recent", RECENT); fillRecent() }, 1500) };
   d.addEventListener("toggle", () => { if (d.open && !out.firstChild) render() }, { once: false });
+  const zp = document.getElementById("zecher"); if (zp) new MutationObserver(() => { if (!zp.hidden && !out.firstChild) render() }).observe(zp, { attributes: true, attributeFilter: ["hidden"] });
 })();

@@ -370,3 +370,5 @@ $("minTel").onclick = () => { $("minMsg").textContent = "חיוג ישיר אי�
 
 $("minCopy2").onclick = () => copyText("*6837").then(ok => { $("minMsg").textContent = ok ? "המספר *6837 הועתק ללוח." : "ההעתקה לא הצליחה. המספר: *6837" });
 $("bKotel").onclick = () => pop("bKotel", "kotel", $("kotel").hidden);
+if ($("bKria")) $("bKria").onclick = () => pop("bKria", "kria", $("kria").hidden);
+if ($("bZecher")) $("bZecher").onclick = () => pop("bZecher", "zecher", $("zecher").hidden);

@@ -13,11 +13,11 @@
   ["txt", "loc", "stMsg", "fbMsg", "satUrl", "minMsg"].forEach(i => { const e = $(i); if (e) e.setAttribute("aria-live", "polite") });
   addEventListener("keydown", e => {
     if (e.key !== "Escape") return;
-    [["bHal", "hal"], ["bFly", "fly"], ["bMin", "minyan"], ["bKotel", "kotel"]].forEach(([b, p]) => { if ($(p) && !$(p).hidden) pop(b, p, false) });
+    [["bHal", "hal"], ["bFly", "fly"], ["bMin", "minyan"], ["bKotel", "kotel"], ["bKria", "kria"], ["bZecher", "zecher"]].forEach(([b, p]) => { if ($(p) && !$(p).hidden) pop(b, p, false) });
   });
 
   /* טלפון: כפתורים משניים מאחורי "עוד" (CSS מסתיר אותם רק במסך צר) */
-  ["bHal", "bKotel", "bMin", "bFly", "bPrint", "bHelp", "bSet", "bLang", "bFb", "meth"].forEach(i => { const e = $(i); if (e) e.classList.add("sec") });
+  ["bHal", "bKotel", "bKria", "bZecher", "bMin", "bFly", "bPrint", "bHelp", "bSet", "bLang", "bFb", "meth"].forEach(i => { const e = $(i); if (e) e.classList.add("sec") });
   const more = document.createElement("button");
   more.id = "bMore"; more.type = "button"; more.textContent = "⋯"; more.title = "עוד"; more.setAttribute("aria-expanded", "false"); more.setAttribute("aria-label", "עוד פעולות");
   more.onclick = () => { const o = bar.classList.toggle("more"); more.setAttribute("aria-expanded", String(o)) };

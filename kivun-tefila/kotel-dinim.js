@@ -1483,9 +1483,9 @@ window.KOTEL_DINIM = [
   const body = document.getElementById("kotelBody"); if (!body) return;
   const D = window.KOTEL_DINIM;
   const top = document.createElement("p");
-  top.innerHTML = "<small>מראי מקומות, ומפת נושאים ושיטות בלבד. התוסף אינו פוסק הלכה למעשה; לשאלה במקרה מסוים יש לפנות לרב מוסמך.</small>";
+  top.innerHTML = "<small>מראי מקומות בלבד. הקריעה ונושאי זכר לחורבן — בכפתורים \"✂ קריעה\" ו\"זכר לחורבן\" בסרגל העליון. התוסף אינו פוסק הלכה למעשה; לשאלה במקרה מסוים יש לפנות לרב מוסמך.</small>";
   body.appendChild(top);
-  D.forEach((sec, si) => {
+  D.filter(sec => !/נושאים ושיטות/.test(sec.title)).forEach((sec, si) => {
     const d = document.createElement("details"); d.className = "sd"; d.open = si === 0;
     const s = document.createElement("summary"), b = document.createElement("b"); b.textContent = sec.title; s.appendChild(b); d.appendChild(s);
     if (sec.note) { const n = document.createElement("p"); n.innerHTML = '<small>סיכום הנושאים והשיטות מתוך "דור המלקטים", בלי ציטוטים. "מחמיר" ו"מיקל" מציינים שיש בנושא דעות שונות; הפירוט והמקורות בחיבור עצמו.</small>'; d.appendChild(n) }

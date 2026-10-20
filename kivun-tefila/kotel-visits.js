@@ -9,7 +9,7 @@
     v.style.cssText = "font-size:1.05rem;font-weight:700;margin:.1rem 0 .4rem;opacity:.9"; spT.after(v);
   }
 
-  const kr = document.querySelector("#kotelBody .kria"); if (!kr) return;
+  const kr = document.querySelector("#kriaBody .kria, #kotelBody .kria"); if (!kr) return;
   const get = k => (window.kvGet ? window.kvGet(k) : Promise.resolve(null)), set = (k, v) => window.kvSet && window.kvSet(k, v);
   const DAY = 864e5, fmt = t => new Date(t).toLocaleDateString("he-IL", { weekday: "short", day: "numeric", month: "numeric", year: "numeric" });
   let V = [], heb = {};
