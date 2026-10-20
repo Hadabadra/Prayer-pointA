@@ -34,7 +34,7 @@
   /* 2.9.7: הרשימה הכפולה חזרה לפעמים — גם click ו-pointerdown נחסמים על <select>, ופתיחה במקלדת
      (רווח, Enter, F4, Alt+חץ למטה) פותחת את הרשימה של הדף ולא את החלון של Windows. ניווט בחיצים בתוך הרשימה. */
   const own = s => s && !s.multiple && !(s.size > 1) && !s.disabled && s.dataset.native == null;
-  ["click", "pointerdown", "dblclick"].forEach(t => document.addEventListener(t, e => { const s = e.target.closest && e.target.closest("select"); if (own(s)) e.preventDefault() }, true));
+  ["click", "dblclick"].forEach(t => document.addEventListener(t, e => { const s = e.target.closest && e.target.closest("select"); if (own(s)) e.preventDefault() }, true));
   document.addEventListener("keydown", e => {
     if (box) {
       const items = [...box.querySelectorAll("div[role=option]:not(.d)")], k = box.querySelector(".k") || box.querySelector(".s"); let i = items.indexOf(k);
