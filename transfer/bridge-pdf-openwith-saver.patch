@@ -1,0 +1,231 @@
+From 95386b86918fcf5a8ffbde87bb5d985eb8d7bf4e Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Tue, 20 Oct 2026 19:57:54 +0300
+Subject: [PATCH] =?UTF-8?q?=D7=92=D7=A9=D7=A8:=20=D7=9B=D7=9C=20=D7=AA?=
+ =?UTF-8?q?=D7=95=D7=9B=D7=A0=D7=95=D7=AA=20'=D7=A4=D7=AA=D7=97=20=D7=91?=
+ =?UTF-8?q?=D7=90=D7=9E=D7=A6=D7=A2=D7=95=D7=AA'=20=D7=9C-PDF=20=D7=9E-Win?=
+ =?UTF-8?q?dows=20(SHAssocEnumHandlers),=20=D7=95=D7=9E=D7=AA=D7=92=20?=
+ =?UTF-8?q?=D7=A8=D7=90=D7=A9=D7=99=20=D7=9C=D7=A9=D7=95=D7=9E=D7=A8=20?=
+ =?UTF-8?q?=D7=94=D7=9E=D7=A1=D7=9A?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_018x85iLy7fRKLBxrPdCyXbq
+---
+ bridge/Kiosk.cs                      |  5 +-
+ bridge/PdfApi.cs                     | 17 +++++
+ bridge/PdfAssoc.cs                   | 97 ++++++++++++++++++++++++++++
+ bridge/Saver.cs                      |  2 +-
+ system-settings/js/sections/kiosk.js |  5 +-
+ 5 files changed, 121 insertions(+), 5 deletions(-)
+ create mode 100644 bridge/PdfAssoc.cs
+
+diff --git a/bridge/Kiosk.cs b/bridge/Kiosk.cs
+index 8e4e8f2..8dbd365 100644
+--- a/bridge/Kiosk.cs
++++ b/bridge/Kiosk.cs
+@@ -277,6 +277,7 @@ public static partial class Kiosk
+         clockPosition = Config.Get("kiosk.clockPosition", "bottom-left"),
+         restScreen = Config.Get("kiosk.restScreen", true),
+         restIdleMinutes = Config.Get("kiosk.restIdleMinutes", 1),
++        saverEnabled = Config.Get("kiosk.saverEnabled", true), // מתג ראשי לשומר המסך
+         saverWhenUnlocked = Config.Get("kiosk.saverWhenUnlocked", true), // D2
+         bootCover = Config.Get("kiosk.bootCover", true), // D3
+         restZmanimSide = Config.Get("kiosk.restZmanimSide", "right"),
+@@ -848,7 +849,7 @@ public static partial class Kiosk
+         if (b.Has("readOnly")) Config.Set("kiosk.readOnly", b.Bool("readOnly"));
+         { string rcv = b.Str("restContent"); if (rcv is "full" or "zmanim" or "clock" or "verse") Config.Set("kiosk.restContent", rcv); }
+         foreach (string k in new[] { "clock", "restScreen", "fullscreenOtzaria", "sideBar", "barPrograms", "sideBarIconsOnly", "resetOnShutdown", "allowExcelDocs", "showParsha", "showDafYomi",
+-            "lockScreenImage", "restShowVerse", "restShowClock", "restShowZmanim", "restShowLogo", "restShowDedication" })
++            "lockScreenImage", "restShowVerse", "restShowClock", "restShowZmanim", "restShowLogo", "restShowDedication", "saverEnabled" })
+             if (b.Has(k)) Config.Set("kiosk." + k, b.Bool(k));
+         if (b.Has("restDedicationText")) { string dt = (b.Str("restDedicationText") ?? "").Replace("\r", ""); Config.Set("kiosk.restDedicationText", dt.Length > 400 ? dt[..400] : dt); }
+         if (b.Has("restDedicationStyle")) Config.Set("kiosk.restDedicationStyle", b.Str("restDedicationStyle") == "column" ? "column" : "fixed");
+@@ -1520,7 +1521,7 @@ public static partial class Kiosk
+             // אוצריא ממוזערת: מסך מנוחה עם סמל אוצריא, שעה ותאריך, במקום החזרה מיידית
+             // שומר מסך אחרי זמן ללא פעילות (0 = כבוי), גם כשאוצריא פתוחה
+             int idleMin = Config.Get("kiosk.restIdleMinutes", 1);
+-            if (idleMin > 0 && !Overlay.RestVisible && IdleMs() >= idleMin * 60000L) { Overlay.ShowRest(hwnd, idle: true); return; }
++            if (idleMin > 0 && Config.Get("kiosk.saverEnabled", true) && !Overlay.RestVisible && IdleMs() >= idleMin * 60000L) { Overlay.ShowRest(hwnd, idle: true); return; }
+             if (Overlay.RestIdle) return;
+             if (IsIconic(hwnd))
+             {
+diff --git a/bridge/PdfApi.cs b/bridge/PdfApi.cs
+index a17f178..81f3536 100644
+--- a/bridge/PdfApi.cs
++++ b/bridge/PdfApi.cs
+@@ -56,6 +56,18 @@ internal static class PdfApi
+                 "AcroRd32.exe", Path.Combine(pf86, "Adobe", "Acrobat Reader DC", "Reader", "AcroRd32.exe"), Path.Combine(pf, "Adobe", "Acrobat Reader DC", "Reader", "AcroRd32.exe"));
+         Add("foxit", "Foxit PDF Reader", "viewer", new[] { "open" },
+             "FoxitPDFReader.exe", Path.Combine(pf86, "Foxit Software", "Foxit PDF Reader", "FoxitPDFReader.exe"), Path.Combine(pf, "Foxit Software", "Foxit PDF Reader", "FoxitPDFReader.exe"));
++        // כל התוכנות ש-Windows מציע ב"פתח באמצעות" (ABBYY, PDF-XChange, LibreOffice, אפליקציות Store ועוד)
++        try
++        {
++            var known = new HashSet<string>(list.Where(h => h.Exe != null).Select(h => Path.GetFileName(h.Exe).ToLowerInvariant()));
++            foreach (var (id, name) in PdfAssoc.Sta(() => PdfAssoc.Enumerate(".pdf").Select(i => (i.Id, i.Name)).ToList()))
++            {
++                string file = Path.GetFileName(id.Substring(6));
++                if (known.Contains(file) || list.Any(h => h.Name.Equals(name, StringComparison.OrdinalIgnoreCase))) continue;
++                list.Add(new(id, name, "viewer", null, new[] { "open" }));
++            }
++        }
++        catch (Exception ex) { Config.Log("pdf assoc: " + ex.Message); }
+         _cache = (DateTime.UtcNow, list);
+         return list;
+     }
+@@ -119,6 +131,11 @@ internal static class PdfApi
+             psi.ArgumentList.Add("shell32.dll,OpenAs_RunDLL"); psi.ArgumentList.Add(path);
+             Process.Start(psi);
+         }
++        else if (h.Id.StartsWith("assoc:"))
++        {
++            if (FxPolicy.IsRestricted) throw FxPolicy.Outside("במצב מוגבל אי אפשר לבחור תוכנה");
++            if (!PdfAssoc.Sta(() => PdfAssoc.Open(".pdf", h.Id, path))) throw new BridgeException("open_failed", "הפתיחה בתוכנה שנבחרה נכשלה", 500);
++        }
+         else
+         {
+             var psi = new ProcessStartInfo(h.Exe) { UseShellExecute = false };
+diff --git a/bridge/PdfAssoc.cs b/bridge/PdfAssoc.cs
+new file mode 100644
+index 0000000..9788186
+--- /dev/null
++++ b/bridge/PdfAssoc.cs
+@@ -0,0 +1,97 @@
++using System;
++using System.Collections.Generic;
++using System.Runtime.InteropServices;
++
++namespace OtzariaBridge;
++
++/// <summary>
++/// כל התוכנות ש-Windows מציע ב"פתח באמצעות" לסוג קובץ (כולל אפליקציות Store),
++/// דרך SHAssocEnumHandlers — אותו מקור שתפריט Windows עצמו משתמש בו.
++/// </summary>
++internal static class PdfAssoc
++{
++    internal sealed record Item(string Id, string Name, IAssocHandler Handler);
++
++    /// <summary>ממשקי המעטפת של Windows צריכים חוט STA; שרת הגשר רץ על חוטי MTA</summary>
++    public static T Sta<T>(Func<T> f)
++    {
++        T r = default!; Exception err = null;
++        var t = new System.Threading.Thread(() => { try { r = f(); } catch (Exception e) { err = e; } });
++        t.SetApartmentState(System.Threading.ApartmentState.STA); t.IsBackground = true; t.Start();
++        if (!t.Join(15000)) throw new TimeoutException("assoc"); if (err != null) throw err; return r;
++    }
++
++    public static List<Item> Enumerate(string ext)
++    {
++        var list = new List<Item>();
++        try
++        {
++            if (SHAssocEnumHandlers(ext, ASSOC_FILTER.RECOMMENDED, out var en) != 0 || en == null) return list;
++            var arr = new IAssocHandler[1];
++            while (en.Next(1, arr, out uint got) == 0 && got == 1)
++            {
++                var h = arr[0];
++                try
++                {
++                    h.GetUIName(out string name); h.GetName(out string path);
++                    if (string.IsNullOrWhiteSpace(name)) continue;
++                    list.Add(new("assoc:" + (path ?? name).ToLowerInvariant(), name, h));
++                }
++                catch { }
++            }
++        }
++        catch (Exception ex) { Config.Log("assoc enum: " + ex.Message); }
++        return list;
++    }
++
++    /// <summary>פתיחת קובץ בתוכנה שנבחרה מהרשימה</summary>
++    public static bool Open(string ext, string id, string file)
++    {
++        foreach (var it in Enumerate(ext))
++        {
++            if (it.Id != id) continue;
++            SHParseDisplayName(file, IntPtr.Zero, out IntPtr pidl, 0, out _);
++            if (pidl == IntPtr.Zero) return false;
++            try
++            {
++                SHCreateItemFromIDList(pidl, typeof(IShellItem).GUID, out IShellItem item);
++                item.BindToHandler(IntPtr.Zero, BHID_DataObject, typeof(IDataObject_).GUID, out object dobj);
++                return it.Handler.Invoke(dobj) == 0;
++            }
++            finally { Marshal.FreeCoTaskMem(pidl); }
++        }
++        return false;
++    }
++
++    private enum ASSOC_FILTER { NONE = 0, RECOMMENDED = 1 }
++    private static readonly Guid BHID_DataObject = new("B8C0BD9F-ED24-455C-83E6-D5390C4FE8C4");
++
++    [DllImport("shell32.dll", CharSet = CharSet.Unicode)] private static extern int SHAssocEnumHandlers(string ext, ASSOC_FILTER f, out IEnumAssocHandlers e);
++    [DllImport("shell32.dll", CharSet = CharSet.Unicode)] private static extern int SHParseDisplayName(string name, IntPtr bc, out IntPtr pidl, uint sfgaoIn, out uint sfgaoOut);
++    [DllImport("shell32.dll")] private static extern int SHCreateItemFromIDList(IntPtr pidl, [MarshalAs(UnmanagedType.LPStruct)] Guid riid, out IShellItem item);
++
++    [ComImport, Guid("973810ae-9599-4b88-9e4d-6ee98c9552da"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
++    internal interface IEnumAssocHandlers { [PreserveSig] int Next(uint celt, [Out, MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 0)] IAssocHandler[] rg, out uint fetched); }
++
++    [ComImport, Guid("F04061AC-1659-4a3f-A954-775AA57FC083"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
++    internal interface IAssocHandler
++    {
++        void GetName([MarshalAs(UnmanagedType.LPWStr)] out string name);
++        void GetUIName([MarshalAs(UnmanagedType.LPWStr)] out string name);
++        void GetIconLocation([MarshalAs(UnmanagedType.LPWStr)] out string path, out int index);
++        [PreserveSig] int IsRecommended();
++        void MakeDefault([MarshalAs(UnmanagedType.LPWStr)] string desc);
++        [PreserveSig] int Invoke([MarshalAs(UnmanagedType.Interface)] object dataObject);
++        void CreateInvoker(object dataObject, out object invoker);
++    }
++
++    [ComImport, Guid("43826d1e-e718-42ee-bc55-a1e261c37bfe"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
++    private interface IShellItem
++    {
++        void BindToHandler(IntPtr pbc, [MarshalAs(UnmanagedType.LPStruct)] Guid bhid, [MarshalAs(UnmanagedType.LPStruct)] Guid riid, [MarshalAs(UnmanagedType.Interface)] out object ppv);
++        void GetParent(out IShellItem parent); void GetDisplayName(uint sigdn, out IntPtr name); void GetAttributes(uint mask, out uint attrs); void Compare(IShellItem other, uint hint, out int order);
++    }
++
++    [ComImport, Guid("0000010e-0000-0000-C000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
++    private interface IDataObject_ { }
++}
+diff --git a/bridge/Saver.cs b/bridge/Saver.cs
+index b42115f..2d213cd 100644
+--- a/bridge/Saver.cs
++++ b/bridge/Saver.cs
+@@ -28,7 +28,7 @@ public static class Saver
+         {
+             if (Kiosk.IsActive) { _shownByUs = false; return; } // בנעילה: Kiosk.Watch מנהל את המסך
+             if (_shownByUs && !Overlay.RestVisible) _shownByUs = false;
+-            if (!Config.Get("kiosk.saverWhenUnlocked", true)) return;
++            if (!Config.Get("kiosk.saverEnabled", true) || !Config.Get("kiosk.saverWhenUnlocked", true)) return;
+             int min = Config.Get("kiosk.restIdleMinutes", 1);
+             if (min <= 0 || Overlay.RestVisible) return;
+             if (Kiosk.IdleMs() < min * 60000L) return;
+diff --git a/system-settings/js/sections/kiosk.js b/system-settings/js/sections/kiosk.js
+index ff03872..cfaca07 100644
+--- a/system-settings/js/sections/kiosk.js
++++ b/system-settings/js/sections/kiosk.js
+@@ -914,7 +914,8 @@
+     cities.forEach(function (c) { cityByName[c.name] = c; });
+     var fields = [
+       { name: 'rest', type: 'checkbox', label: 'מסך מנוחה כשאוצריא ממוזערת', value: st.restScreen !== false, hint: 'סמל אוצריא, שעה ותאריך במסך מלא. לחיצה בכל מקום מחזירה לאוצריא' },
+-      { name: 'idle', label: 'שומר מסך אחרי דקות ללא פעילות (0 = כבוי, ברירת מחדל: 1)', value: String(st.restIdleMinutes || 0), dir: 'ltr', placeholder: '0', hint: 'מסך המנוחה מופיע גם כשאוצריא פתוחה, אחרי הזמן הזה בלי מקלדת ועכבר. עד 240 דקות' },
++      { name: 'saverOn', type: 'checkbox', label: 'שומר מסך', value: st.saverEnabled !== false, hint: 'מתג ראשי. כשהוא כבוי שומר המסך לא מופיע בכלל: לא בנעילה ולא בלעדיה. מסך המנוחה כשאוצריא ממוזערת נשלט בנפרד' },
++      { name: 'idle', label: 'שומר מסך אחרי דקות ללא פעילות (ברירת מחדל: 1)', value: String(st.restIdleMinutes || 0), dir: 'ltr', placeholder: '0', hint: 'מסך המנוחה מופיע גם כשאוצריא פתוחה, אחרי הזמן הזה בלי מקלדת ועכבר. עד 240 דקות' },
+       { name: 'saverUnl', type: 'checkbox', label: 'שומר מסך גם כשהנעילה כבויה', value: st.saverWhenUnlocked !== false, hint: 'אחרי זמן ההמתנה שלמעלה, גם בלי מצב נעילה. לחיצה או מקש חוזרים לחלון הקודם' },
+       { name: 'bootCover', type: 'checkbox', label: 'מסך מנוחה מיד בהדלקת המחשב (בנעילה), עד שאוצריא עולה', value: st.bootCover !== false, hint: 'נסגר לבד כשאוצריא מוכנה, או אחרי דקה. לחיצה סוגרת אותו מיד' }
+     ];
+@@ -990,7 +991,7 @@
+   };
+   SS.screensaverPayload = function (x) {
+     return {
+-      restScreen: !!x.rest, saverWhenUnlocked: !!x.saverUnl, bootCover: !!x.bootCover, restIdleMinutes: +String(x.idle).trim() || 0, restZmanimSide: x.zmSide, showParsha: !!x.parsha, showDafYomi: !!x.dafyomi, restShowVerse: !!x.rsVerse, restVerseText: (x.verseText || '').trim(), restShowClock: !!x.rsClock, restShowZmanim: !!x.rsZmanim, restShowLogo: !!x.rsLogo, restShowDedication: !!x.rsDed, restDedicationStyle: x.dedStyle === 'column' ? 'column' : 'fixed', restCandleFlicker: !!x.candleFlicker, restDedicationText: String(x.dedText || '').slice(0, 400), lockScreenImage: !!x.lockImg, restNoteText: String(x.noteText || '').slice(0, 600),
++      restScreen: !!x.rest, saverEnabled: !!x.saverOn, saverWhenUnlocked: !!x.saverUnl, bootCover: !!x.bootCover, restIdleMinutes: +String(x.idle).trim() || 0, restZmanimSide: x.zmSide, showParsha: !!x.parsha, showDafYomi: !!x.dafyomi, restShowVerse: !!x.rsVerse, restVerseText: (x.verseText || '').trim(), restShowClock: !!x.rsClock, restShowZmanim: !!x.rsZmanim, restShowLogo: !!x.rsLogo, restShowDedication: !!x.rsDed, restDedicationStyle: x.dedStyle === 'column' ? 'column' : 'fixed', restCandleFlicker: !!x.candleFlicker, restDedicationText: String(x.dedText || '').slice(0, 400), lockScreenImage: !!x.lockImg, restNoteText: String(x.noteText || '').slice(0, 600),
+       zmanimLocation: x.zloc.trim(), zmanimCity: (x.zcity || '').trim(),
+       zmanimElevation: +String(x.zelev).trim() || 0, zmanimAlert: ZMAN_FIELDS.filter(function (z) { return x['za_' + z.id]; }).map(function (z) { return z.id; }).join(','), zmanimAlertMinutes: +String(x.zalertmin).trim() || 10, zmanimFallbackEngine: x.zengine,
+       zmanimDiaspora: !!x.diaspora, candleLightingMinutes: +String(x.candle).trim() || 0,
+-- 
+2.43.0
+
