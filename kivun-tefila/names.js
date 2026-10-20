@@ -126,6 +126,24 @@
   const DIRS = ["צפון", "צפון-מזרח", "מזרח", "דרום-מזרח", "דרום", "דרום-מערב", "מערב", "צפון-מערב"];
   const dirName = h => DIRS[Math.round(h / 45) % 8];
 
+  /* 2.9.0: ערים לאורך הקו (cities.js, Natural Earth) — כדי להתמצא: "עובר ליד חרטום, קהיר…" */
+  function alongCities(lines, maxKm) {
+    const C = typeof KT_CITIES !== "undefined" ? KT_CITIES : null; if (!C) return [];
+    let a = 90, b = -90, c = 180, d = -180; for (const l of lines) for (const p of l) { if (p[0] < a) a = p[0]; if (p[0] > b) b = p[0]; if (p[1] < c) c = p[1]; if (p[1] > d) d = p[1] }
+    const m = maxKm / 100; const out = [];
+    for (const ct of C) {
+      if (ct[1] < a - m || ct[1] > b + m || ct[2] < c - m * 1.5 || ct[2] > d + m * 1.5) continue;
+      let best = 1e9, at = 0, k = 0;
+      for (const l of lines) for (let i = 0; i + 1 < l.length; i++, k++) {
+        const A = l[i], B = l[i + 1], cs = Math.cos(ct[1] * Math.PI / 180), ax = (A[1] - ct[2]) * cs, ay = A[0] - ct[1], bx = (B[1] - ct[2]) * cs, by = B[0] - ct[1];
+        const dx = bx - ax, dy = by - ay, L = dx * dx + dy * dy; let t = L ? -(ax * dx + ay * dy) / L : 0; t = Math.max(0, Math.min(1, t));
+        const ex = ax + dx * t, ey = ay + dy * t, dd = Math.sqrt(ex * ex + ey * ey) * 111.2; if (dd < best) { best = dd; at = k + t }
+      }
+      if (best <= maxKm) out.push({ n: ct[0], p: [ct[1], ct[2]], pop: ct[3], d: best, at });
+    }
+    return out.sort((x, y) => y.pop - x.pop).slice(0, 8).sort((x, y) => x.at - y.at);
+  }
+
   function show(list) {
     res.innerHTML = ""; res.hidden = !list.length;
     list.slice(0, 30).forEach(e => {
@@ -143,15 +161,23 @@
       else info.textContent = "נקודה באמצע הקו. ";
       let rel = (bj - n.h + 360) % 360; if (rel > 180) rel -= 360;
       info.textContent += `כיוון הקו שם בקירוב ${dirName(n.h)}, וירושלים ${Math.abs(Math.round(rel))}° ${rel >= 0 ? "מימין" : "משמאל"} לכיוון הקו (${dirName(bj)} מהנקודה).`;
+      const cities = alongCities(lines, e[0] === "w" ? 25 : 12);
+      const cdiv = document.createElement("div"); cdiv.className = "nsCities"; cdiv.style.cssText = "font-size:.85em;margin:.15rem 0";
+      if (cities.length) {
+        cdiv.append(e[0] === "w" ? "זורם ליד: " : "עובר ליד: ");
+        cities.forEach((ct, i) => { const cb = document.createElement("button"); cb.type = "button"; cb.className = "chip"; cb.textContent = ct.n; cb.title = "קבע מיקום ב" + ct.n + " (" + Math.round(ct.d) + " ק\"מ מה" + (e[0] === "w" ? "נהר" : "כביש") + ")";
+          cb.onclick = () => { hl(); setPos(ct.p, ct.n, null, false); mode2("near"); map(); scrollTo(0, 0) }; if (i) cdiv.append(" · "); cdiv.appendChild(cb) });
+        if (ref) { const me = cities.reduce((x, y) => dist(ref, x.p) < dist(ref, y.p) ? x : y); const dm = dist(ref, me.p); if (dm < 300) { const pm = document.createElement("div"); pm.textContent = `העיר הקרובה אליך מביניהן: ${me.n} (${dm < 10 ? dm.toFixed(1) : Math.round(dm)} ק"מ).`; cdiv.appendChild(pm) } }
+      }
       const b = document.createElement("button"); b.type = "button"; b.textContent = "קבע מיקום על הנקודה הזו";
-      const hl = () => { window.HL = { name: e[1] || "", w: e[0] === "w", lines, at: n.q } };
+      const hl = () => { window.HL = { name: e[2] || e[1] || "", w: e[0] === "w", lines, at: n.q, cities: cities.map(c => ({ n: c.n, p: c.p })) } };
       const mode2 = w => { const mm = $("mapMode"); if (mm && mm.value !== w) { mm.value = w; mm.dispatchEvent(new Event("change")) } };
       b.onclick = () => { hl(); setPos([+n.q[0].toFixed(5), +n.q[1].toFixed(5)], "על " + (e[1] || ""), null, false); mode2("near"); map(); scrollTo(0, 0) };
       const sh = document.createElement("button"); sh.type = "button"; sh.textContent = "הצג במפה";
       sh.onclick = () => { hl(); if (typeof pos !== "undefined" && pos) { mode2(n.d != null && n.d < 120 ? "near" : "far"); map(); $("map").scrollIntoView({ block: "center" }) } else say("nsMsg", "בחר קודם מיקום, כדי שהמפה תוצג.") };
       const cl = document.createElement("button"); cl.type = "button"; cl.textContent = "הסר מהמפה";
       cl.onclick = () => { window.HL = null; if (typeof pos !== "undefined" && pos) map() };
-      li.append(info, b, sh, cl); res.appendChild(li);
+      li.append(info, cdiv, b, sh, cl); res.appendChild(li);
     });
   }
 
