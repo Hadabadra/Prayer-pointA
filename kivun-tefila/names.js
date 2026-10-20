@@ -28,7 +28,7 @@
   $("namesDl").onclick = async () => {
     say("namesMsg", "מוריד…");
     try { const j = await getJ(BASE + "geo-names.json"); if (!j || !j.e) throw 0; await saveFile("geo-names.json", JSON.stringify(j)); setNames(j) }
-    catch (e) { say("namesMsg", "ההורדה נכשלה (אין חיבור, או שהכתובת עוד לא אושרה באוצריא). לחץ \"העתק קישור\", הורד במחשב אחר ולחץ \"טען מקובץ\".") }
+    catch (e) { say("namesMsg", "ההורדה עוד חסומה באוצריא: כתובת הקבצים טרם נוספה לרשימת הכתובות המאושרות של אוצריא (בקשה נשלחה). בינתיים: לחצו \"העתק קישור\", שמרו את הקובץ בדפדפן (Ctrl+S) ולחצו \"טען מקובץ\".") }
   };
   $("namesImp").onclick = async () => {
     try { const t = await pickText("בחר את הקובץ geo-names.json"); if (t == null) return; const j = JSON.parse(t); if (!j || !j.e) throw 0; await saveFile("geo-names.json", t); setNames(j) }
@@ -92,7 +92,7 @@
   $("rdDl").onclick = async () => {
     const c = $("nsCountry").value; if (!c) return; say("nsMsg", "מוריד את כבישי " + cName() + "…");
     try { const j = await getJ(BASE + "roads/" + c + ".json"); if (!j || !j.e) throw 0; await roadsSet(c, JSON.stringify(j)); say("nsMsg", "כבישי " + cName() + " נשמרו ✓ (" + j.e.length + ")"); rdBox() }
-    catch (e) { say("nsMsg", "ההורדה נכשלה: אין חיבור, הכתובת עוד לא אושרה באוצריא, או שקובץ המדינה עוד לא נבנה. אפשר \"העתק קישור\" ו\"טען מקובץ\".") }
+    catch (e) { say("nsMsg", "ההורדה עוד חסומה באוצריא: כתובת הקבצים טרם נוספה לרשימת הכתובות המאושרות של אוצריא (בקשה נשלחה). בינתיים: לחצו \"העתק קישור\", שמרו את הקובץ בדפדפן (Ctrl+S) ולחצו \"טען מקובץ\".") }
   };
   $("rdImp").onclick = async () => {
     const c = $("nsCountry").value; if (!c) return;
