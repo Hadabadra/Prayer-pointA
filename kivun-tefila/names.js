@@ -4,7 +4,7 @@
 (function () {
   const $ = id => document.getElementById(id), O = window.Otzaria;
   const BASE = "https://raw.githubusercontent.com/Hadabadra/Prayer-pointA/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/kivun-tefila-data/";
-  const PAGE = "https://github.com/Hadabadra/Prayer-pointA/raw/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/kivun-tefila-data/";
+  const PAGE = "https://github.com/Hadabadra/Prayer-pointA/releases/download/kivun-tefila-data/"; /* 3.0.5: קבצים מצורפים — הדפדפן מוריד ישירות */
   const dat = r => r && (r.data !== undefined ? r.data : r);
   const say = (id, t) => { const e = $(id); if (e) e.textContent = t };
   const BASIC = [["ISR", "ישראל", "Israel"], ["USA", "ארצות הברית", "United States of America"], ["CAN", "קנדה", "Canada"], ["MEX", "מקסיקו", "Mexico"], ["GBR", "בריטניה", "United Kingdom"], ["FRA", "צרפת", "France"], ["DEU", "גרמניה", "Germany"], ["BEL", "בלגיה", "Belgium"], ["NLD", "הולנד", "Netherlands"], ["CHE", "שווייץ", "Switzerland"], ["AUT", "אוסטריה", "Austria"], ["ITA", "איטליה", "Italy"], ["ESP", "ספרד", "Spain"], ["UKR", "אוקראינה", "Ukraine"], ["RUS", "רוסיה", "Russia"], ["POL", "פולין", "Poland"], ["HUN", "הונגריה", "Hungary"], ["ARG", "ארגנטינה", "Argentina"], ["BRA", "ברזיל", "Brazil"], ["AUS", "אוסטרליה", "Australia"], ["ZAF", "דרום אפריקה", "South Africa"], ["MAR", "מרוקו", "Morocco"], ["JOR", "ירדן", "Jordan"], ["EGY", "מצרים", "Egypt"], ["TUR", "טורקיה", "Turkey"]];
@@ -18,7 +18,7 @@
   async function readFile(name) { try { if (!O) return localStorage.getItem("kivun-" + name); const r = dat(await O.call("fs.readFile", { path: name })); return r && typeof r === "object" ? (r.content != null ? r.content : null) : r } catch (e) { return null } }
   const openUrl = u => { let w = null; try { w = window.open(u, "_blank", "noopener") } catch (e) {} if (!w && O) O.call("app.openUrl", { url: u }).catch(() => {}) };
   function link(btn, msg, url, what) {
-    $(btn).onclick = () => { copyText(url).then(ok => { say(msg, ok ? "הקישור הועתק. פתח אותו במחשב עם אינטרנט ושמור את הקובץ (Ctrl+S)." : "העתקה אוטומטית נכשלה: " + url); openUrl(url) }) };
+    $(btn).onclick = () => { copyText(url).then(ok => { say(msg, ok ? "הקישור הועתק. פתח אותו במחשב עם אינטרנט והקובץ יורד מעצמו לתיקיית ההורדות; אחר כך לחצו \"טען מקובץ\"." : "העתקה אוטומטית נכשלה: " + url); openUrl(url) }) };
   }
 
   /* ---- שמות נהרות וכבישים ---- */
@@ -28,7 +28,7 @@
   $("namesDl").onclick = async () => {
     say("namesMsg", "מוריד…");
     try { const j = await getJ(BASE + "geo-names.json"); if (!j || !j.e) throw 0; await saveFile("geo-names.json", JSON.stringify(j)); setNames(j) }
-    catch (e) { say("namesMsg", "ההורדה עוד חסומה באוצריא: כתובת הקבצים טרם נוספה לרשימת הכתובות המאושרות של אוצריא (בקשה נשלחה). בינתיים: לחצו \"העתק קישור\", שמרו את הקובץ בדפדפן (Ctrl+S) ולחצו \"טען מקובץ\".") }
+    catch (e) { say("namesMsg", "ההורדה עוד חסומה באוצריא: כתובת הקבצים טרם נוספה לרשימת הכתובות המאושרות של אוצריא (בקשה נשלחה). בינתיים: לחצו \"העתק קישור\", הקובץ יורד בדפדפן ולחצו \"טען מקובץ\".") }
   };
   $("namesImp").onclick = async () => {
     try { const t = await pickText("בחר את הקובץ geo-names.json"); if (t == null) return; const j = JSON.parse(t); if (!j || !j.e) throw 0; await saveFile("geo-names.json", t); setNames(j) }
@@ -92,14 +92,14 @@
   $("rdDl").onclick = async () => {
     const c = $("nsCountry").value; if (!c) return; say("nsMsg", "מוריד את כבישי " + cName() + "…");
     try { const j = await getJ(BASE + "roads/" + c + ".json"); if (!j || !j.e) throw 0; await roadsSet(c, JSON.stringify(j)); say("nsMsg", "כבישי " + cName() + " נשמרו ✓ (" + j.e.length + ")"); rdBox() }
-    catch (e) { say("nsMsg", "ההורדה עוד חסומה באוצריא: כתובת הקבצים טרם נוספה לרשימת הכתובות המאושרות של אוצריא (בקשה נשלחה). בינתיים: לחצו \"העתק קישור\", שמרו את הקובץ בדפדפן (Ctrl+S) ולחצו \"טען מקובץ\".") }
+    catch (e) { say("nsMsg", "ההורדה עוד חסומה באוצריא: כתובת הקבצים טרם נוספה לרשימת הכתובות המאושרות של אוצריא (בקשה נשלחה). בינתיים: לחצו \"העתק קישור\", הקובץ יורד בדפדפן ולחצו \"טען מקובץ\".") }
   };
   $("rdImp").onclick = async () => {
     const c = $("nsCountry").value; if (!c) return;
     try { const t = await pickText("בחר את הקובץ " + c + ".json"); if (t == null) return; const e = await roadsSet(c, t); say("nsMsg", "נטען ✓ (" + e.length + ")"); rdBox() }
     catch (e) { say("nsMsg", "הקובץ אינו קובץ כבישים תקין של המדינה שנבחרה.") }
   };
-  $("rdLink").onclick = () => { const c = $("nsCountry").value; if (!c) return; const u = PAGE + "roads/" + c + ".json"; copyText(u).then(ok => { say("nsMsg", ok ? "הקישור הועתק. פתח אותו במחשב עם אינטרנט, שמור את הקובץ (Ctrl+S) ולחץ \"טען מקובץ\"." : "העתקה אוטומטית נכשלה: " + u); openUrl(u) }) };
+  $("rdLink").onclick = () => { const c = $("nsCountry").value; if (!c) return; const u = PAGE + "roads-" + c + ".json"; copyText(u).then(ok => { say("nsMsg", ok ? "הקישור הועתק. פתח אותו במחשב עם אינטרנט, הקובץ יורד מעצמו לתיקיית ההורדות; אחר כך לחצו \"טען מקובץ\" ולחץ \"טען מקובץ\"." : "העתקה אוטומטית נכשלה: " + u); openUrl(u) }) };
 
   /* ---- חישוב קרבה לקו ---- */
   const parse = s => s.split(";").map(l => l.split(" ").map(p => p.split(",").map(Number)));

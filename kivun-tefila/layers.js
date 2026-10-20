@@ -34,7 +34,7 @@
   $("lyDl").onclick = async () => {
     const c = $("nsCountry").value; if (!c) return; say("מוריד…");
     try { const j = await getJ(BASE + "layers/" + c + ".json"); if (!j || !j.v) throw 0; await save("layers-" + c + ".json", JSON.stringify(j)); LY[c] = j; isos(c); say("נשמר ✓ (בתי כנסת " + j.s.length + ", תחנות " + j.t.length + ", שדות תעופה " + j.a.length + ")"); sync(); if (typeof pos !== "undefined" && pos) map() }
-    catch (e) { say("ההורדה עוד חסומה באוצריא: כתובת הקבצים טרם נוספה לרשימת הכתובות המאושרות של אוצריא (בקשה נשלחה). בינתיים: לחצו \"העתק קישור\", שמרו את הקובץ בדפדפן (Ctrl+S) ולחצו \"טען מקובץ\".") }
+    catch (e) { say("ההורדה עוד חסומה באוצריא: כתובת הקבצים טרם נוספה לרשימת הכתובות המאושרות של אוצריא (בקשה נשלחה). בינתיים: לחצו \"העתק קישור\", הקובץ יורד בדפדפן ולחצו \"טען מקובץ\".") }
   };
 
   /* ---- חיפוש סביב המיקום דרך Overpass, עם שמירה מקומית ---- */

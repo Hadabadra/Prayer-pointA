@@ -30,6 +30,11 @@ jobs:
           v="$(node -p "require('./kivun-tefila/manifest.json').version")"
           tag="kivun-tefila-v$v"
           file="kivun-tefila-$v.otzplugin"
+          # קובצי נתונים כקבצים מצורפים (קישור שמוריד ישירות, בלי Ctrl+S) — ב-Release קבוע kivun-tefila-data
+          mkdir -p /tmp/kd; cp kivun-tefila-data/geo-names.json kivun-tefila-data/geo-extra.json /tmp/kd/
+          for f in kivun-tefila-data/roads/*.json; do cp "$f" "/tmp/kd/roads-$(basename "$f")"; done
+          gh release view kivun-tefila-data >/dev/null 2>&1 || gh release create kivun-tefila-data --target "$GITHUB_SHA" --prerelease --title "כיוון תפילה — קובצי נתונים" --notes "קובצי נהרות, אגמים וכבישים לטעינה ידנית בתוסף (טען מקובץ)."
+          gh release upload kivun-tefila-data /tmp/kd/*.json --clobber
           if gh release view "$tag" >/dev/null 2>&1; then echo "Release $tag כבר קיים"; exit 0; fi
           if [ ! -f "$file" ]; then echo "::warning::$file לא נמצא בענף"; exit 0; fi
           awk -v h="## מה חדש ב-$v" 'index($0,h)==1{f=1;next} /^## /{if(f)exit} f' README.md > notes.md
