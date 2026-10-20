@@ -162,7 +162,7 @@ function compassNote() {
   $("noCompass").hidden = !(need && ncOpen);
 }
 (function () {
-  const b = document.createElement("button"); b.id = "bNoComp"; b.type = "button"; b.textContent = "!"; b.hidden = true;
+  const b = document.createElement("button"); b.id = "bNoComp"; b.type = "button"; b.textContent = "! אין מצפן במחשב"; b.hidden = true;
   b.title = "אין מצפן זמין: לחץ להסבר"; b.setAttribute("aria-label", "אין מצפן זמין, הצג הסבר"); b.setAttribute("aria-controls", "noCompass");
   b.onclick = () => { ncOpen = !ncOpen; b.setAttribute("aria-expanded", String(ncOpen)); compassNote(); if (ncOpen) $("noCompass").scrollIntoView({ block: "nearest" }) };
   const bar = $("bar"); bar.insertBefore(b, bar.children[1] || null);
@@ -370,7 +370,10 @@ $("minTel").onclick = () => { $("minMsg").textContent = "חיוג ישיר אי�
 
 $("minCopy2").onclick = () => copyText("*6837").then(ok => { $("minMsg").textContent = ok ? "המספר *6837 הועתק ללוח." : "ההעתקה לא הצליחה. המספר: *6837" });
 $("bKotel").onclick = () => pop("bKotel", "kotel", $("kotel").hidden);
-if ($("bKria")) $("bKria").onclick = () => pop("bKria", "kria", $("kria").hidden);
+if ($("bKria")) $("bKria").onclick = () => { pop("bKria", "kria", $("kria").hidden); document.body.classList.remove("side");
+  try { const w = $("kria").querySelector(".kwall"), m = $("wall").style.maskImage || $("wall").style.webkitMaskImage; if (w && m && !w.style.maskImage) { w.style.maskImage = m; w.style.webkitMaskImage = m } } catch (e) {} };
+if ($("kriaX")) $("kriaX").onclick = () => pop("bKria", "kria", false);
+if ($("kria")) $("kria").addEventListener("click", e => { if (e.target === $("kria")) pop("bKria", "kria", false) });
 if ($("bZecher")) $("bZecher").onclick = () => { pop("bZecher", "zecher", $("zecher").hidden); document.body.classList.remove("side") };
 if ($("zecherX")) $("zecherX").onclick = () => pop("bZecher", "zecher", false);
 if ($("zecher")) $("zecher").addEventListener("click", e => { if (e.target === $("zecher")) pop("bZecher", "zecher", false) });

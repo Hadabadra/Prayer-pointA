@@ -75,11 +75,12 @@
   /* ---- 1. קריעה בכותל ---- */
   const S61 = F.find(s => s.sa === "תקסא");
   const kr = document.createElement("div"); kr.className = "kria";
-  const V = [["הרואה ערי יהודה בחורבנן", "ערי קדשך היו מדבר"], ["ירושלים בחורבנה", "ציון מדבר היתה ירושלים שממה"],
-    ["בית המקדש בחורבנו", "בית קדשנו ותפארתנו אשר הללוך אבתינו היה לשרפת אש וכל מחמדינו היה לחרבה"]];
-  kr.innerHTML = "<h3 style='margin:.2rem 0'>מה אומרים בשעת הקריעה</h3>";
-  V.forEach(([w, v]) => { const p = document.createElement("p"); p.innerHTML = "<small></small><br><span class='vs'></span>"; p.firstChild.textContent = w + ", אומר:"; p.lastChild.textContent = v; kr.appendChild(p) });
-  const vs = document.createElement("p"); vs.append("המקור: ", link('גמרא, מו"ק כו ע"א', "מועד קטן", 'כו ע"א'), " · ", link('שולחן ערוך אורח חיים, סימן תקסא', "שולחן ערוך אורח חיים", "סימן תקסא")); kr.appendChild(vs);
+  /* 2.9.4: הפסוקים בניקוד ובטעמים — ישעיהו סד, ט–י, לפי "מקרא על פי המסורה" (CC-BY-SA) */
+  const V = [["הרואה ערי יהודה בחורבנן", "עָרֵ֥י קׇדְשְׁךָ֖ הָי֣וּ מִדְבָּ֑ר"], ["ירושלים בחורבנה", "צִיּוֹן֙ מִדְבָּ֣ר הָיָ֔תָה יְרוּשָׁלַ֖͏ִם שְׁמָמָֽה׃"],
+    ["בית המקדש בחורבנו", "בֵּ֧ית קׇדְשֵׁ֣נוּ וְתִפְאַרְתֵּ֗נוּ אֲשֶׁ֤ר הִֽלְל֙וּךָ֙ אֲבֹתֵ֔ינוּ הָיָ֖ה לִשְׂרֵ֣פַת אֵ֑שׁ וְכׇל־מַחֲמַדֵּ֖ינוּ הָיָ֥ה לְחׇרְבָּֽה׃"]];
+  kr.innerHTML = "<h3 class='kvh'>מה אומרים בשעת הקריעה</h3>";
+  V.forEach(([w, v]) => { const p = document.createElement("p"); p.className = "kvp"; p.innerHTML = "<small></small><span class='vs'></span>"; p.firstChild.textContent = w + ", אומר:"; p.lastChild.textContent = v; kr.appendChild(p) });
+  const vs = document.createElement("p"); vs.className = "kvsrc"; vs.append(link("ישעיהו סד, ט–י", "ישעיהו", "סד ט"), " · ", link('גמרא, מו"ק כו ע"א', "מועד קטן", 'כו ע"א'), " · ", link('מעבר לשולחן ערוך — אורח חיים, סימן תקסא', "שולחן ערוך אורח חיים", "סימן תקסא")); kr.appendChild(vs);
   if (S61) {
     const h = document.createElement("h3"); h.style.margin = ".6rem 0 .2rem"; h.textContent = "בקצרה"; kr.appendChild(h);
     const ul = document.createElement("ul"); ul.className = "kd";
