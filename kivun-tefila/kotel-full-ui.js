@@ -141,6 +141,10 @@
     const w = q.value.trim(), rx = w ? new RegExp(w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g") : null; out.replaceChildren(); let hits = 0;
     for (const s of F) {
       const h = document.createElement("h3"); h.style.margin = ".6rem 0 .2rem"; h.textContent = s.siman + (s.sa === "תקס" ? " — זכר לחורבן" : " — קריעה על החורבן");
+      /* 2.9.3: ניווט מחולק לפי סימן, עם קפיצה לראש הסימן */
+      const ng = document.createElement("b"); ng.style.cssText = "display:block;width:100%;margin:.3rem 0 .1rem";
+      const nj = document.createElement("button"); nj.type = "button"; nj.textContent = "⬇ " + h.textContent; nj.style.fontWeight = "700";
+      nj.onclick = () => h.scrollIntoView({ behavior: "smooth", block: "start" }); ng.appendChild(nj); nav.appendChild(ng);
       let any = false; const box = document.createDocumentFragment();
       for (const tp of s.topics) {
         const ls = w ? tp.lines.filter(l => l[1].includes(w) || tp.t.includes(w)) : tp.lines; if (!ls.length) continue;
