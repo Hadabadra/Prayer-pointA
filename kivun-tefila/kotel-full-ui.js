@@ -81,17 +81,19 @@
   kr.innerHTML = "<h3 class='kvh'>מה אומרים בשעת הקריעה</h3>";
   V.forEach(([w, v]) => { const p = document.createElement("p"); p.className = "kvp"; p.innerHTML = "<small></small><span class='vs'></span>"; p.firstChild.textContent = w + ", אומר:"; p.lastChild.textContent = v; kr.appendChild(p) });
   const vs = document.createElement("p"); vs.className = "kvsrc"; vs.append(link("ישעיהו סד, ט–י", "ישעיהו", "סד ט"), " · ", link('גמרא, מו"ק כו ע"א', "מועד קטן", 'כו ע"א'), " · ", link('מעבר לשולחן ערוך — אורח חיים, סימן תקסא', "שולחן ערוך אורח חיים", "סימן תקסא")); kr.appendChild(vs);
+  let kdd = null;
   if (S61) {
-    const h = document.createElement("h3"); h.style.margin = ".6rem 0 .2rem"; h.textContent = "בקצרה"; kr.appendChild(h);
+    /* 2.9.7: הנקודות בקצרה בתוך חלק נסגר, כדי שהנוסח והביקורים יהיו במרכז */
+    kdd = document.createElement("details"); kdd.className = "kshort"; const ks = document.createElement("summary"); ks.textContent = "נקודות בהלכות הקריעה (בקצרה)"; kdd.appendChild(ks);
     const ul = document.createElement("ul"); ul.className = "kd";
     const PICK = ["מקום הקריעה.", "בזמנינו.", "כותל המערבי.", "קריעת בגדו - סעיף ד'.", "זמני הקריעה.", "תושבי ירושלים - סעיף ה'.", "שבת."];
     for (const tp of S61.topics) { if (!PICK.includes(tp.t)) continue;
       const li = document.createElement("li"); li.className = "kd0"; li.textContent = tp.t.replace(/\.$/, ""); const sub = document.createElement("ul");
       tp.lines.filter(l => l[0] === "h").slice(0, 4).forEach(l => { const x = document.createElement("li"); x.textContent = l[1]; sub.appendChild(x) });
       li.appendChild(sub); ul.appendChild(li) }
-    kr.appendChild(ul);
+    kdd.appendChild(ul);
   }
-  const kn = document.createElement("p"); kn.innerHTML = "<small>הנקודות מתוך החיבור \"דור המלקטים\". הפירוט, השיטות ומראי המקומות בכפתור \"זכר לחורבן\" שבסרגל העליון. התוסף אינו פוסק הלכה למעשה; לשאלה במקרה מסוים יש לפנות לרב מוסמך.</small>"; kr.appendChild(kn);
+  const kn = document.createElement("p"); kn.innerHTML = "<small>הנקודות מתוך החיבור \"דור המלקטים\". הפירוט, השיטות ומראי המקומות בכפתור \"זכר לחורבן\" שבסרגל העליון. התוסף אינו פוסק הלכה למעשה; לשאלה במקרה מסוים יש לפנות לרב מוסמך.</small>"; if (kdd) { kdd.appendChild(kn); kr.appendChild(kdd) } else kr.appendChild(kn);
   kBody.appendChild(kr);
 
   /* ---- 2. כל הנושאים, עם חיפוש ---- */

@@ -31,7 +31,21 @@
     if (!s || s.multiple || s.size > 1 || s.disabled || s.dataset.native != null) return;
     e.preventDefault(); s.focus({ preventScroll: true }); open(s);
   }, true);
-  document.addEventListener("keydown", e => { if (box && (e.key === "Escape" || e.key === "Tab")) { if (e.key === "Escape") e.preventDefault(); close() } }, true);
+  /* 2.9.7: הרשימה הכפולה חזרה לפעמים — גם click ו-pointerdown נחסמים על <select>, ופתיחה במקלדת
+     (רווח, Enter, F4, Alt+חץ למטה) פותחת את הרשימה של הדף ולא את החלון של Windows. ניווט בחיצים בתוך הרשימה. */
+  const own = s => s && !s.multiple && !(s.size > 1) && !s.disabled && s.dataset.native == null;
+  ["click", "pointerdown", "dblclick"].forEach(t => document.addEventListener(t, e => { const s = e.target.closest && e.target.closest("select"); if (own(s)) e.preventDefault() }, true));
+  document.addEventListener("keydown", e => {
+    if (box) {
+      const items = [...box.querySelectorAll("div[role=option]:not(.d)")], k = box.querySelector(".k") || box.querySelector(".s"); let i = items.indexOf(k);
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); i = Math.max(0, Math.min(items.length - 1, i + (e.key === "ArrowDown" ? 1 : -1))); items.forEach(x => x.classList.remove("k")); if (items[i]) { items[i].classList.add("k"); items[i].scrollIntoView({ block: "nearest" }) } return }
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); const t = box.querySelector(".k"); if (t) t.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true })); else close(); return }
+      if (e.key === "Escape" || e.key === "Tab") { if (e.key === "Escape") e.preventDefault(); close() }
+      return;
+    }
+    const s = e.target && e.target.tagName === "SELECT" ? e.target : null;
+    if (own(s) && (e.key === " " || e.key === "Enter" || e.key === "F4" || (e.altKey && (e.key === "ArrowDown" || e.key === "ArrowUp")))) { e.preventDefault(); open(s) }
+  }, true);
   addEventListener("resize", close); addEventListener("blur", close);
   document.addEventListener("scroll", e => { if (box && !box.contains(e.target)) close() }, true);
 })();
