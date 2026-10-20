@@ -144,7 +144,7 @@ body.mapfull #stRotRow .sep{display:none}
   <button id="bGps" class="dis" aria-disabled="true" title="מיקום מדויק (GPS): בפיתוח, ממתין לאוצריא">GPS</button>
   <button id="bManT" aria-expanded="false" aria-controls="manBox pcBox" title="הזנת קואורדינטות או מיקוד">מיקום ידני / מיקוד</button>
   <button id="bPcT" aria-expanded="false" aria-controls="pcBox" hidden>מיקוד</button>
-  <select id="meth" aria-label="שיטת חישוב"><option value="rh" title="שיטת חישוב: כיוון קבוע על המפה" selected>חישוב: מפה</option><option value="gc" title="שיטת חישוב: הקו הקצר על הכדור">חישוב: כדור</option></select>
+  <button id="methBtn" type="button" class="sec" title="לחיצה מחליפה בין כיוון קבוע על המפה לקו הקצר על הכדור">חישוב: מפה</button><select id="meth" aria-label="שיטת חישוב" hidden data-native><option value="rh" title="שיטת חישוב: כיוון קבוע על המפה" selected>חישוב: מפה</option><option value="gc" title="שיטת חישוב: הקו הקצר על הכדור">חישוב: כדור</option></select>
   <button id="bSid" hidden data-merged="1">פתח סידורון</button>
   <button id="bHal" aria-expanded="false" aria-controls="hal">הלכות</button>
   <button id="bKotel" aria-expanded="false" aria-controls="kotel" title="דיני הכותל המערבי">דיני הכותל</button>
@@ -790,8 +790,10 @@ $("city").onchange=()=>{const v=$("city").value;if(v==="")return;mode=/^\d+$/.te
 $("bMan").onclick=()=>{const a=parseFloat($("lat").value),b=parseFloat($("lon").value);
  if(!(Math.abs(a)<=90&&Math.abs(b)<=180)){$("txt").textContent="יש להזין קו רוחב בין ‎-90 ל-90 וקו אורך בין ‎-180 ל-180.";return}
  $("city").value="";setPos([a,b],"קואורדינטות ידניות",null,false);mode="m:"+a+","+b;save(mode)};
-$("meth").onchange=()=>{draw();/* 3.0.3: בארץ ההפרש בין השיטות פחות ממעלה, ונראה כאילו הכפתור לא עובד — מציגים את ההפרש */
- if(!pos)return;let d=Math.abs(rhumb(pos,J)-bearing(pos,J));if(d>180)d=360-d;let n=$("methNote");if(!n){n=document.createElement("small");n.id="methNote";n.style.marginInline=".4em";$("meth").after(n)}
+$("methBtn").onclick=()=>{const m=$("meth");m.value=m.value==="rh"?"gc":"rh";m.dispatchEvent(new Event("change"))};
+const methLbl=()=>{const b=$("methBtn"),en=document.documentElement.lang==="en";b.textContent=$("meth").value==="rh"?(en?"Calc: map":"חישוב: מפה"):(en?"Calc: globe":"חישוב: כדור");b.setAttribute("aria-pressed",$("meth").value==="gc")};methLbl();
+$("meth").onchange=()=>{methLbl();draw();/* 3.0.3: בארץ ההפרש בין השיטות פחות ממעלה, ונראה כאילו הכפתור לא עובד — מציגים את ההפרש */
+ if(!pos)return;let d=Math.abs(rhumb(pos,J)-bearing(pos,J));if(d>180)d=360-d;let n=$("methNote");if(!n){n=document.createElement("small");n.id="methNote";n.style.marginInline=".4em";$("methBtn").after(n)}
  n.textContent=d<1?"(כאן ההפרש בין השיטות "+d.toFixed(2)+"° בלבד — כמעט זהה)":"(הפרש בין השיטות: "+Math.round(d)+"°)";clearTimeout(n._t);n._t=setTimeout(()=>n.textContent="",6000)};$("mapMode").onchange=map;
 $("bOn").onclick=()=>{$("txt").textContent="מאתר מיקום…";ipLoc()}; /* אוצריא אינה מאפשרת לתוספים geolocation, לכן ישר לפי רשת (IP) */
 $("bSat").onclick=()=>{if(!pos)return;const url=`https://www.google.com/maps/@${pos[0].toFixed(6)},${pos[1].toFixed(6)},19z/data=!3m1!1e3`;
