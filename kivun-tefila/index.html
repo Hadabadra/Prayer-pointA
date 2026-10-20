@@ -162,7 +162,7 @@ body.mapfull #stRotRow .sep{display:none}
     <label>סוג: <select id="fbType"><option value="bug">תקלה</option><option value="content">טעות בכיוון או בעיר</option><option value="other">הצעה או אחר</option></select></label>
     <textarea id="fbText" rows="5" placeholder="מה כדאי לתקן או להוסיף?" aria-label="תוכן ההארה"></textarea>
     <button id="fbSend">שלח</button> <span id="fbMsg"></span>
-    <p style="font-size:.85rem;margin:.6rem 0 0"><b>אהבתם את התוסף?</b> אפשר לדרג אותו בחנות התוספים של אוצריא: פותחים את החנות, מחפשים "כיוון תפילה", ובוחרים מספר כוכבים בדף התוסף. הדירוג עוזר לאחרים למצוא אותו.</p>
+    <p style="font-size:.85rem;margin:.6rem 0 0"><b>אהבתם את התוסף?</b> אפשר לדרג אותו בחנות התוספים של אוצריא. הדירוג עוזר לאחרים למצוא אותו. <a href="https://otzaria.org/plugins/6ac80057bd083fcc18562fa0" id="rateLink" target="_blank" rel="noopener">לדף התוסף בחנות ←</a></p>
   </div>
   <div id="set" class="pop" hidden>
     <details class="sd" id="dls" open><summary><b>הורדות</b></summary>
@@ -869,6 +869,7 @@ else try{restore(localStorage.getItem("kivun-city"))}catch(e){}
 <script src="kotel-dinim.js"></script>
 <script src="i18n.js"></script>
 <script src="selfix.js"></script>
+<script>/* 3.0.4: קישור לדירוג נפתח בדפדפן דרך אוצריא */(()=>{const a=document.getElementById("rateLink");if(a)a.onclick=e=>{try{if(typeof O!=="undefined"&&O){e.preventDefault();O.call("app.openUrl",{url:a.href}).catch(()=>open(a.href))}}catch(x){}}})();</script>
 <script src="lines.js"></script>
 <script src="kotel-full.js"></script>
 <script src="kotel-full-ui.js"></script>
