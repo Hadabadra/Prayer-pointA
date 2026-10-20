@@ -1,7 +1,7 @@
 {
   "id": "com.shiachrina.kivuntefila",
   "name": "כיוון תפילה",
-  "version": "2.6.2",
+  "version": "2.6.3",
   "description": "הכיוון לירושלים לפי מיקום, עיר או רחוב: חוגה, מצפן, מפות וכדור הארץ בלי אינטרנט, מצב טיסה, הלכות עם מקורות, וממשק באנגלית.",
   "author": "שיח רינה-עמודי שש",
   "schemaVersion": 1,
@@ -30,6 +30,8 @@
   "network": {
     "enabled": true,
     "allowlist": [
+      "127.0.0.1",
+      "localhost",
       "https://get.geojs.io/v1/ip/geo.json",
       "https://nominatim.openstreetmap.org/reverse",
       "https://overpass-api.de/api/interpreter",
