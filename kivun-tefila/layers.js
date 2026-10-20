@@ -19,7 +19,7 @@
   if (!sel) return;
   sel.insertAdjacentHTML("beforeend", '<option value="syn">בתי כנסת קרובים</option><option value="rw">תחנות רכבת</option><option value="ap">שדות תעופה</option>');
   const box = document.createElement("span"); box.id = "lyBox"; box.hidden = true;
-  box.innerHTML = '<button id="lyDl" type="button">הורד שכבות המדינה</button>';
+  box.innerHTML = '<button id="lyDl" type="button">הורד שכבות המדינה</button> <button id="lyLink" type="button">העתק קישור</button> <button id="lyImp" type="button">טען מקובץ</button>';
   $("nsMsg").before(box);
   const isMine = () => !!KINDS[sel.value];
   const sync = () => { box.hidden = !(isMine() && $("nsCountry").value && !LY[$("nsCountry").value]); if (isMine()) $("nsQ").placeholder = "שם (ריק = הקרובים)" };
@@ -36,6 +36,16 @@
     try { const j = await getJ(BASE + "layers/" + c + ".json"); if (!j || !j.v) throw 0; await save("layers-" + c + ".json", JSON.stringify(j)); LY[c] = j; isos(c); say("נשמר ✓ (בתי כנסת " + j.s.length + ", תחנות " + j.t.length + ", שדות תעופה " + j.a.length + ")"); sync(); if (typeof pos !== "undefined" && pos) map() }
     catch (e) { say("ההורדה עוד חסומה באוצריא: כתובת הקבצים טרם נוספה לרשימת הכתובות המאושרות של אוצריא (בקשה נשלחה). בינתיים: לחצו \"העתק קישור\", הקובץ יורד בדפדפן ולחצו \"טען מקובץ\".") }
   };
+
+  /* 3.0.5: כשההורדה חסומה באוצריא — קישור שמוריד ישירות (קובץ מצורף ל-Release), וטעינה מקובץ */
+  const DL = "https://github.com/Hadabadra/Prayer-pointA/releases/download/kivun-tefila-data/";
+  $("lyLink").onclick = () => { const c = $("nsCountry").value; if (!c) return; const u = DL + "layers-" + c + ".json";
+    (typeof copyText === "function" ? copyText(u) : Promise.resolve(false)).then(ok => say(ok ? "הקישור הועתק. הקובץ יורד בדפדפן לתיקיית ההורדות; אחר כך לחצו \"טען מקובץ\"." : "הקישור: " + u));
+    let w = null; try { w = window.open(u, "_blank", "noopener") } catch (e) {} if (!w && O) O.call("app.openUrl", { url: u }).catch(() => {}) };
+  $("lyImp").onclick = async () => { const c = $("nsCountry").value; if (!c) return;
+    try { const t = window.ktPickText ? await window.ktPickText("בחר את הקובץ layers-" + c + ".json") : null; if (t == null) return; const j = JSON.parse(t); if (!j || !j.v) throw 0;
+      await save("layers-" + c + ".json", t); LY[c] = j; isos(c); say("נשמר ✓ (בתי כנסת " + j.s.length + ", תחנות " + j.t.length + ")"); sync() }
+    catch (e) { say("הקובץ אינו קובץ שכבות תקין.") } };
 
   /* ---- חיפוש סביב המיקום דרך Overpass, עם שמירה מקומית ---- */
   async function live(kind, p) {

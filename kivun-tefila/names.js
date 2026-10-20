@@ -10,6 +10,7 @@
   const BASIC = [["ISR", "ישראל", "Israel"], ["USA", "ארצות הברית", "United States of America"], ["CAN", "קנדה", "Canada"], ["MEX", "מקסיקו", "Mexico"], ["GBR", "בריטניה", "United Kingdom"], ["FRA", "צרפת", "France"], ["DEU", "גרמניה", "Germany"], ["BEL", "בלגיה", "Belgium"], ["NLD", "הולנד", "Netherlands"], ["CHE", "שווייץ", "Switzerland"], ["AUT", "אוסטריה", "Austria"], ["ITA", "איטליה", "Italy"], ["ESP", "ספרד", "Spain"], ["UKR", "אוקראינה", "Ukraine"], ["RUS", "רוסיה", "Russia"], ["POL", "פולין", "Poland"], ["HUN", "הונגריה", "Hungary"], ["ARG", "ארגנטינה", "Argentina"], ["BRA", "ברזיל", "Brazil"], ["AUS", "אוסטרליה", "Australia"], ["ZAF", "דרום אפריקה", "South Africa"], ["MAR", "מרוקו", "Morocco"], ["JOR", "ירדן", "Jordan"], ["EGY", "מצרים", "Egypt"], ["TUR", "טורקיה", "Turkey"]];
 
   /* קבצי טקסט: אוצריא (בחירת קובץ) או דפדפן */
+  window.ktPickText = (t) => pickText(t);
   async function pickText(title) {
     if (O) { const r = dat(await O.call("fs.pickUserFile", { title })); if (!r || r.cancelled) return null; const x = dat(await O.call("fs.readTextFile", { token: r.token })); return x && typeof x === "object" ? (x.content != null ? x.content : x.text != null ? x.text : JSON.stringify(x)) : x }
     return new Promise(res => { const f = document.createElement("input"); f.type = "file"; f.accept = ".json,application/json"; f.onchange = () => f.files[0] ? f.files[0].text().then(res) : res(null); f.click() });

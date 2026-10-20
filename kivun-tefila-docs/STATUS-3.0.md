@@ -43,3 +43,4 @@
 - 3.0.5: הודעת שגיאה בהורדת נהרות/כבישים מסבירה את הסיבה האמיתית — כתובת Hadabadra/Prayer-pointA אינה ב-plugin_network_allowlist.txt הרשמי של אוצריא (נדרשת בקשה להוספה).
 - 3.0.5: הודעת שגיאה בהורדת נהרות/כבישים מסבירה את הסיבה האמיתית — כתובת Hadabadra/Prayer-pointA אינה ב-plugin_network_allowlist.txt הרשמי של אוצריא (נדרשת בקשה להוספה).
 - 3.0.5: הורדה חסומה כי Hadabadra/Prayer-pointA אינה ב-plugin_network_allowlist.txt הרשמי של אוצריא (בקשה להוספה); הודעת השגיאה מסבירה זאת. "העתק קישור" מוביל ל-Release kivun-tefila-data שמוריד ישירות.
+- 3.0.6: שכבות המדינה (בתי כנסת/רכבות/שדות) קיבלו "העתק קישור" ו"טען מקובץ"; קובצי layers-<ISO3>.json מצורפים ל-Release kivun-tefila-data.
