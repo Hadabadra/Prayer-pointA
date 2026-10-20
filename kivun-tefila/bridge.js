@@ -1,4 +1,5 @@
-/* כיוון תפילה 2.6.1 — מיקום אוטומטי מהגשר בעלייה, ניסיון חוזר אם הגשר עלה אחרי התוסף, ומצפן מהגשר (/sys/compass).
+/* כיוון תפילה 2.6.2 — תיקון: זיהוי הגשר כשאוצריא עוטפת את תשובת fetchStream.
+   2.6.1 — מיקום אוטומטי מהגשר בעלייה, ניסיון חוזר אם הגשר עלה אחרי התוסף, ומצפן מהגשר (/sys/compass).
    2.6.0 — שימוש בגשר "אחת שאלתי" (127.0.0.1:47917-47921) כשהוא מותקן:
    מיקום מ-Windows (מדויק יותר ממיקום לפי IP) ומשוב ל-GitHub. בלי גשר — הכול ממשיך כמו קודם.
    הרשאה: network.localhost. צימוד: בפעם הראשונה הגשר מציג חלון אישור במחשב, והמפתח נשמר ב-storage. */
@@ -11,8 +12,13 @@
     if (token) headers["X-Otzaria-Token"] = token;
     const prm = { url: `http://127.0.0.1:${p}${path}`, method, headers, timeoutMs: ms || 8000 };
     if (method !== "GET") prm.body = JSON.stringify(body || {});
-    let it = O.call("network.fetchStream", prm); if (it && it.then) it = await it;
-    if (!it || !it[Symbol.asyncIterator]) throw new Error("transport");
+    // 2.6.2: אוצריא מחזירה לפעמים {success, data: <זרם>} ולא את הזרם עצמו (כמו בצופה PDF).
+    // בלי הפריסה הזו הגשר "לא נמצא" אף פעם, ו"מיקום משוער" נפל ישר למיקום לפי רשת.
+    const isIt = x => x && typeof x[Symbol.asyncIterator] === "function";
+    let it = O.call("network.fetchStream", prm); if (!isIt(it) && it && it.then) it = await it;
+    if (!isIt(it) && it && it.success === false) throw Object.assign(new Error((it.error && it.error.message) || "transport"), { code: "transport" });
+    if (!isIt(it) && it && isIt(it.data)) it = it.data;
+    if (!isIt(it)) throw new Error("transport");
     let text = "";
     for await (const c of it) { if (c && c.type === "data" && typeof c.body === "string") text += c.body; else if (c && typeof c.body === "string" && c.type !== "response") text += c.body }
     return JSON.parse(text);
@@ -73,7 +79,7 @@
         const d = await KT_BRIDGE.location();
         setPos([+d.lat, +d.lon], "מיקום מ-Windows (דיוק כ-" + Math.round(d.accuracy) + " מ׳)", d.accuracy, true); rev();
       } catch (er) {
-        if (er.code === "location_off") txt.textContent = er.message.split(" Windows location")[0] + " בינתיים: מיקום משוער לפי רשת.";
+        if (er.code === "location_off") txt.textContent = "המיקום של Windows כבוי (הגדרות › פרטיות ואבטחה › מיקום, כולל \"גישה של אפליקציות שולחן עבודה\"). בינתיים: מיקום משוער לפי רשת.";
         if (prev) setTimeout(() => prev.call(this, e), er.code === "location_off" ? 2500 : 0);
       }
     };
