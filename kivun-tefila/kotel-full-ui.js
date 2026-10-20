@@ -33,12 +33,25 @@
   function link(label, q, r) {
     const b = document.createElement("button"); b.type = "button"; b.className = "src kfl"; b.textContent = label; b.dataset.q = q; b.dataset.r = r || "";
     b.title = "פתיחה בספריית אוצריא"; if (typeof O === "undefined" || !O) b.disabled = true;
-    b.onclick = () => typeof openSrc === "function" && openSrc(q, r); return b;
+    const k = q + "@" + (r || ""); if (SEEN.has(k)) b.classList.add("seen");
+    b.onclick = () => { if (typeof openSrc === "function") openSrc(q, r); if (!SEEN.has(k)) { SEEN.add(k); kvSet("kivun-seen", [...SEEN].slice(-2000)) } document.querySelectorAll("button.kfl").forEach(x => { if (x.dataset.q + "@" + x.dataset.r === k) x.classList.add("seen") }) };
+    return b;
   }
+
+  /* ---- אחסון: מקורות שעיינתי בהם, חיפושים אחרונים ---- */
+  const kvGet = async k => { try { let v = typeof O !== "undefined" && O ? await O.call("storage.get", { key: k }) : localStorage.getItem(k); v = v && v.data !== undefined ? v.data : v; return typeof v === "string" ? JSON.parse(v) : v } catch (e) { return null } };
+  const kvSet = (k, v) => { try { const s = JSON.stringify(v); typeof O !== "undefined" && O ? O.call("storage.set", { key: k, value: s }).catch(() => {}) : localStorage.setItem(k, s) } catch (e) {} };
+  window.kvGet = kvGet; window.kvSet = kvSet;
+  const SEEN = new Set(); let RECENT = [];
+  kvGet("kivun-seen").then(a => { if (Array.isArray(a)) { a.forEach(x => SEEN.add(x)); document.querySelectorAll("button.kfl").forEach(x => { if (SEEN.has(x.dataset.q + "@" + x.dataset.r)) x.classList.add("seen") }) } });
+  kvGet("kivun-recent").then(a => { if (Array.isArray(a)) { RECENT = a; fillRecent() } });
 
   /* ---- סגנון ---- */
   const css = document.createElement("style");
   css.textContent = `button.kfl{background:none;border:0;padding:0 .1rem;color:var(--color-primary);text-decoration:underline dotted;cursor:pointer;font:inherit}
+  button.kfl.seen::after{content:" ✓";font-size:.8em;color:var(--color-on-surface-dim)}
+  .kfnav{display:flex;flex-wrap:wrap;gap:.25rem;margin:.3rem 0;max-height:9rem;overflow:auto}.kfnav button{font-size:.8rem;padding:.1rem .45rem;border-radius:999px}
+  .kftools{display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;margin:.2rem 0}
   button.kfl:disabled{color:inherit;text-decoration:none;cursor:default}
   .kfx{margin:.4rem 0}.kfx h4{margin:.5rem 0 .15rem;font-size:.95rem}.kfx p{margin:.1rem 0}.kfx p.h{font-weight:700;margin-top:.35rem}.kfx p.s{padding-inline-start:.8rem;font-size:.92rem}
   .kfx mark{background:var(--color-tertiary-container,#ffe58a);color:inherit}.kfq{width:100%;box-sizing:border-box;margin:.3rem 0}
@@ -89,7 +102,26 @@
   const cnt = document.createElement("p"); cnt.style.cssText = "font-size:.85rem;margin:.1rem 0"; cnt.setAttribute("aria-live", "polite");
   const out = document.createElement("div"); out.className = "kfx";
   const nt = document.createElement("p"); nt.innerHTML = "<small>מתוך החיבור \"דור המלקטים\" (סימנים תק\"ס–תקס\"א). מוצגים שמות הפוסקים ומראי המקומות בלבד; לחיצה על מקור פותחת אותו בספריית אוצריא. התוסף אינו פוסק הלכה למעשה.</small>";
-  d.append(nt, q, cnt, out); body.appendChild(d);
+  const dl = document.createElement("datalist"); dl.id = "kfRecent"; q.setAttribute("list", "kfRecent");
+  function fillRecent() { dl.replaceChildren(...RECENT.map(x => { const o = document.createElement("option"); o.value = x; return o })) }
+  const tools = document.createElement("div"); tools.className = "kftools";
+  const bOpen = document.createElement("button"), bClose = document.createElement("button"), bPr = document.createElement("button"), bPdf = document.createElement("button");
+  bOpen.textContent = "פתח הכול"; bClose.textContent = "סגור הכול"; bPr.textContent = "🖨 הדפסת הפתוח"; bPdf.textContent = "PDF של הפתוח";
+  [bOpen, bClose, bPr, bPdf].forEach(b => { b.type = "button"; tools.appendChild(b) });
+  const nav = document.createElement("nav"); nav.className = "kfnav"; nav.setAttribute("aria-label", "ניווט בנושאים");
+  d.append(nt, q, dl, tools, nav, cnt, out); body.appendChild(d);
+  bOpen.onclick = () => out.querySelectorAll("details").forEach(x => { x.open = true; x.dispatchEvent(new Event("toggle")) });
+  bClose.onclick = () => out.querySelectorAll("details").forEach(x => x.open = false);
+  function printOpen(pdf) {
+    const open = [...out.querySelectorAll("details[open]")]; if (!open.length) { cnt.textContent = "פתחו נושא אחד או יותר (או חפשו), ואז הדפיסו."; return }
+    const ph = document.getElementById("printHead"); if (!ph) return;
+    let h = "<h1>זכר לחורבן וקריעה</h1>" + (q.value.trim() ? `<p>חיפוש: <b>${esc(q.value.trim())}</b></p>` : "");
+    for (const x of open) { h += `<h2>${esc(x.querySelector("summary").textContent)}</h2>`; x.querySelectorAll(":scope > p").forEach(p => h += `<p>${esc(p.textContent)}</p>`) }
+    ph.innerHTML = h + "<p><small>מתוך החיבור \"דור המלקטים\" (סימנים תק\"ס–תקס\"א). שמות הפוסקים ומראי המקומות בלבד. התוסף אינו פוסק הלכה למעשה.</small></p>";
+    document.body.classList.add("printfly"); window.__pdf = !!pdf;
+    Promise.resolve(typeof printNow === "function" ? printNow() : window.print()).catch(() => {}).finally(() => setTimeout(() => document.body.classList.remove("printfly"), 1500));
+  }
+  bPr.onclick = () => printOpen(false); bPdf.onclick = () => printOpen(true);
 
   const esc = s => s.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
   function line(l, sa, rx) {
@@ -106,6 +138,7 @@
     return p;
   }
   function render() {
+    nav.replaceChildren(); let NAVN = 0;
     const w = q.value.trim(), rx = w ? new RegExp(w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g") : null; out.replaceChildren(); let hits = 0;
     for (const s of F) {
       const h = document.createElement("h3"); h.style.margin = ".6rem 0 .2rem"; h.textContent = s.siman + (s.sa === "תקס" ? " — זכר לחורבן" : " — קריעה על החורבן");
@@ -113,7 +146,9 @@
       for (const tp of s.topics) {
         const ls = w ? tp.lines.filter(l => l[1].includes(w) || tp.t.includes(w)) : tp.lines; if (!ls.length) continue;
         any = true; hits += w ? ls.length : 0;
-        const td = document.createElement("details"); td.open = !!w; const ts = document.createElement("summary"); ts.innerHTML = "<b></b>"; ts.firstChild.textContent = tp.t.replace(/\.$/, ""); td.appendChild(ts);
+        const td = document.createElement("details"); td.open = !!w; td.id = "kft" + (NAVN++);
+        const nb = document.createElement("button"); nb.type = "button"; nb.textContent = tp.t.replace(/\.$/, "").replace(/ - סעיף.*$/, ""); nb.title = s.siman;
+        nb.onclick = () => { td.open = true; td.dispatchEvent(new Event("toggle")); td.scrollIntoView({ behavior: "smooth", block: "start" }) }; nav.appendChild(nb); const ts = document.createElement("summary"); ts.innerHTML = "<b></b>"; ts.firstChild.textContent = tp.t.replace(/\.$/, ""); td.appendChild(ts);
         const lazy = () => { if (td.dataset.f) return; td.dataset.f = 1; ls.forEach(l => td.appendChild(line(l, s.sa, rx))) };
         if (td.open) lazy(); else td.addEventListener("toggle", lazy);
         box.appendChild(td);
@@ -122,6 +157,7 @@
     }
     cnt.textContent = w ? (hits ? `${hits} תוצאות` : "לא נמצאו תוצאות") : "";
   }
-  let T = 0; q.oninput = () => { clearTimeout(T); T = setTimeout(render, 200) };
+  let T = 0, T2 = 0; q.oninput = () => { clearTimeout(T); T = setTimeout(render, 200); clearTimeout(T2);
+    T2 = setTimeout(() => { const v = q.value.trim(); if (v.length < 2) return; RECENT = [v, ...RECENT.filter(x => x !== v && !v.startsWith(x))].slice(0, 10); kvSet("kivun-recent", RECENT); fillRecent() }, 1500) };
   d.addEventListener("toggle", () => { if (d.open && !out.firstChild) render() }, { once: false });
 })();
