@@ -11,7 +11,7 @@
 
   /* קבצי טקסט: אוצריא (בחירת קובץ) או דפדפן */
   async function pickText(title) {
-    if (O) { const r = dat(await O.call("fs.pickUserFile", { title })); if (!r || r.cancelled) return null; return dat(await O.call("fs.readTextFile", { token: r.token })) }
+    if (O) { const r = dat(await O.call("fs.pickUserFile", { title })); if (!r || r.cancelled) return null; const x = dat(await O.call("fs.readTextFile", { token: r.token })); return x && typeof x === "object" ? (x.content != null ? x.content : x.text != null ? x.text : JSON.stringify(x)) : x }
     return new Promise(res => { const f = document.createElement("input"); f.type = "file"; f.accept = ".json,application/json"; f.onchange = () => f.files[0] ? f.files[0].text().then(res) : res(null); f.click() });
   }
   async function saveFile(name, s) { try { O ? await O.call("fs.writeFile", { path: name, content: s }) : localStorage.setItem("kivun-" + name, s) } catch (e) {} }
@@ -23,7 +23,7 @@
 
   /* ---- שמות נהרות וכבישים ---- */
   let N = null;
-  function setNames(j) { N = j; say("namesMsg", "נטען ✓"); fillCountries() }
+  function setNames(j) { N = j; const nr = j.e.filter(e => e[0] === "w").length; say("namesMsg", "נטען ✓ (" + nr + " נהרות, " + (j.e.length - nr) + " כבישים). לחיפוש: בשורת המיקום בחרו \"נהרות\" או \"כבישים ראשיים\"."); fillCountries(); try { mode() } catch (e) {} }
   async function namesLoad() { const t = await readFile("geo-names.json"); try { if (t) setNames(typeof t === "string" ? JSON.parse(t) : t) } catch (e) {} }
   $("namesDl").onclick = async () => {
     say("namesMsg", "מוריד…");
@@ -113,6 +113,16 @@
     return best;
   }
   const norm = s => (s || "").toLowerCase().replace(/[׳'’"״.\-]/g, "").trim();
+  /* 2.8.7: התאמה לפי צליל בין עברית לאנגלית — בקובץ רוב השמות באנגלית בלבד (ירדן ↔ Jordan, נילוס ↔ Nile, דנובה ↔ Danube) */
+  const HEB = { "ב": "b", "ג": "g", "ד": "d", "ז": "z", "ח": "k", "ט": "t", "כ": "k", "ך": "k", "ל": "l", "מ": "m", "ם": "m", "נ": "n", "ן": "n", "ס": "s", "פ": "p", "ף": "p", "צ": "s", "ץ": "s", "ק": "k", "ר": "r", "ש": "s", "ת": "t" };
+  function skel(s) {
+    s = (s || "").toLowerCase().replace(/[׳'’"״.\-]/g, "");
+    if (/[\u05d0-\u05ea]/.test(s)) return s.split(/\s+/).map(w => [...w].map((ch, i) => ch === "י" && i === 0 ? "y" : ch === "ו" && i === 0 ? "b" : (HEB[ch] || "")).join("")).join(" ").replace(/(.)\1+/g, "$1").trim();
+    return s.replace(/sch|sh|ch(?=[ei])/g, "s").replace(/ch|kh|ck|q|c(?![ei])|x/g, "k").replace(/c/g, "s").replace(/ph|f|v|w/g, m => m === "w" ? "b" : m === "v" ? "b" : "p").replace(/th/g, "t").replace(/j|dj|dzh/g, "y")
+      .replace(/g(?=[ei])/g, "g").replace(/z/g, "z").replace(/h/g, "").replace(/(?!^)y|[aeiou]/g, "").replace(/(^|\s)[aeiou]+/g, "$1").replace(/[^a-z ]/g, "").replace(/(.)\1+/g, "$1").trim();
+  }
+  const HEBN = {"ירדן":"Jordan","נילוס":"Nile","נילוס הלבן":"White Nile","נילוס הכחול":"Blue Nile","דנובה":"Danube","ריין":"Rhine","הדסון":"Hudson","מיסיסיפי":"Mississippi","אמזונס":"Amazonas","אמזונה":"Amazonas","וולגה":"Volga","פרת":"Euphrates","חידקל":"Tigris","טמזה":"Thames","לואר":"Loire","אלבה":"Elbe","ויסלה":"Vistula","דניסטר":"Dniester","דנייסטר":"Dniester","דנייפר":"Dnieper","דון":"Don","אודר":"Oder","פו":"Po","טיבר":"Tiber","מיזורי":"Missouri","אוהיו":"Ohio","סנט לורנס":"St. Lawrence","יאנגצה":"Yangtze","גנגס":"Ganges","גאנגס":"Ganges","אינדוס":"Indus","מקונג":"Mekong","זמבזי":"Zambezi","קונגו":"Congo","ניז'ר":"Niger","ניגר":"Niger","ליטני":"Litani","רון":"Rhône","בוג":"Bug","פוטומק":"Potomac","דלאוור":"Delaware","קולורדו":"Colorado","יוקון":"Yukon","פרנה":"Paraná","אורינוקו":"Orinoco","לנה":"Lena","אמור":"Amur","פריפיאט":"Pripyat","אברו":"Ebro","טאחו":"Tagus","גרון":"Garonne","מיין":"Main","אין":"Inn","סאווה":"Sava","פרוט":"Prut"};
+  function soundLike(name, sq) { if (!name || sq.length < 2) return false; const n = skel(name); return n.length >= 2 && (n.includes(sq) || (sq.startsWith(n) && n.length >= sq.length - 1)) }
   const DIRS = ["צפון", "צפון-מזרח", "מזרח", "דרום-מזרח", "דרום", "דרום-מערב", "מערב", "צפון-מערב"];
   const dirName = h => DIRS[Math.round(h / 45) % 8];
 
@@ -209,6 +219,9 @@
     let out = [];
     if (N) out = N.e.filter(e => e[0] === t && (!c || (e[3] || []).includes(c)) && (norm(e[1]).includes(nq) || norm(e[2]).includes(nq)))
       .sort((a, b) => (norm(b[1]).startsWith(nq) || norm(b[2]).startsWith(nq)) - (norm(a[1]).startsWith(nq) || norm(a[2]).startsWith(nq)));
+    if (N && !out.length && t === "w" && HEBN[q.replace(/^נהר\s+/, "")]) { const en = HEBN[q.replace(/^נהר\s+/, "")]; out = N.e.filter(e => e[0] === "w" && e[1] === en && (!c || (e[3] || []).includes(c))) }
+    if (N && !out.length) { const sq = skel(q.replace(/^נהר\s+/, "")); if (sq.replace(/ /g, "").length >= 2) out = N.e.filter(e => e[0] === t && (!c || (e[3] || []).includes(c)) && soundLike(e[1], sq))
+      .map(e => [e, skel(e[1])]).sort((a, b) => (b[1] === sq) - (a[1] === sq) || b[1].startsWith(sq) - a[1].startsWith(sq) || a[1].length - b[1].length).map(x => x[0]); if (out.length) setTimeout(() => say("nsMsg", "תוצאות לפי צליל השם (רוב השמות בקובץ באנגלית)."), 0) }
     if (k === "rd" && c) {
       const ce = await roadsLocal(c);
       if (ce) out = out.concat(ce.filter(e => norm(e[1]).includes(nq) || norm(e[2]).includes(nq))
