@@ -371,4 +371,6 @@ $("minTel").onclick = () => { $("minMsg").textContent = "חיוג ישיר אי�
 $("minCopy2").onclick = () => copyText("*6837").then(ok => { $("minMsg").textContent = ok ? "המספר *6837 הועתק ללוח." : "ההעתקה לא הצליחה. המספר: *6837" });
 $("bKotel").onclick = () => pop("bKotel", "kotel", $("kotel").hidden);
 if ($("bKria")) $("bKria").onclick = () => pop("bKria", "kria", $("kria").hidden);
-if ($("bZecher")) $("bZecher").onclick = () => pop("bZecher", "zecher", $("zecher").hidden);
+if ($("bZecher")) $("bZecher").onclick = () => { pop("bZecher", "zecher", $("zecher").hidden); document.body.classList.remove("side") };
+if ($("zecherX")) $("zecherX").onclick = () => pop("bZecher", "zecher", false);
+if ($("zecher")) $("zecher").addEventListener("click", e => { if (e.target === $("zecher")) pop("bZecher", "zecher", false) });
