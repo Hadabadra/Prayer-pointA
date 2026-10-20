@@ -140,7 +140,7 @@
   const sp = $("splash"), dat0 = r => r && (r.data !== undefined ? r.data : r);
   if (sp) {
     try { const m = $("wall").style.maskImage || $("wall").style.webkitMaskImage; if (m) { $("spWall").style.maskImage = m; $("spWall").style.webkitMaskImage = m } } catch (e) {}
-    try { $("spVer").textContent = "גרסה " + VER } catch (e) {}
+    try { $("spVer").textContent = "גרסה " + VER + " — גרסה יציבה ואחרונה לתקופה הקרובה" } catch (e) {}
     const close = () => { sp.classList.add("out"); setTimeout(() => { sp.hidden = true; sp.remove() }, 400) };
     $("spGo").onclick = () => { try { if (typeof startCompass === "function") startCompass() } catch (e) {} close() };
     const skip = /nosplash/.test(location.search);

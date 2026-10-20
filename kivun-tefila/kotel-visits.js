@@ -21,10 +21,17 @@
     <label style="font-size:.85rem">תאריך אחר: <input id="kvDate" type="date"></label><button id="kvAdd" type="button">הוסף</button></div>
    <label style="display:block;margin:.35rem 0;font-size:.9rem"><input id="kvRem" type="checkbox"> תזכורת 30 יום אחרי הביקור האחרון (הודעת מערכת של אוצריא)</label>
    <div class="row" style="flex-wrap:wrap;gap:.3rem"><button id="kvIcs" type="button">📅 שליחה ללוח השנה (קובץ .ics)</button></div>
+   <p style="font-size:.8rem;margin:.15rem 0;opacity:.8">הקובץ נפתח ביומן של Outlook, Google או הטלפון. לוח השנה של אוצריא עדיין אינו מאפשר לתוספים להוסיף אירועים; התזכורת של 30 יום מופיעה כהודעת מערכת של אוצריא.</p>
    <p id="kvMsg" style="font-size:.85rem;min-height:1.1em" aria-live="polite"></p>
    <details><summary style="font-size:.9rem">כל הביקורים</summary><ul id="kvList" style="margin:.2rem 0"></ul></details>
    <p><small>התזכורת עוזרת לזכור את ענין הקריעה כשעברו שלושים יום. מתי חייבים ומי פטור (למשל תושבי ירושלים) — ראו בנקודות למעלה ובמקורות, ובשאלה מעשית יש לשאול רב.</small></p>`;
   kr.appendChild(box);
+  /* 3.0.0: מעבר לתוסף "עינים למקרא" — תמונות והסברים על הכותל ובית המקדש */
+  const em = document.createElement("div"); em.style.cssText = "border-top:1px solid var(--color-outline);margin-top:.5rem;padding-top:.4rem";
+  em.innerHTML = '<h3 style="margin:.2rem 0">תמונות והסברים על הכותל ובית המקדש</h3><p style="font-size:.9rem;margin:.2rem 0">בתוסף "עינים למקרא" יש גלריות, מפות והסברים על הכותל, הר הבית ובית המקדש.</p>';
+  const eb = document.createElement("button"); eb.type = "button"; eb.textContent = "🖼 פתח את \"עינים למקרא\"";
+  eb.onclick = () => { if (typeof O !== "undefined" && O) O.call("plugin.openOther", { pluginId: "com.chadbedera.madaeihatanach" }).then(r => { if (r && r.success === false) throw 0 }).catch(() => { msg("לא ניתן לפתוח את \"עינים למקרא\". אם התוסף לא מותקן — אפשר להתקין אותו מחנות התוספים של אוצריא.") }); else msg("התוסף \"עינים למקרא\" זמין בחנות התוספים של אוצריא.") };
+  em.appendChild(eb); kr.appendChild(em);
   const $k = id => document.getElementById(id), msg = t => { $k("kvMsg").textContent = t };
 
   function draw() {
@@ -75,13 +82,18 @@
   $k("kvAdd").onclick = () => { const v = $k("kvDate").value; if (!v) { msg("בחרו תאריך."); return } if (Date.parse(v) > Date.now()) { msg("התאריך בעתיד."); return } add(v + "T12:00") };
   $k("kvRem").onchange = schedule; $k("kvIcs").onclick = ics;
 
-  Promise.all([get("kivun-kotel-visits"), get("kivun-kotel-rem")]).then(([v, r]) => {
-    V = Array.isArray(v) ? v.filter(Number.isFinite) : []; $k("kvRem").checked = r !== false && r !== "false"; heb.rem = $k("kvRem").checked; draw();
+  /* 3.0.0: טוענים גם אחרי plugin.boot — לפניו storage של אוצריא עוד לא זמין, והרשימה נטענה ריקה */
+  let loaded = false;
+  const load = () => Promise.all([get("kivun-kotel-visits"), get("kivun-kotel-rem")]).then(([v, r]) => {
+    const got = Array.isArray(v) ? v.filter(Number.isFinite) : [];
+    if (loaded && !got.length) return; loaded = true;
+    V = [...new Set(V.concat(got))]; $k("kvRem").checked = r !== false && r !== "false"; heb.rem = $k("kvRem").checked; draw();
     /* תזכורת בתוך התוסף: בפתיחה, אם עברו 30 יום מהביקור האחרון (פעם ביום) */
-    if (heb.rem && V[0] && Date.now() - V[0] >= 30 * DAY) get("kivun-kotel-remshown").then(s => {
+    if (heb.rem && V[0] && !heb.shown && Date.now() - V[0] >= 30 * DAY && (heb.shown = 1)) get("kivun-kotel-remshown").then(s => {
       const today = new Date().toDateString(); if (s === today) return; set("kivun-kotel-remshown", today);
       const t = `עברו ${Math.floor((Date.now() - V[0]) / DAY)} ימים מהביקור האחרון בכותל (${fmt(V[0])}). הלכות הקריעה — בחלונית "דיני הכותל".`;
       if (typeof O !== "undefined" && O) O.call("notifications.showInApp", { message: "🕍 " + t, type: "info" }).catch(() => {});
     });
   });
+  load(); if (typeof O !== "undefined" && O) { try { O.on("plugin.boot", () => setTimeout(load, 50)) } catch (e) {} setTimeout(load, 1500) }
 })();

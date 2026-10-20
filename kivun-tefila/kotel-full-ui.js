@@ -40,8 +40,18 @@
   }
 
   /* ---- אחסון: מקורות שעיינתי בהם, חיפושים אחרונים ---- */
-  const kvGet = async k => { try { let v = typeof O !== "undefined" && O ? await O.call("storage.get", { key: k }) : localStorage.getItem(k); v = v && v.data !== undefined ? v.data : v; return typeof v === "string" ? JSON.parse(v) : v } catch (e) { return null } };
-  const kvSet = (k, v) => { try { const s = JSON.stringify(v); typeof O !== "undefined" && O ? O.call("storage.set", { key: k, value: s }).catch(() => {}) : localStorage.setItem(k, s) } catch (e) {} };
+  /* 3.0.0: storage.get מחזיר {success,data} ולפעמים data = {value}; וגם עותק גיבוי ב-localStorage, כדי שהנתונים יישמרו אחרי רענון */
+  const unwrap = v => { for (let i = 0; i < 3 && v && typeof v === "object" && !Array.isArray(v); i++) { if ("data" in v) v = v.data; else if ("value" in v) v = v.value; else break } return v };
+  const parse = v => { if (typeof v !== "string") return v; try { return JSON.parse(v) } catch (e) { return v } };
+  const kvGet = async k => {
+    let v = null;
+    try { if (typeof O !== "undefined" && O) v = parse(unwrap(await O.call("storage.get", { key: k }))) } catch (e) {}
+    if (v == null) try { v = parse(localStorage.getItem(k)) } catch (e) {}
+    return v == null ? null : v;
+  };
+  const kvSet = (k, v) => { let s; try { s = JSON.stringify(v) } catch (e) { return }
+    try { localStorage.setItem(k, s) } catch (e) {}
+    try { if (typeof O !== "undefined" && O) O.call("storage.set", { key: k, value: s }).catch(() => {}) } catch (e) {} };
   window.kvGet = kvGet; window.kvSet = kvSet;
   const SEEN = new Set(); let RECENT = [];
   kvGet("kivun-seen").then(a => { if (Array.isArray(a)) { a.forEach(x => SEEN.add(x)); document.querySelectorAll("button.kfl").forEach(x => { if (SEEN.has(x.dataset.q + "@" + x.dataset.r)) x.classList.add("seen") }) } });
