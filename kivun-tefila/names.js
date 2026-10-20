@@ -53,6 +53,7 @@
   }
   async function roadsLocal(iso) {
     if (RD[iso]) return RD[iso];
+    if (iso === "ISR" && typeof KT_ISR_ROADS !== "undefined" && KT_ISR_ROADS.e) return RD[iso] = KT_ISR_ROADS.e;
     const t = await readFile("roads-" + iso + ".json");
     try { if (t) { const j = typeof t === "string" ? JSON.parse(t) : t; if (j && j.e) return RD[iso] = j.e } } catch (e) {}
     return null;
@@ -241,17 +242,25 @@
     const k = $("nsKind").value, q = $("nsQ").value.trim(), c = $("nsCountry").value, en = $("nsCountry").selectedOptions[0] && $("nsCountry").selectedOptions[0].dataset.en;
     if (!q) { say("nsMsg", "הקלד שם או מספר."); return }
     say("nsMsg", "מחפש…"); res.hidden = true;
-    const t = k === "rv" ? "w" : "r", nq = norm(q);
+    const t = k === "rv" ? "w" : "r", nq = norm(k === "rd" ? q.replace(/^(כביש|דרך|road|route|hwy|highway)\s*/i, "") || q : q);
     let out = [];
     if (N) out = N.e.filter(e => e[0] === t && (!c || (e[3] || []).includes(c)) && (norm(e[1]).includes(nq) || norm(e[2]).includes(nq)))
       .sort((a, b) => (norm(b[1]).startsWith(nq) || norm(b[2]).startsWith(nq)) - (norm(a[1]).startsWith(nq) || norm(a[2]).startsWith(nq)));
     if (N && !out.length && t === "w" && HEBN[q.replace(/^נהר\s+/, "")]) { const en = HEBN[q.replace(/^נהר\s+/, "")]; out = N.e.filter(e => e[0] === "w" && e[1] === en && (!c || (e[3] || []).includes(c))) }
-    if (N && !out.length) { const sq = skel(q.replace(/^נהר\s+/, "")); if (sq.replace(/ /g, "").length >= 2) out = N.e.filter(e => e[0] === t && (!c || (e[3] || []).includes(c)) && soundLike(e[1], sq))
+    if (N && !out.length) { const sq = skel(q.replace(/^(נהר|כביש|דרך|שדרות|רחוב)\s+/, "")); if (sq.replace(/ /g, "").length >= 2) out = N.e.filter(e => e[0] === t && (!c || (e[3] || []).includes(c)) && soundLike(e[1], sq))
       .map(e => [e, skel(e[1])]).sort((a, b) => (b[1] === sq) - (a[1] === sq) || b[1].startsWith(sq) - a[1].startsWith(sq) || a[1].length - b[1].length).map(x => x[0]); if (out.length) setTimeout(() => say("nsMsg", "תוצאות לפי צליל השם (רוב השמות בקובץ באנגלית)."), 0) }
-    if (k === "rd" && c) {
-      const ce = await roadsLocal(c);
-      if (ce) out = out.concat(ce.filter(e => norm(e[1]).includes(nq) || norm(e[2]).includes(nq))
+    /* 2.9.2: בלי מדינה נבחרת — גם כבישי ישראל המובנים (מספר כביש: "6", "כביש 90") */
+    const cc = k === "rd" && !c ? "ISR" : c;
+    if (k === "rd" && cc) {
+      const ce = await roadsLocal(cc);
+      if (ce) out = (c ? out : []).concat(ce.filter(e => norm(e[1]).includes(nq) || norm(e[2]).includes(nq))
         .sort((a, b) => (norm(b[1]) === nq || norm(b[2]) === nq) - (norm(a[1]) === nq || norm(a[2]) === nq) || norm(b[1]).startsWith(nq) - norm(a[1]).startsWith(nq)));
+      if (!c) out = out.concat(N ? N.e.filter(e => e[0] === "r" && (norm(e[1]).includes(nq) || norm(e[2]).includes(nq))).filter(e => !/^\d+$/.test(nq) || String(e[1]).split(/[;\s]/).includes(nq)) : []);
+      if (/^\d+$/.test(nq)) { const ex = out.filter(e => String(e[1]).split(/[;\s]/).includes(nq)); if (ex.length) out = ex }
+      /* 2.9.2: כבישים בעברית — התאמה לפי צליל מול השם באנגלית ("שדרות ברודווי" ↔ Broadway) */
+      if (ce && !out.length && /[\u05d0-\u05ea]/.test(q)) { const sq = skel(q.replace(/^(כביש|דרך|שדרות|שדרה|רחוב|כביש מהיר)\s+/, "")); if (sq.replace(/ /g, "").length >= 2) {
+        out = ce.filter(e => soundLike(e[1], sq)).map(e => [e, skel(e[1])]).sort((a, b) => (b[1] === sq) - (a[1] === sq) || b[1].startsWith(sq) - a[1].startsWith(sq) || a[1].length - b[1].length).map(x => x[0]).slice(0, 30);
+        if (out.length) setTimeout(() => say("nsMsg", "תוצאות לפי צליל השם (שמות הכבישים בקובץ באנגלית)."), 0) } }
     }
     if (!out.length && k === "rd") {
       const hit = await cacheFind(c, nq);
