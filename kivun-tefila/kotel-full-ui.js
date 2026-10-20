@@ -1,0 +1,127 @@
+/* כיוון תפילה 2.8 — בחלונית "דיני הכותל":
+   1. כפתור "קריעה בכותל": נוסח הפסוקים שאומרים (גמרא מו"ק כו ע"א, כפי שמובא בקובץ) ונקודות קצרות מתוך הקובץ.
+   2. "זכר לחורבן וקריעה — כל הנושאים": סיכום הנושאים והשיטות מהקובץ, שמות הפוסקים ומראי המקומות בלבד (בלי ציטוטים), עם חיפוש.
+   3. כל מראה מקום (גם בתוכן הקיים של KOTEL_DINIM) נפתח בספריית אוצריא דרך openSrc (extras.js).
+   התוסף אינו פוסק הלכה למעשה. */
+(function () {
+  const body = document.getElementById("kotelBody"); if (!body) return;
+  const F = window.KOTEL_FULL || [];
+
+  /* ---- קיצורים → שם הספר בספרייה. q יכול להכיל כמה חלופות מופרדות ב-| ---- */
+  const MAS = { 'מו"ק': "מועד קטן", 'ב"ב': "בבא בתרא", 'ב"ק': "בבא קמא", 'ב"מ': "בבא מציעא", "ברכות": "ברכות", "שבת": "שבת", 'ר"ה': "ראש השנה", "יבמות": "יבמות",
+    "תענית": "תענית", "סוטה": "סוטה", "פסחים": "פסחים", "מגילה": "מגילה", "סנהדרין": "סנהדרין", "יומא": "יומא", "זבחים": "זבחים", "גיטין": "גיטין", "שבועות": "שבועות", "ע\"ז": "עבודה זרה", "עירובין": "עירובין" };
+  const ON_SA = { 'מ"ב': "משנה ברורה", 'ביה"ל': "ביאור הלכה", 'שעה"צ': "שער הציון", 'מג"א': "מגן אברהם", 'ט"ז': 'ט"ז|טורי זהב', 'ב"י': "בית יוסף אורח חיים", 'ב"ח': 'ב"ח אורח חיים|בית חדש',
+    'א"ר': "אליה רבה", 'פמ"ג': "פרי מגדים", 'ערוה"ש': "ערוך השולחן אורח חיים", "כה\"ח": "כף החיים" };
+  const SA = new Set(["מחבר", 'רמ"א', 'שו"ע', "שולחן ערוך", 'ש"ע']);
+  function resolve(name, ref, sa) {
+    name = name.replace(/^(ו?עי'|וכ"כ|כ"כ|הו"ד|מראי מקומות)\s*[–-]?\s*/, "").trim();
+    if (SA.has(name)) return /או"ח|אה"ע|יו"ד/.test(ref) ? ["שולחן ערוך", ref] : ["שולחן ערוך אורח חיים", (sa ? "סימן " + sa + " " : "") + ref];
+    if (ON_SA[name]) return [ON_SA[name], (sa && !/סי'/.test(ref) ? "סימן " + sa + " " : "") + ref];
+    if (name === "גמרא" || name === "גמ'" || name === "תלמוד בבלי") { for (const k in MAS) if (ref.includes(k)) return [MAS[k], ref.replace(/^.*?(דף|דפים)\s*/, "").replace(k, "").trim()]; return ["תלמוד בבלי", ref] }
+    for (const k in MAS) if (name === k || name === MAS[k]) return [MAS[k], ref];
+    if (/^רמב"ם$/.test(name)) { const m = ref.match(/^(הל'|הלכות)?\s*([^\s]+(?: [^\s]+)?)\s+(פרק.*)$/); return m ? ['רמב"ם הלכות ' + m[2] + "|" + m[2] + ' רמב"ם', m[3]] : ['רמב"ם', ref] }
+    if (/^(רי"ף|רא"ש)$/.test(name)) { for (const k in MAS) if (ref.includes(k)) return [name + " " + MAS[k] + "|" + name, ref.replace(k, "").trim()]; }
+    return [name, ref];
+  }
+  /* מראה מקום בנוסח "ספר, חלק, מקום" (התוכן הקיים): הכול חוץ מהחלק האחרון הוא שם הספר */
+  function resolveLong(s) {
+    s = s.replace(/\s*\(.*?\)\s*/g, " ").trim(); const parts = s.split(/,\s*/);
+    if (parts[0] === "תלמוד בבלי" && parts[1]) { const m = parts[1].match(/^(.+?)\s+([^\s]+\s+ע["״]?[אב])$/); return m ? [m[1], m[2]] : [parts[1], ""] }
+    if (parts.length < 2) return [s, ""];
+    const r = parts.pop(); return [parts.join(" ").replace(/^רמב["״]ם הלכות/, 'רמב"ם הלכות'), r];
+  }
+  function link(label, q, r) {
+    const b = document.createElement("button"); b.type = "button"; b.className = "src kfl"; b.textContent = label; b.dataset.q = q; b.dataset.r = r || "";
+    b.title = "פתיחה בספריית אוצריא"; if (typeof O === "undefined" || !O) b.disabled = true;
+    b.onclick = () => typeof openSrc === "function" && openSrc(q, r); return b;
+  }
+
+  /* ---- סגנון ---- */
+  const css = document.createElement("style");
+  css.textContent = `button.kfl{background:none;border:0;padding:0 .1rem;color:var(--color-primary);text-decoration:underline dotted;cursor:pointer;font:inherit}
+  button.kfl:disabled{color:inherit;text-decoration:none;cursor:default}
+  .kfx{margin:.4rem 0}.kfx h4{margin:.5rem 0 .15rem;font-size:.95rem}.kfx p{margin:.1rem 0}.kfx p.h{font-weight:700;margin-top:.35rem}.kfx p.s{padding-inline-start:.8rem;font-size:.92rem}
+  .kfx mark{background:var(--color-tertiary-container,#ffe58a);color:inherit}.kfq{width:100%;box-sizing:border-box;margin:.3rem 0}
+  .kria{border:1px solid var(--color-outline);border-radius:10px;padding:.5rem .8rem;margin:.4rem 0}.kria .vs{font-size:1.15rem;font-weight:700;line-height:1.8;margin:.25rem 0}`;
+  document.head.appendChild(css);
+
+  /* ---- 3. מראי המקומות בתוכן הקיים נעשים לחיצים ---- */
+  function linkify(li) {
+    const t = li.textContent, i = t.lastIndexOf(" — "); if (i < 0) return;
+    li.textContent = t.slice(0, i + 3);
+    t.slice(i + 3).split(/;\s*/).forEach((part, k) => {
+      if (k) li.append("; ");
+      const j = part.lastIndexOf(" — "), lab = j < 0 ? part : part.slice(j + 3); if (j >= 0) li.append(part.slice(0, j + 3));
+      if (/^(קריעה|זכר לחורבן).*נושאים/.test(lab)) { li.append(lab); return }
+      const [q, r] = resolveLong(lab); li.append(link(lab, q, r));
+    });
+  }
+  body.querySelectorAll("ul.kd li").forEach(li => { if (!li.querySelector("ul") && li.textContent.includes(" — ")) linkify(li) });
+
+  /* ---- 1. קריעה בכותל ---- */
+  const S61 = F.find(s => s.sa === "תקסא");
+  const kb = document.createElement("button"); kb.type = "button"; kb.textContent = "✂ קריעה בכותל"; kb.style.cssText = "font-weight:700;margin:.2rem 0 .4rem";
+  const kr = document.createElement("div"); kr.className = "kria"; kr.hidden = true;
+  const V = [["הרואה ערי יהודה בחורבנן", "ערי קדשך היו מדבר"], ["ירושלים בחורבנה", "ציון מדבר היתה ירושלים שממה"],
+    ["בית המקדש בחורבנו", "בית קדשנו ותפארתנו אשר הללוך אבתינו היה לשרפת אש וכל מחמדינו היה לחרבה"]];
+  kr.innerHTML = "<h3 style='margin:.2rem 0'>מה אומרים בשעת הקריעה</h3>";
+  V.forEach(([w, v]) => { const p = document.createElement("p"); p.innerHTML = "<small></small><br><span class='vs'></span>"; p.firstChild.textContent = w + ", אומר:"; p.lastChild.textContent = v; kr.appendChild(p) });
+  const vs = document.createElement("p"); vs.append("המקור: ", link('גמרא, מו"ק כו ע"א', "מועד קטן", 'כו ע"א'), " · ", link('שולחן ערוך אורח חיים, סימן תקסא', "שולחן ערוך אורח חיים", "סימן תקסא")); kr.appendChild(vs);
+  if (S61) {
+    const h = document.createElement("h3"); h.style.margin = ".6rem 0 .2rem"; h.textContent = "בקצרה"; kr.appendChild(h);
+    const ul = document.createElement("ul"); ul.className = "kd";
+    const PICK = ["מקום הקריעה.", "בזמנינו.", "כותל המערבי.", "קריעת בגדו - סעיף ד'.", "זמני הקריעה.", "תושבי ירושלים - סעיף ה'.", "שבת."];
+    for (const tp of S61.topics) { if (!PICK.includes(tp.t)) continue;
+      const li = document.createElement("li"); li.className = "kd0"; li.textContent = tp.t.replace(/\.$/, ""); const sub = document.createElement("ul");
+      tp.lines.filter(l => l[0] === "h").slice(0, 4).forEach(l => { const x = document.createElement("li"); x.textContent = l[1]; sub.appendChild(x) });
+      li.appendChild(sub); ul.appendChild(li) }
+    kr.appendChild(ul);
+  }
+  const kn = document.createElement("p"); kn.innerHTML = "<small>הנקודות מתוך החיבור \"דור המלקטים\". הפירוט, השיטות ומראי המקומות ב\"כל הנושאים\" שלמטה. התוסף אינו פוסק הלכה למעשה; לשאלה במקרה מסוים יש לפנות לרב מוסמך.</small>"; kr.appendChild(kn);
+  kb.onclick = () => { kr.hidden = !kr.hidden };
+  body.prepend(kb, kr);
+
+  /* ---- 2. כל הנושאים, עם חיפוש ---- */
+  if (!F.length) return;
+  const d = document.createElement("details"); d.className = "sd";
+  const sm = document.createElement("summary"); sm.innerHTML = "<b>זכר לחורבן וקריעה — כל הנושאים והמקורות</b>"; d.appendChild(sm);
+  const q = document.createElement("input"); q.type = "search"; q.className = "kfq"; q.placeholder = "חיפוש: נושא, פוסק או מילה (למשל: נגיעה, שבת, מ\"ב)"; q.setAttribute("aria-label", "חיפוש בהלכות");
+  const cnt = document.createElement("p"); cnt.style.cssText = "font-size:.85rem;margin:.1rem 0"; cnt.setAttribute("aria-live", "polite");
+  const out = document.createElement("div"); out.className = "kfx";
+  const nt = document.createElement("p"); nt.innerHTML = "<small>מתוך החיבור \"דור המלקטים\" (סימנים תק\"ס–תקס\"א). מוצגים שמות הפוסקים ומראי המקומות בלבד; לחיצה על מקור פותחת אותו בספריית אוצריא. התוסף אינו פוסק הלכה למעשה.</small>";
+  d.append(nt, q, cnt, out); body.appendChild(d);
+
+  const esc = s => s.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
+  function line(l, sa, rx) {
+    const p = document.createElement("p"); p.className = l[0];
+    if (!l[2]) { p.innerHTML = rx ? esc(l[1]).replace(rx, "<mark>$&</mark>") : esc(l[1]); return p }
+    let s = l[1], at = 0;
+    for (const [n, r] of l[2]) {
+      const tok = n + " (" + r + ")", i = s.indexOf(tok, at); if (i < 0) continue;
+      if (i > at) p.append(s.slice(at, i));
+      const [bq, br] = resolve(n, r, sa); p.append(link(tok, bq, br)); at = i + tok.length;
+    }
+    if (at < s.length) p.append(s.slice(at));
+    if (rx) p.querySelectorAll("button").forEach(b => { if (rx.test(b.textContent)) b.style.background = "var(--color-tertiary-container,#ffe58a)"; rx.lastIndex = 0 });
+    return p;
+  }
+  function render() {
+    const w = q.value.trim(), rx = w ? new RegExp(w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g") : null; out.replaceChildren(); let hits = 0;
+    for (const s of F) {
+      const h = document.createElement("h3"); h.style.margin = ".6rem 0 .2rem"; h.textContent = s.siman + (s.sa === "תקס" ? " — זכר לחורבן" : " — קריעה על החורבן");
+      let any = false; const box = document.createDocumentFragment();
+      for (const tp of s.topics) {
+        const ls = w ? tp.lines.filter(l => l[1].includes(w) || tp.t.includes(w)) : tp.lines; if (!ls.length) continue;
+        any = true; hits += w ? ls.length : 0;
+        const td = document.createElement("details"); td.open = !!w; const ts = document.createElement("summary"); ts.innerHTML = "<b></b>"; ts.firstChild.textContent = tp.t.replace(/\.$/, ""); td.appendChild(ts);
+        const lazy = () => { if (td.dataset.f) return; td.dataset.f = 1; ls.forEach(l => td.appendChild(line(l, s.sa, rx))) };
+        if (td.open) lazy(); else td.addEventListener("toggle", lazy);
+        box.appendChild(td);
+      }
+      if (any) { out.append(h, box) }
+    }
+    cnt.textContent = w ? (hits ? `${hits} תוצאות` : "לא נמצאו תוצאות") : "";
+  }
+  let T = 0; q.oninput = () => { clearTimeout(T); T = setTimeout(render, 200) };
+  d.addEventListener("toggle", () => { if (d.open && !out.firstChild) render() }, { once: false });
+})();
