@@ -275,36 +275,7 @@ document.querySelectorAll("button.fl").forEach(b => b.onclick = () => { copyText
 $("halForum").onclick = () => { copyText(FORUM_URL).then(ok => $("halForumMsg").textContent = ok ? "הכתובת הועתקה ללוח." : FORUM_URL); let w = null; try { w = window.open(FORUM_URL, "_blank", "noopener") } catch (e) {} if (!w && O) O.call("app.openUrl", { url: FORUM_URL }).catch(() => {}) };
 if (!O) extrasBoot();
 
-/* ---- רשימות נפתחות בעכבר: ב-Windows הרשימה המקורית נסגרת ברגע שהעכבר נכנס אליה, ולכן מציגים רשימה משלנו. במגע — הרשימה המקורית ---- */
-(function () {
-  let dd = null, pt = "mouse";
-  document.addEventListener("pointerdown", e => { pt = e.pointerType }, true);
-  const close = () => { if (dd) { dd.remove(); dd = null } };
-  document.addEventListener("mousedown", e => {
-    const s = e.target.closest && e.target.closest("select");
-    if (dd && !dd.contains(e.target)) { close(); if (s) { e.preventDefault(); return } }
-    if (!s || s.disabled || s.multiple || e.button !== 0 || pt === "touch" || pt === "pen") return;
-    e.preventDefault(); s.focus();
-    const r = s.getBoundingClientRect(); dd = document.createElement("div"); dd.className = "dd"; dd.setAttribute("role", "listbox");
-    [...s.options].forEach((o, i) => {
-      if (o.hidden) return;
-      const d = document.createElement("div"); d.textContent = o.text; d.setAttribute("role", "option");
-      if (o.disabled) d.style.opacity = ".5"; if (i === s.selectedIndex) d.className = "sel on";
-      d.onmousedown = ev => ev.preventDefault();
-      d.onclick = () => { if (o.disabled) return; close(); if (s.selectedIndex !== i) { s.selectedIndex = i; s.dispatchEvent(new Event("input", { bubbles: true })); s.dispatchEvent(new Event("change", { bubbles: true })) } };
-      dd.appendChild(d);
-    });
-    document.body.appendChild(dd);
-    const below = innerHeight - r.bottom - 8, above = r.top - 8, up = below < 160 && above > below;
-    dd.style.maxHeight = Math.max(120, up ? above : below) + "px"; dd.style.minWidth = r.width + "px";
-    dd.style.left = Math.max(4, Math.min(r.left, innerWidth - dd.offsetWidth - 4)) + "px";
-    dd.style.top = (up ? r.top - dd.offsetHeight : r.bottom) + "px";
-    const on = dd.querySelector(".sel"); if (on) on.scrollIntoView({ block: "nearest" });
-  }, true);
-  addEventListener("keydown", e => { if (dd && e.key === "Escape") { e.stopPropagation(); close() } }, true);
-  addEventListener("resize", close); addEventListener("blur", close);
-  document.addEventListener("scroll", e => { if (dd && !dd.contains(e.target)) close() }, true);
-})();
+/* 3.0.3: הרשימה הנפתחת הישנה הוסרה — היא התנגשה עם selfix.js (focus גלל את חלון ההגדרות, והגלילה סגרה מיד את הרשימה) */
 
 /* כשאזור הרחובות נטען: שורת המיקום מקבלת את שם פינת הרחובות */
 (function () { const sm = streetMap; streetMap = async function () { const r = await sm.apply(this, arguments); try { if (pos) locText() } catch (e) {} return r } })();

@@ -47,5 +47,6 @@
     if (own(s) && (e.key === " " || e.key === "Enter" || e.key === "F4" || (e.altKey && (e.key === "ArrowDown" || e.key === "ArrowUp")))) { e.preventDefault(); open(s) }
   }, true);
   addEventListener("resize", close); addEventListener("blur", close);
-  document.addEventListener("scroll", e => { if (box && !box.contains(e.target)) close() }, true);
+  let opened = 0; const _o = open; open = s => { _o(s); opened = Date.now() };
+  document.addEventListener("scroll", e => { if (box && !box.contains(e.target) && Date.now() - opened > 300) close() }, true);
 })();
