@@ -134,8 +134,11 @@ function stView(){const hw=300/zoom,[kx,ky]=stM();return{hw,hh:hw*.8,kx,ky,cx:ST
 function stRot(x,y,r){const c=Math.cos(r*R),s=Math.sin(r*R);return[x*c+y*s,-x*s+y*c]}
 function stXY(v,la,lo){const[x,y]=stRot((lo-pos[1])*v.kx-v.cx,(la-pos[0])*v.ky-v.cy,ST.rot);return[200+x*200/v.hw,160-y*160/v.hh]}
 async function streetMap(){const svg=$("map"),panel=$("stPanel");panel.hidden=false;const cov=stCover();
- if(!cov){ST.area=null;svg.innerHTML=`<text x="200" y="150" text-anchor="middle" font-size="14" fill="var(--color-on-surface)">אין עדיין מפת רחובות לאזור הזה</text><text x="200" y="174" text-anchor="middle" font-size="12" fill="var(--color-on-surface-dim)">אפשר להוריד אותה פעם אחת בכפתור שמתחת</text>`;
-  $("stNone").hidden=false;$("stTxt").textContent="";stNear();return}
+ if(!cov){ST.area=null;
+  /* אין מפת רחובות למקום הזה (למשל יישוב קטן שלא נכלל במובנים): מציגים את מפת "הסביבה הקרובה" במקום מסך ריק,
+     ומשאירים את כפתור ההורדה ואת ההצעה לאזור הקרוב גלויים */
+  $("mapMode").value="near";map();panel.hidden=false;
+  $("stNone").hidden=false;$("stTxt").textContent="אין עדיין מפת רחובות למקום הזה, ולכן מוצגת הסביבה הקרובה. הכיוון לירושלים מדויק גם כך. אפשר להוריד את מפת הרחובות פעם אחת בכפתור שמתחת.";ST.autoNear=true;stNear();return}
  $("stNone").hidden=true;
  {const m=$("stMsg");if(ST.part){m.dataset.part="1";m.textContent=`המיקום בשולי האזור המובנה "${cov.name||""}", ולכן חלק מהרחובות סביבך עשויים לחסור. אפשר להוריד את האזור המדויק בכפתור שבהגדרות.`}else if(m.dataset.part){m.textContent="";delete m.dataset.part}}
  if(!ST.area||ST.area.k!==cov.k){ST.area=await stReadArea(cov.k);ST.sel=null;if(!ST.area){svg.innerHTML="";$("stTxt").textContent=EMB.some(a=>a.k===cov.k)?"לא ניתן לטעון את נתוני האזור המובנים.":"קובץ האזור חסר. הורד אותו שוב.";return}stNames()}
@@ -235,7 +238,7 @@ function stSettings(){const l=$("stList");if(!l)return;l.replaceChildren();
 
 /* ---- חיבור לממשק ---- */
 (function(){const prevMap=map;
- map=function(){if($("mapMode").value==="street"&&pos)return streetMap();$("stPanel").hidden=true;return prevMap()};
+ map=function(){if(ST.autoNear&&$("mapMode").value==="near"&&pos&&stCover()){ST.autoNear=false;$("mapMode").value="street"}if($("mapMode").value==="street"&&pos)return streetMap();if($("mapMode").value!=="near")ST.autoNear=false;$("stPanel").hidden=true;return prevMap()};
  $("mapMode").onchange=()=>map(); $("stDl").onclick=stDownload;$("stImp").onclick=stImport;$("stBrw").onclick=stBrowser;$("stCopy").onclick=stCopy;
  $("stGo").onclick=stFind;$("stQ").onkeydown=e=>{if(e.key==="Enter")stFind()};$("stSyn").onchange=()=>{ST.showSyn=$("stSyn").checked;streetMap()};
  $("stHere").onclick=()=>{ST.setHere=!ST.setHere;$("stHere").classList.toggle("on",ST.setHere);stText()};

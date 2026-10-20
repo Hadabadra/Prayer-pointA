@@ -150,7 +150,8 @@ function flyStart() {
   if (t1 - t0 > 22 * 36e5) { m.textContent = "טיסה ארוכה מ-22 שעות? כדאי לבדוק את התאריכים."; return }
   m.textContent = ""; Object.assign(FLY, { a, b, A0: a, t0, t1, T0: t0, on: true, alt: $("flyAlt").checked, altKm: null, altAt: 0, re: false }); flyReadAlt();
   try { const v = JSON.stringify({ a: $("flyA").value, b: $("flyB").value, t0: $("flyT0").value, t1: $("flyT1").value, alt: FLY.alt, h: $("flyH").value, hu: $("flyHU").value }); O ? O.call("storage.set", { key: "kivun-fly", value: v }).catch(() => {}) : localStorage.setItem("kivun-fly", v) } catch (e) {}
-  $("mapMode").value = "globe"; flyDraw(); clearInterval(FLY.T); FLY.T = setInterval(flyDraw, 60000); $("flyStop").hidden = false;
+  if (!FLY.on0) FLY.prevMode = $("mapMode").value; FLY.on0 = true; flyChip(true);
+  $("mapMode").value = "globe"; if (typeof map === "function") map(); flyDraw(); clearInterval(FLY.T); FLY.T = setInterval(flyDraw, 60000); $("flyStop").hidden = false;
 }
 /* גובה שהוזן ידנית (מהמסך במושב): ברגל או במטרים */
 function flyReadAlt() { const v = parseFloat($("flyH").value); if (isFinite(v) && v > 0) { FLY.altKm = $("flyHU").value === "ft" ? v * .0003048 : v / 1000; FLY.altAt = Date.now() } else FLY.altKm = null }
@@ -182,7 +183,15 @@ function flyPrint() { const S = flySheet(); if (!S) return; const row = r => `<t
     + `<h2>כיוון ירושלים כל חצי שעה</h2><table class="halt">${S.rows.map(r => row([flyTm(r[0]), flyLL(r[1]), "ירושלים " + r[2], r[3] + "°"])).join("")}</table>`
     + `<p><small>השעות לפי השעון במכשיר. חישוב משוער (מסלול ישיר, מהירות קבועה). בשאלה מעשית יש לשאול רב.</small></p>`;
   document.body.classList.add("printfly"); try { window.print() } catch (e) {} setTimeout(() => document.body.classList.remove("printfly"), 1500) }
-function flyStop() { if (O) O.call("notifications.cancelAll").catch(() => {}); $("flyAlert").hidden = true; FLY.on = false; clearInterval(FLY.T); FLY.T = null; $("flyStop").hidden = true; $("flyMsg").textContent = "המעקב הופסק. המיקום נשאר האחרון שחושב." }
+function flyStop() { if (O) O.call("notifications.cancelAll").catch(() => {}); $("flyAlert").hidden = true; FLY.on = false; FLY.on0 = false; FLY.a = null; clearInterval(FLY.T); FLY.T = null; $("flyStop").hidden = true; flyChip(false);
+  $("flyOut").innerHTML = ""; $("flyGlobe").innerHTML = ""; $("mapMode").value = FLY.prevMode && FLY.prevMode !== "globe" ? FLY.prevMode : "street"; if (typeof map === "function") map(); if (typeof draw === "function") draw();
+  $("flyMsg").textContent = "יצאת ממצב טיסה. הכיוון חוזר למיקום שלך (המקום שנבחר לפני הטיסה)." }
+/* תווית קבועה בזמן טיסה, כדי שתמיד יהיה ברור שהמצב פעיל ואיך יוצאים ממנו */
+function flyChip(on) { let c = $("flyChip");
+  if (!c) { c = document.createElement("button"); c.id = "flyChip"; c.type = "button"; c.textContent = "✈ מצב טיסה פעיל · יציאה"; c.title = "עצירת המעקב וחזרה למיקום שלך";
+    c.style.cssText = "position:fixed;bottom:.6rem;inset-inline-start:.6rem;z-index:9000;border-radius:999px;padding:.35rem .9rem;background:var(--color-primary);color:var(--color-on-primary);border:0;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.25)";
+    c.onclick = flyStop; document.body.appendChild(c) }
+  c.hidden = !on }
 (function () {
   const dl = $("flyList"); dl.replaceChildren(...[...FLY_AP, ...C].map(x => { const o = document.createElement("option"); o.value = x[0]; return o }));
   const loc = d => new Date(d - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 16), n = new Date();
