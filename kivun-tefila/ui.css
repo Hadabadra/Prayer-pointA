@@ -26,6 +26,7 @@ body{font-size:var(--font-size-base)}
 
 /* כפתורים: משני (Tonal) כברירת מחדל, ראשי (Filled) לפעולה מרכזית */
 button{background:var(--color-secondary-subtle);font-weight:600;transition:opacity .15s,background-color .15s}
+#bar select{background:var(--color-secondary-subtle);font-weight:600}
 button:hover:not(:disabled):not(.dis){opacity:.88}
 button.on,#stGo,#bMan,#pcGo,#fbSend,#minCopy,#newsOk,#plSave,#flyGo{background:var(--color-primary);color:var(--color-on-primary);border-color:var(--color-primary)}
 button:disabled,button.dis{opacity:.45;cursor:default;filter:none}

@@ -19,7 +19,7 @@ button.dis{opacity:.55;cursor:not-allowed;filter:grayscale(1)}
 #city{max-width:11rem}
 button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--color-primary)}
 input.c{width:7em}
-#dial{display:block;margin:.5rem auto;width:100%;max-width:14rem;height:auto}
+#dial{display:block;margin:.4rem auto;width:100%;max-width:9.5rem;height:auto}
 .pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:0 1rem;align-items:start}
 /* מתחת למפה ולמצפן: שורות הכלים לכל רוחב הדף */
 #stPanel{grid-column:1/-1}
@@ -80,7 +80,7 @@ button.src{padding:.05rem .4rem;font-size:.8rem;margin:.1rem 0}
  #printHead h1{margin:.2rem 0}
  .pbig{font-size:1.6rem;font-weight:700}
  .pair{display:block}
- #dial{max-width:10rem}
+ #dial{max-width:7.5rem}
  #map{max-height:none;width:100%}
  body{background:var(--color-surface)}
 }
@@ -138,10 +138,10 @@ body.mapfull #stRotRow .sep{display:none}
   <strong>כיוון תפילה</strong>
   <button id="bOn">מיקום משוער</button>
   <button id="bGps" class="dis" aria-disabled="true" title="מיקום מדויק (GPS): בפיתוח, ממתין לאוצריא">GPS</button>
-  <button id="bManT" aria-expanded="false" aria-controls="manBox">מיקום ידני</button>
-  <button id="bPcT" aria-expanded="false" aria-controls="pcBox">מיקוד</button>
-  <select id="meth" aria-label="שיטת חישוב"><option value="rh" title="כיוון קבוע על המפה" selected>כיוון קבוע (מפה)</option><option value="gc" title="הקו הקצר על הכדור">קו קצר (כדור)</option></select>
-  <button id="bSid" hidden>פתח סידורון</button>
+  <button id="bManT" aria-expanded="false" aria-controls="manBox pcBox" title="הזנת קואורדינטות או מיקוד">מיקום ידני / מיקוד</button>
+  <button id="bPcT" aria-expanded="false" aria-controls="pcBox" hidden>מיקוד</button>
+  <select id="meth" aria-label="שיטת חישוב"><option value="rh" title="שיטת חישוב: כיוון קבוע על המפה" selected>חישוב: מפה</option><option value="gc" title="שיטת חישוב: הקו הקצר על הכדור">חישוב: כדור</option></select>
+  <button id="bSid" hidden data-merged="1">פתח סידורון</button>
   <button id="bHal" aria-expanded="false" aria-controls="hal">הלכות</button>
   <button id="bKotel" aria-expanded="false" aria-controls="kotel" title="דיני הכותל המערבי">דיני הכותל</button>
   <button id="bKria" aria-expanded="false" aria-controls="kria" title="מה אומרים בשעת הקריעה, ונקודות קצרות">✂ קריעה</button>
@@ -595,12 +595,8 @@ body.mapfull #stRotRow .sep{display:none}
 <div id="fLoc" hidden></div>
 <div id="printHead"></div>
 <main>
-<div id="news" class="newsbox" hidden><strong>מה חדש בגרסה <span id="newsVer"></span></strong><ul>
-  <li><b>דיני הכותל:</b> נכנסו לתוסף: מראי מקומות לקריעה ולתפילה כנגד המקדש, ומפת נושאים ושיטות לסימנים תק"ס (זכר לחורבן) ותקס"א (קריעה), בלי ציטוטים, מתוך "דור המלקטים".</li>
-  <li><b>מצב תפילה:</b> מוצג עכשיו על רקע הכותל, כמו מסך הפתיחה.</li>
-  <li><b>תמונת הכותל:</b> חזרה לציור הקודם (ההארכה של 2.5.2 בוטלה).</li>
-  <li><b>מה חדש:</b> נוספו בהגדרות הגרסאות החסרות 2.1.2 עד 2.4.0.</li>
-  <li>הפירוט המלא, וכל היכולות: בכפתור "הגדרות".</li></ul>
+<div id="news" class="newsbox" hidden><strong>מה חדש בגרסה <span id="newsVer"></span></strong><ul id="newsList"></ul>
+ <p style="margin:.3rem 0"><small>הפירוט המלא, וכל היכולות: בכפתור "הגדרות".</small></p>
  <button id="newsOk">הבנתי</button></div>
 <p id="loc"></p>
 <div class="row" id="plRow"><select id="pl" aria-label="מקומות שמורים"><option value="">מקומות שמורים…</option></select>
@@ -815,7 +811,7 @@ async function loadCal(){try{const l=dat(await O.call("calendar.getCities"));if(
  try{const n=dat(await O.call("settings.get",{key:"key-selected-city"}));if(typeof n==="string")calName=n}catch(e){}
  buildSel()}
 async function sidLink(){try{const l=dat(await O.call("plugin.listInstalled"))||[],sd=l.find(x=>/siduron/i.test(x.pluginId||""));
- if(sd){$("bSid").hidden=false;$("bSid").onclick=()=>O.call("plugin.openOther",{pluginId:sd.pluginId}).catch(()=>{})}}catch(e){}}
+ if(sd){window.SID_INFO=sd;$("bSid").onclick=()=>O.call("plugin.openOther",{pluginId:sd.pluginId}).catch(()=>{})}}catch(e){}}
 if(O){O.on("plugin.boot",async p=>{applyTheme(p&&p.theme);await loadCal();let v=null;try{v=dat(await O.call("storage.get",{key:"kivun-city"}))}catch(e){}restore(v);sidLink();if(typeof plLoad==="function")plLoad();if(typeof newsCheck==="function")newsCheck();if(typeof extrasBoot==="function")extrasBoot(p)});
  O.on("calendar.city_changed",p=>{if(p&&p.city){calName=p.city;buildSel();if(mode==="cal"||mode==null)useCal()}});
  O.on("theme.changed",applyTheme);O.call("app.getTheme").then(r=>r&&applyTheme(r.data)).catch(()=>{})}
@@ -856,7 +852,7 @@ $("plDel").onclick=()=>{const i=+$("pl").value;if($("pl").value==="")return;plac
 if(!O)plLoad();
 function barBox(id,btn,o){$(id).hidden=!o;$(btn).setAttribute("aria-expanded",String(o));$(btn).classList.toggle("on",o)}
 $("bPcT").onclick=()=>{const o=$("pcBox").hidden;barBox("manBox","bManT",false);barBox("pcBox","bPcT",o);document.documentElement.style.setProperty("--bar-h",$("bar").offsetHeight+"px");if(o)$("pc").focus()};
-$("bManT").onclick=()=>{const o=$("manBox").hidden;barBox("pcBox","bPcT",false);$("manBox").hidden=!o;$("bManT").setAttribute("aria-expanded",String(o));$("bManT").classList.toggle("on",o);document.documentElement.style.setProperty("--bar-h",$("bar").offsetHeight+"px");if(o)$("lat").focus()};
+$("bManT").onclick=()=>{const o=$("manBox").hidden;$("pcBox").hidden=!o;$("manBox").hidden=!o;$("bManT").setAttribute("aria-expanded",String(o));$("bManT").classList.toggle("on",o);document.documentElement.style.setProperty("--bar-h",$("bar").offsetHeight+"px");if(o)$("lat").focus()};
 {const setH=()=>document.documentElement.style.setProperty("--bar-h",$("bar").offsetHeight+"px");setH();addEventListener("resize",setH)}
 /* "מה חדש": מוצג פעם אחת אחרי כל עדכון גרסה */
 async function newsCheck(){let seen=null;try{seen=O?dat(await O.call("storage.get",{key:"kivun-seen-ver"})):localStorage.getItem("kivun-seen-ver")}catch(e){}

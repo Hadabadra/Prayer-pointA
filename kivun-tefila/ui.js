@@ -165,7 +165,7 @@
   const tb = document.createElement("button"); tb.id = "bTfila"; tb.type = "button"; tb.textContent = "תפילה"; tb.title = "התפילה הנוכחית מהסידורון על רקע הכותל";
   bar.insertBefore(tb, $("bHal"));
   const ov = document.createElement("div"); ov.id = "tfila"; ov.hidden = true; ov.setAttribute("role", "dialog"); ov.setAttribute("aria-modal", "true"); ov.setAttribute("aria-label", "תפילה");
-  ov.innerHTML = '<div id="tfWall" aria-hidden="true"></div><div id="tfBox"><div class="row"><button id="tfClose" type="button">סגור</button><button id="tfFs" type="button">גופן +</button><button id="tfFs2" type="button">גופן −</button></div><h2 id="tfTitle"></h2><p id="tfDir" class="chip" hidden></p><div id="tfText"></div></div>';
+  ov.innerHTML = '<div id="tfWall" aria-hidden="true"></div><div id="tfBox"><div class="row"><button id="tfClose" type="button">סגור</button><button id="tfFs" type="button">גופן +</button><button id="tfFs2" type="button">גופן −</button><button id="tfSid" type="button" title="מעבר לתוסף סידורון">📖 מעבר לסידורון</button></div><h2 id="tfTitle"></h2><p id="tfDir" class="chip" hidden></p><div id="tfText"></div></div>';
   document.body.appendChild(ov);
   try { const m = $("wall").style.maskImage || $("wall").style.webkitMaskImage; if (m) { $("tfWall").style.maskImage = m; $("tfWall").style.webkitMaskImage = m } } catch (e) {}
   let last = null, fsz = 1.25, lastId = null, waitT = 0;
@@ -193,6 +193,9 @@
     } catch (e) { tshow(null) }
   };
   $("tfClose").onclick = () => { ov.hidden = true };
+  /* 2.9.4: כפתור "פתח סידורון" עבר מהסרגל העליון לתוך חלון התפילה */
+  $("tfSid").onclick = () => { ov.hidden = true; if (O) O.call("plugin.openOther", { pluginId: SID }).catch(() => {}) };
+  if (!O) $("tfSid").hidden = true;
   $("tfFs").onclick = () => { fsz = Math.min(2.4, fsz + .15); $("tfText").style.fontSize = fsz + "rem" };
   $("tfFs2").onclick = () => { fsz = Math.max(.9, fsz - .15); $("tfText").style.fontSize = fsz + "rem" };
   addEventListener("keydown", e => { if (e.key === "Escape" && !ov.hidden) ov.hidden = true });
@@ -204,4 +207,13 @@
     const s = $("splash"); if (s) { s.hidden = true; s.remove() }
     tshow(p);
   });
+})();
+
+/* 2.9.4: חלונית "מה חדש" לוקחת את הרשימה של הגרסה האחרונה מתוך "מה חדש" שבהגדרות (כדי שלא תתיישן) */
+(function () {
+  try {
+    const sum = [...document.querySelectorAll("details.sd > summary")].find(x => x.textContent.trim() === "מה חדש");
+    const first = sum && sum.parentNode.querySelector("details ul"), dst = document.getElementById("newsList");
+    if (first && dst) dst.replaceChildren(...[...first.children].map(li => li.cloneNode(true)));
+  } catch (e) {}
 })();
