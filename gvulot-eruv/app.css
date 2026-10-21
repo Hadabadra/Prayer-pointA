@@ -339,7 +339,9 @@ mark { background: var(--color-primary-container); color: var(--color-on-primary
   border: 1px solid var(--color-outline); border-radius: var(--radius-sm);
   background: var(--color-surface); color: var(--color-on-surface);
 }
-.cl ul { margin: .2em 0 .6em; padding-inline-start: 1.2em; }
+.cl summary { cursor: pointer; color: var(--color-on-surface-variant); }
+.cl p { margin: .3em 0; font-size: .9em; }
+.tasks { margin: .2em 0; padding-inline-start: 1.2em; }
 
 /* ── שדות בדיאלוג ─────────────────────────────────────────────── */
 .field { display: flex; flex-direction: column; gap: .3em; margin: .7em 0; }

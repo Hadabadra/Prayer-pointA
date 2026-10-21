@@ -1,9 +1,9 @@
 {
   "id": "com.hadabadra.gvulot-eruv",
   "name": "גבולות עירוב",
-  "version": "0.2.2",
+  "version": "0.2.5",
   "description": "מפות העירובים השכונתיים ברחבי הארץ ורשימת האחראים המקומיים, מתוך מוקד העירוב ובאישורו. עובד בלי אינטרנט.",
-  "author": "חד בדרא",
+  "author": "לזש\"ק לרמב\"ר ומבק\"י",
   "schemaVersion": 1,
   "sdkVersion": "1.x",
   "stability": "beta",
@@ -16,12 +16,15 @@
     "plugin.storage.read",
     "plugin.storage.write",
     "ui.feedback",
+    "network.localhost",
     "fs.user_files.read",
+    "library.books.read",
+    "reader.open",
     "fs.user_files.write"
   ],
   "network": {
-    "enabled": false,
-    "allowlist": []
+    "enabled": true,
+    "allowlist": ["127.0.0.1", "localhost"]
   },
   "contributes": {
     "toolTab": {

@@ -415,9 +415,75 @@
     closeMap(); render(); toast('המפה הוסרה');
   }
 
+  // ── קישורים: באוצריא קישור רגיל לא נפתח — פותחים בדפדפן החיצוני וגם מעתיקים ללוח ──
+  async function openLink(u) {
+    let copied = false;
+    try { await navigator.clipboard.writeText(u); copied = true; } catch (e) {}
+    let w = null;
+    if (hasOtz) { const r = await call('app.openUrl', { url: u }); if (r.success) { toast('נפתח בדפדפן' + (copied ? ' · הקישור גם הועתק' : '')); return; } }
+    try { w = window.open(u, '_blank', 'noopener'); } catch (e) {}
+    toast(w ? 'נפתח בחלון חדש' : copied ? 'הקישור הועתק ללוח — הדביקו בדפדפן' : u);
+  }
+  // ── מקורות בספריית אוצריא (כמו בכיוון תפילה): הספר עצמו, הכותרת הקצרה ביותר ──
+  const srcNorm = t => (t || '').replace(/[^\u05d0-\u05eaA-Za-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+  async function openSrc(q, ref) {
+    if (!hasOtz) { toast(q + ' ' + ref); return; }
+    for (const qq of q.split('|')) {
+      const l = await call('library.findBooks', { query: qq, limit: 30 });
+      const w = srcNorm(qq).split(' ');
+      const m = (l.success ? l.data || [] : []).filter(x => { const t = ' ' + srcNorm(x.title) + ' '; return w.every(y => t.includes(' ' + y + ' ')); })
+        .sort((a, b) => srcNorm(a.title).length - srcNorm(b.title).length)[0];
+      if (m) { const r = await call('reader.openBookAtRef', { bookId: m.bookId, ref, highlight: true }); if (r.success && r.data !== false) return; }
+    }
+    const r = await call('reader.openSearchTab', { query: q.split('|')[0] + ' ' + ref });
+    if (!r.success) toast('לא נמצא בספרייה: ' + q + ' ' + ref);
+  }
+  const SOURCES = [
+    ['שולחן ערוך — הלכות עירובין', 'שולחן ערוך אורח חיים', 'שסו'],
+    ['משנה ברורה — הלכות עירובין', 'משנה ברורה', 'שסו'],
+    ['שולחן ערוך — הלכות רשויות', 'שולחן ערוך אורח חיים', 'שמה'],
+    ['רמב"ם — הלכות עירובין', 'הלכות עירובין|משנה תורה עירובין', 'א'],
+    ['גמרא — מסכת עירובין', 'עירובין', 'ב א']
+  ];
+  const OPEN_TASKS = [
+    'קווי עירוב חדים (וקטור/SVG) מעל מפת רחובות, משכבת העירוב של GovMap',
+    'בדיקה אם המיקום שלי בתוך העירוב עצמו (כעת מזוהה רק העיר הקרובה)',
+    'מפות לשכונות חסרות (פרדס כץ, קרית הרצוג ועוד) — פנייה למוקד העירוב',
+    'עירובין בחו"ל — בדיקת מאגרים קיימים',
+    'כפתור פתיחה מתוך ספר בסרגל העיון'
+  ];
+
+  // ── זיהוי מיקום: גשר "אחת שאלתי" (כמו בכיוון תפילה), ואם אין — מיקום הדפדפן; העיר הקרובה נפתחת ──
+  const CITY_POS = {
+    'אופקים': [31.314, 34.620], 'אלעד': [32.052, 34.951], 'אשדוד': [31.801, 34.650], 'באר שבע': [31.252, 34.791],
+    'בית שמש': [31.730, 34.990], 'ביתר': [31.700, 35.120], 'בני ברק': [32.084, 34.834], 'בת ים': [32.023, 34.751],
+    'גבעת זאב': [31.860, 35.170], 'גני תקוה': [32.060, 34.873], 'זכרון יעקב': [32.570, 34.950], 'חדרה': [32.434, 34.919],
+    'חיפה': [32.800, 34.990], 'חצור': [32.980, 35.540], 'טבריה': [32.790, 35.530], 'יסודות': [31.810, 34.860],
+    'ירוחם': [30.990, 34.930], 'ירושלים': [31.780, 35.210], 'כרמיאל': [32.920, 35.300], 'לוד (אחיסמך)': [31.950, 34.890],
+    'מודיעין עילית': [31.930, 35.040], 'מיצד': [31.590, 35.190], 'מירון': [32.980, 35.440], 'נוף הגליל': [32.710, 35.320],
+    'נתיבות': [31.420, 34.590], 'נתניה': [32.330, 34.860], 'עמנואל': [32.160, 35.140], 'עפולה': [32.610, 35.290],
+    'פתח תקוה': [32.090, 34.880], 'צפת': [32.960, 35.500], 'קרית אתא': [32.810, 35.110], 'קרית יערים (טלזסטון)': [31.800, 35.100],
+    'קרית מלאכי': [31.730, 34.750], 'רחובות': [31.890, 34.810], 'רכסים': [32.750, 35.100], 'תל ציון': [31.880, 35.250], 'תפרח': [31.330, 34.670]
+  };
+  const km = (a, b) => { const r = Math.PI / 180, x = (b[1] - a[1]) * r * Math.cos((a[0] + b[0]) * r / 2), y = (b[0] - a[0]) * r; return Math.hypot(x, y) * 6371; };
+  async function locateMe() {
+    toast('מאתר מיקום…');
+    let p = null, how = '';
+    try { if (window.ERUV_BRIDGE && await ERUV_BRIDGE.available()) { const d = await ERUV_BRIDGE.location(); p = [+d.lat, +d.lon]; how = 'מ-Windows'; } } catch (e) {}
+    if (!p && navigator.geolocation) {
+      p = await new Promise(res => navigator.geolocation.getCurrentPosition(g => res([g.coords.latitude, g.coords.longitude]), () => res(null), { timeout: 12000, maximumAge: 300000 }));
+      how = 'מהמכשיר';
+    }
+    if (!p) { toast('לא ניתן לזהות מיקום. התקינו את הגשר "אחת שאלתי" או בחרו עיר מהרשימה'); return; }
+    const best = Object.keys(CITY_POS).filter(c => byCity.has(c)).map(c => [c, km(p, CITY_POS[c])]).sort((a, b) => a[1] - b[1])[0];
+    if (!best || best[1] > 25) { toast('אין עירוב במאגר בקרבת המיקום (העיר הקרובה: ' + (best ? best[0] + ', ' + Math.round(best[1]) + ' ק"מ' : '—') + ')'); return; }
+    goCity(best[0]); toast('מיקום ' + how + ': ' + best[0] + (best[1] > 3 ? ' (כ-' + Math.round(best[1]) + ' ק"מ)' : ''));
+  }
+
   // ── יומן שינויים ותגובות ─────────────────────────────────────
   const REPO = 'https://github.com/Hadabadra/Prayer-pointA';
   const CHANGELOG = [
+    ['0.2.5', ['זיהוי מיקום (גשר אחת שאלתי או המכשיר) ופתיחת העיר הקרובה', 'כפתור נפרד למידע הלכתי ומקורות', 'קישורים נפתחים בדפדפן ומועתקים ללוח', 'מקורות הלכות עירובין בספריית אוצריא', 'התכנון והמשימות הפתוחות בתוך התוסף', 'יומן שינויים מקוצר']],
     ['0.2.2', ['סמל חדש לתוסף: קו עירוב בין עמודים סביב סמן מיקום']],
     ['0.2.1', ['שליחת תגובה מתוך התוסף דרך אוצריא', 'יומן שינויים וקישור לתכנון המתעדכן בגיטהאב']],
     ['0.2.0', ['כפתור "מפה כללית" לשכונות בלי מפה משלהן (פרדס כץ, קרית הרצוג ועוד)', 'הוספת מפה משלי מהמחשב, עם קישור לשכונה ולאחראים']],
@@ -431,13 +497,26 @@
     if (r.success) { $('#fbText').value = ''; toast(r.data === 'queued' ? 'התגובה תישלח כשיהיה חיבור' : 'התגובה נשלחה, תודה!'); }
     else toast('השליחה זמינה בתוך אוצריא');
   }
-  const VERSION = '0.2.2';
+  const VERSION = '0.2.5';
 
   // ── אודות ───────────────────────────────────────────────────
-  function openInfo() {
+  function openHalacha() {
+    $('#infoTitle').textContent = 'מידע הלכתי';
     $('#infoBody').innerHTML = `
-      <p>המפות ורשימת האחראים מאתר <b>מוקד העירוב</b>, באישורם. המוקד נותן מענה הלכתי בטלפון ${esc(D.source.phone)}.
-      ${esc(D.source.note)} מטרת התוסף היא התמצאות בלבד, ולפני שבת יש לוודא מול האחראי המקומי שהעירוב תקין.</p>
+      <p>המפות מסמנות את גבולות העירובים השכונתיים כפי שפורסמו על ידי <b>מוקד העירוב</b>.
+      יש הבדלים בדרגות הכשרות בין העירובים, וכל עירוב עלול להיפסל במהלך השבוע. ${esc(D.source.note)}</p>
+      <p>לפני שבת יש לוודא מול האחראי המקומי שהעירוב תקין. לשאלות למעשה יש לפנות לרב המקומי או למוקד העירוב,
+      שנותן מענה הלכתי בטלפון <button class="chip" data-phone="${esc(D.source.phone)}">${ICON.phone}${esc(D.source.phone)}</button></p>
+      <p>התוסף אינו פוסק הלכה ואינו קובע אם עירוב כשר. הוא מרכז את המידע כדי להקל על הבירור.</p>
+      <h3 class="info-h">ללימוד: מקורות בספריית אוצריא</h3>
+      <div class="area-actions">${SOURCES.map(x => `<button class="chip map" data-src="${esc(x[1])}" data-ref="${esc(x[2])}">${ICON.map}${esc(x[0])}</button>`).join('')}</div>`;
+    $('#infoScrim').hidden = false; $('#infoClose').focus();
+  }
+  function openInfo() {
+    $('#infoTitle').textContent = 'אודות התוסף';
+    $('#infoBody').innerHTML = `
+      <p>גבולות עירוב ${VERSION} · מאת לזש"ק לרמב"ר ומבק"י. המפות ורשימת האחראים מאתר <b>מוקד העירוב</b>, באישורם.
+      מידע על כשרות ובירור לפני שבת — בכפתור "מידע הלכתי".</p>
       <div class="levels">
         <div class="level done"><span class="dot">1</span><div><b>מפות ואחראים</b>${D.maps.length} מפות ו־${D.areas.length} אחראים, בלי צורך באינטרנט.</div></div>
         <div class="level"><span class="dot">2</span><div><b>קווי עירוב על מפת רחובות</b>המרת המפות לקווים מדויקים, עם הגדלה עד רמת הבית.</div></div>
@@ -449,9 +528,11 @@
       <h3 class="info-h">שליחת תגובה</h3>
       <textarea id="fbText" rows="3" placeholder="הערה, תיקון או שכונה חסרה — נשלח דרך אוצריא למפתחת"></textarea>
       <div class="sheet-actions"><button class="btn filled" id="fbSend">שליחה</button></div>
-      <h3 class="info-h">יומן שינויים</h3>
-      ${CHANGELOG.map(c => `<div class="cl"><b>${esc(c[0])}</b><ul>${c[1].map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>`).join('')}
-      <p><button class="btn text" data-url="${REPO}/blob/%D7%92%D7%91%D7%95%D7%9C%D7%95%D7%AA-%D7%A2%D7%99%D7%A8%D7%95%D7%91/gvulot-eruv-docs/PLAN.md">התכנון המלא בגיטהאב (מתעדכן)</button>
+      <h3 class="info-h">בתכנון</h3>
+      <ul class="tasks">${OPEN_TASKS.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
+      <details class="cl"><summary><b>יומן שינויים</b> · גרסה ${VERSION}: ${esc(CHANGELOG[0][1].join('; '))}</summary>
+        ${CHANGELOG.slice(1).map(c => `<p><b>${esc(c[0])}</b> — ${esc(c[1].join('; '))}</p>`).join('')}</details>
+      <p><button class="btn text" data-url="${REPO}/blob/%D7%92%D7%91%D7%95%D7%9C%D7%95%D7%AA-%D7%A2%D7%99%D7%A8%D7%95%D7%91/gvulot-eruv-docs/PLAN.md">התכנון המלא בגיטהאב</button>
       <button class="btn text" data-url="${REPO}/releases">כל הגרסאות</button></p>`;
     $('#fbSend').onclick = sendFeedback;
     $('#infoScrim').hidden = false; $('#infoClose').focus();
@@ -459,7 +540,7 @@
 
   // ── אירועים כלליים ─────────────────────────────────────────
   document.addEventListener('click', e => {
-    const t = e.target.closest('[data-open-map],[data-city],[data-phone],[data-fav],[data-url],[data-add-map],[data-del-map]');
+    const t = e.target.closest('[data-open-map],[data-city],[data-phone],[data-fav],[data-url],[data-add-map],[data-del-map],[data-src]');
     if (!t) return;
     if (t.dataset.addMap !== undefined) addOwnMap(t.dataset.addMap);
     else if (t.dataset.delMap) delOwnMap(t.dataset.delMap);
@@ -467,7 +548,8 @@
     else if (t.dataset.fav) toggleFav(t.dataset.fav);
     else if (t.dataset.city) goCity(t.dataset.city);
     else if (t.dataset.phone) copyPhone(t.dataset.phone);
-    else if (t.dataset.url) call('app.openUrl', { url: t.dataset.url }).then(r => { if (!r.success && !hasOtz) open(t.dataset.url); });
+    else if (t.dataset.url) openLink(t.dataset.url);
+    else if (t.dataset.src) openSrc(t.dataset.src, t.dataset.ref);
   });
   let qT;
   $('#q').addEventListener('input', e => { clearTimeout(qT); qT = setTimeout(() => { state.q = e.target.value; render(); }, 120); });
@@ -477,6 +559,8 @@
   });
   $('#btnHome').onclick = goHome;
   $('#btnInfo').onclick = openInfo;
+  $('#btnHal').onclick = openHalacha;
+  $('#btnLoc').onclick = locateMe;
   $('#infoClose').onclick = () => { $('#infoScrim').hidden = true; };
   $('#infoScrim').addEventListener('click', e => { if (e.target.id === 'infoScrim') e.target.hidden = true; });
   document.addEventListener('keydown', e => {
