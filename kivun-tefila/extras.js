@@ -68,7 +68,7 @@ function printSheet(again) {
   let lab = src; try { lab = stLabel() || src } catch (e) {}
   const b = bear(), when = new Date().toLocaleDateString("he-IL");
   $("printHead").innerHTML = `<h1>כיוון התפילה לירושלים</h1><p><b>${esc(lab || "המיקום")}</b> (${pos[0].toFixed(5)}, ${pos[1].toFixed(5)})</p>`
-    + `<p class="pbig">${Math.round(b)}° מהצפון · ${esc(nm(b))}</p><p>${esc($("stTxt").textContent || "")}</p><p><small>במפה: הנקודה השחורה היא המקום, והקו המקווקו מוביל לכיוון ירושלים. הודפס ב-${when} מתוך התוסף "כיוון תפילה" לאוצריא. החישוב אל הר הבית; בשאלה מעשית יש להתייעץ עם רב.</small></p>`;
+    + `<p class="pbig">${Math.round(b)}° מהצפון · ${esc(nm(b))}</p><p>${esc($("stTxt").textContent || "")}</p><p><small>במפה: הנקודה השחורה היא המקום, והקו המקווקו מוביל לכיוון ירושלים. הודפס ב-${when} מתוך התוסף "כיוון תפילה" לאוצריא (להורדה מחנות התוספים: <a href="https://otzaria.org/plugins/6ac80057bd083fcc18562fa0">otzaria.org/plugins/6ac80057bd083fcc18562fa0</a>). החישוב אל הר הבית; בשאלה מעשית יש להתייעץ עם רב.</small></p>`;
   if (typeof showPrintPreview === "function") { window.__pdf = false; showPrintPreview(); return }
   printNow().catch(() => { $("stMsg").textContent = "ההדפסה אינה זמינה כאן." })
 }
@@ -140,7 +140,11 @@ async function openSrc(q, r) {
   for (const qq of q.split("|")) {
     try {
       const l = dat(await O.call("library.findBooks", { query: qq, limit: 30 })) || [], w = srcNorm(qq).split(" ");
-      const m = l.filter(x => { const t = " " + srcNorm(x.title) + " "; return w.every(y => t.includes(" " + y + " ")) })
+      const m = l.filter(x => { const t = " " + srcNorm(x.title) + " "; if (!w.every(y => t.includes(" " + y + " "))) return false;
+        /* 3.1.0: לא לפתוח שו"ת או פירוש המשניות כשלא ביקשו אותם (ב"ח → שו"ת הב"ח; רמב"ם → פירוש המשניות) */
+        const qn = " " + srcNorm(qq) + " ";
+        for (const z of ["שו ת", "תשובות", "פירוש המשניות"]) if (t.includes(" " + z + " ") !== qn.includes(" " + z + " ")) return false;
+        return true })
         .sort((a, b) => srcNorm(a.title).length - srcNorm(b.title).length);
       const b = m[0];
       if (b) { const ok = dat(await O.call("reader.openBookAtRef", { bookId: b.bookId, ref: r, highlight: true })); if (ok !== false) return }

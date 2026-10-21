@@ -21,7 +21,16 @@
     w.append(h, num, ds, row, msg); return w;
   }
   const mm = document.getElementById("minMsg");
-  if (mm) { const f = document.createDocumentFragment(); LINES.minyan.forEach(l => f.appendChild(block(l))); mm.after(f) }
+  /* 3.1.0: קו בדיקת המיקוד עבר מ"מניינים" לשורת המיקוד (כפתור "מיקום / מיקוד ידני") */
+  const pcb = document.getElementById("pcBox");
+  if (pcb) LINES.minyan.forEach(l => {
+    const w = document.createElement("span"); w.className = "pcline"; w.title = l.d;
+    const t = document.createElement("small"); t.textContent = "☎ " + l.t + ": "; const nb = document.createElement("b"); nb.dir = "ltr"; nb.textContent = l.n;
+    const x = document.createElement("small"); x.textContent = l.x ? " · " + l.x + " " : " ";
+    const b = document.createElement("button"); b.type = "button"; b.textContent = "העתק";
+    b.onclick = () => (typeof copyText === "function" ? copyText(l.n.replace(/-/g, "")) : Promise.resolve(false)).then(ok => { b.textContent = ok ? "הועתק ✓" : l.n; setTimeout(() => b.textContent = "העתק", 2500) });
+    w.append(t, nb, x, b); pcb.appendChild(w) });
+  else if (mm) { const f = document.createDocumentFragment(); LINES.minyan.forEach(l => f.appendChild(block(l))); mm.after(f) }
   const fo = document.getElementById("flyOut");
   if (fo) { const d = document.createElement("details"); d.style.margin = ".6rem 0";
     const s = document.createElement("summary"); s.textContent = "☎ טלפונים לטיסה (מידע טיסות, נתב״ג)"; d.appendChild(s);

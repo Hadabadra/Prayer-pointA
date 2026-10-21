@@ -73,7 +73,7 @@ input[type=checkbox]:disabled{opacity:.45;cursor:default}
 /* הורדות בהגדרות */
 .dlitem{border:1px solid var(--color-outline);border-radius:var(--radius-md);padding:.4rem .6rem;margin:.4rem 0}
 .dlitem .row{margin:.3rem 0 0}
-#nsRes{list-style:none;margin:.3rem 0;padding:0;display:grid;gap:.4rem}
+#nsRes{list-style:none;margin:.3rem 0;padding:0;display:grid;gap:.4rem;grid-template-columns:repeat(auto-fill,minmax(17em,1fr))}
 #nsRes li{border:1px solid var(--color-outline);border-radius:var(--radius-md);padding:.4rem .6rem;background:var(--color-surface)}
 #nsRes button{margin-top:.3rem}
 
@@ -109,3 +109,29 @@ input[type=checkbox]:disabled{opacity:.45;cursor:default}
 
 /* 2.5.4: דיני הכותל, רשימה מדורגת */
 .kd{margin:.2em 0;padding-inline-start:1.1em}.kd ul{padding-inline-start:1.1em;margin:.1em 0}.kd li{margin:.12em 0}.kd .kd0{font-weight:600;margin-top:.45em}
+/* 3.1.0 */
+#plChips{display:contents}#plChips[hidden]{display:none}
+.plc{display:inline-flex;align-items:stretch;border:1px solid var(--color-outline);border-radius:var(--radius-pill);overflow:hidden}
+.plc button{border:0;border-radius:0;margin:0}.plc.on{border-color:var(--color-primary)}.plc.on>button:first-child{background:var(--color-primary);color:var(--color-on-primary)}
+.plc .plx{padding-inline:.45em;opacity:.75}.plc .plx:hover{opacity:1}
+#plName[hidden],#plSave[hidden]{display:none}
+.pcline{display:inline-flex;gap:.3em;align-items:center;margin-inline-start:.6em}
+#fly .setrow label>span{display:inline-flex;gap:.4em;align-items:center;white-space:nowrap}
+#bar button.ico{font-size:1.15em;min-width:2.2em;padding-inline:.4em}
+#dlp.pop{top:var(--bar-h,2.6rem);bottom:0;inset-inline-start:auto;inset-inline-end:0;margin:0;width:min(22rem,92vw);max-width:none;max-height:none;border-radius:0;border-width:0 1px 0 0;border-inline-start:1px solid var(--color-outline);z-index:4;overflow:auto}
+.pop.wide{width:min(46rem,96vw) !important}
+@media (min-width:60rem){body.side.sidewide main{margin-inline-end:47rem}}
+.wideb{position:sticky;top:0;float:inline-end;z-index:2;padding:.1em .5em}
+.pop h3.ph{margin:.3em 0 .4em;font-size:1.05em}
+#aboutBox{border-bottom:1px solid var(--color-outline);padding-bottom:.5em;margin-bottom:.6em}
+#mapWrap{position:relative}
+#mapTool{position:absolute;top:.4em;inset-inline-end:.4em;z-index:3;display:flex;gap:.25em;flex-wrap:wrap}
+#mapWrap #map{display:block;width:100%}
+#mapWrap #stRotRow{position:absolute;bottom:.4em;left:50%;transform:translateX(-50%);margin:0;z-index:3;flex-wrap:wrap;justify-content:center;max-width:96%}
+#mapWrap #stRotRow>label{background:var(--color-surface);border:1px solid var(--color-outline);border-radius:var(--radius-sm);padding:.1em .4em}
+#mapWrap #stRotRow .sep{display:none}
+body.mapfull #mapTool{display:none}
+#pl,#plDel{display:none !important}
+/* 3.1.0: בלי סימון כחול בלחיצות על הממשק; טקסט ההלכות, התפילה ושדות הקלט נשארים ניתנים לסימון והעתקה */
+body{-webkit-user-select:none;user-select:none}
+input,textarea,#zecher,#kria .kria,#hal,#kotel,#tfText,#stUrl,.xline,#fb textarea{-webkit-user-select:text;user-select:text}

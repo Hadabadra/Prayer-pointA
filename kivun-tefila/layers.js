@@ -85,7 +85,10 @@
       const set = document.createElement("button"); set.type = "button"; set.textContent = "קבע מיקום כאן";
       set.onclick = () => { window.HLP = { name: e[0], at: [e[1], e[2]] }; setPos([e[1], e[2]], e[0] || KINDS[kind][1], null, false); scrollTo(0, 0) };
       const sh = document.createElement("button"); sh.type = "button"; sh.textContent = "הצג במפה";
-      sh.onclick = () => { window.HLP = { name: e[0], at: [e[1], e[2]] }; if (me) { map(); $("map").scrollIntoView({ block: "center" }) } };
+      sh.onclick = () => { window.HLP = { name: e[0], at: [e[1], e[2]] }; /* 3.1.0: בתצוגת "הרחובות סביבי" הנקודה לא נראית — עוברים לתצוגה שבה היא נכנסת */
+        const mm = $("mapMode"), want = me && e.d != null && e.d < 40 ? "near" : "far";
+        if (mm.value !== want) { mm.value = want; mm.dispatchEvent(new Event("change")) }
+        try { map() } catch (x) {} $("map").scrollIntoView({ block: "center" }) };
       li.append(b, sm, info, set, sh); res.appendChild(li);
     });
     res.hidden = !res.children.length;
