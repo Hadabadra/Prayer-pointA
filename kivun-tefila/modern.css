@@ -112,4 +112,14 @@ details.sd,details.box,.hsec,.dlitem,details.way{border-color:var(--color-outlin
 }
 #fly .setrow label{flex-wrap:wrap}
 /* מסך בינוני: הסרגל נשאר בשורה אחת — כפתורי ההלכה והכלים כסמלים (השם במעבר העכבר) */
-@media (max-width:80rem){#bar>button:not(#bOn):not(#bManT)>.bl{display:none}#bar>button:not(#bOn):not(#bManT):has(>.bl){min-width:2.35em;justify-content:center;padding-inline:.45em !important}}
+@media (max-width:96rem){#bar>button:not(#bOn):not(#bManT)>.bl{display:none}#bar>button:not(#bOn):not(#bManT):has(>.bl){min-width:2.35em;justify-content:center;padding-inline:.45em !important}}
+/* 3.2.0: מצב לילה — גובר על צבעי ערכת הנושא של אוצריא */
+:root.night{--color-bg:#14110d !important;--color-surface:#201c17 !important;--color-surface-container-high:#262019 !important;--color-surface-container-highest:#1d1914 !important;--color-on-surface:#efe7d8 !important;--color-on-surface-variant:#c3b8a3 !important;--color-on-surface-dim:#b9ae99 !important;--color-outline:#3d342a !important;--color-outline-strong:#52473a !important;--color-primary:#d8ab52 !important;--color-on-primary:#1a1610 !important;--color-error:#f2b8b5 !important;color-scheme:dark}
+:root.night #wall{opacity:.05}
+#bar>.bdate{font-size:.82em;color:var(--color-on-surface-dim);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;padding:0 .6em}
+#mNote{display:flex;gap:.6em;align-items:flex-start;background:var(--m-tonal);border-radius:var(--m-r-lg);padding:.55em .9em;margin:-.3em 0 .9em;font-size:.9em;line-height:1.6}
+#mNote[hidden]{display:none}
+#mNote>span{flex:1}#mNote>span button{margin-inline-start:.4em}
+#mNote>button{border:0;background:none;padding:.1em .4em;opacity:.7}
+.plx.sure{color:var(--color-error);opacity:1 !important;font-weight:700}
+@media (max-width:75rem){#bar>.bdate{font-size:0;padding:0}}

@@ -96,6 +96,52 @@
     eyes.classList.add("eyMain"); eyes.after(wrap); wrap.prepend(eyes);
   }
 
+
+  /* ---------- 5. מצב לילה (גובר על צבעי אוצריא; נשמר במחשב) ---------- */
+  const root = document.documentElement, NK = "kivun-night";
+  const nb = document.createElement("button"); nb.id = "bNight"; nb.type = "button"; nb.className = "ico";
+  const moon = svg('<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>'), sun = svg('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>');
+  function night(on, save) {
+    root.classList.toggle("night", on); nb.innerHTML = on ? sun : moon;
+    nb.title = on ? "מצב יום" : "מצב לילה"; nb.setAttribute("aria-label", nb.title); nb.setAttribute("aria-pressed", String(on));
+    if (save) { try { localStorage.setItem(NK, on ? "1" : "0") } catch (e) {} try { if (typeof O !== "undefined" && O) O.call("storage.set", { key: NK, value: on ? "1" : "0" }).catch(() => {}) } catch (e) {} }
+  }
+  nb.onclick = () => night(!root.classList.contains("night"), true);
+  let n0 = false; try { n0 = localStorage.getItem(NK) === "1" } catch (e) {}
+  night(n0, false);
+  try { if (typeof O !== "undefined" && O) O.call("storage.get", { key: NK }).then(r => { const v = r && (r.data !== undefined ? r.data : r); const x = v && v.value !== undefined ? v.value : v; if (x === "1" || x === "0") night(x === "1", false) }).catch(() => {}) } catch (e) {}
+  if ($("bLang")) $("bLang").before(nb); else bar.appendChild(nb);
+
+  /* ---------- 6. יום ותאריך עברי ברווח שבסרגל ---------- */
+  const gem = n => { const L = [[400,"ת"],[300,"ש"],[200,"ר"],[100,"ק"],[90,"צ"],[80,"פ"],[70,"ע"],[60,"ס"],[50,"נ"],[40,"מ"],[30,"ל"],[20,"כ"],[10,"י"],[9,"ט"],[8,"ח"],[7,"ז"],[6,"ו"],[5,"ה"],[4,"ד"],[3,"ג"],[2,"ב"],[1,"א"]]; let r = ""; n %= 1000;
+    for (const [v, c] of L) while (n >= v) { if (n === 15) { r += "טו"; n = 0; break } if (n === 16) { r += "טז"; n = 0; break } r += c; n -= v }
+    return r.length > 1 ? r.slice(0, -1) + "״" + r.slice(-1) : r + "׳" };
+  function today() {
+    const d = new Date();
+    try {
+      const day = new Intl.DateTimeFormat("he", { weekday: "long" }).format(d);
+      const pr = new Intl.DateTimeFormat("he-u-ca-hebrew", { day: "numeric", month: "long", year: "numeric" }).formatToParts(d);
+      const g = t => (pr.find(x => x.type === t) || {}).value || "";
+      const s = day + " · " + gem(+g("day")) + " " + g("month").replace(/^ב?/, "ב") + " " + gem(+g("year"));
+      spacer.textContent = s; spacer.title = d.toLocaleDateString("he-IL");
+    } catch (e) { spacer.textContent = "" }
+  }
+  spacer.classList.add("bdate"); today(); setInterval(today, 60000);
+
+  /* ---------- 7. הודעות ארוכות לא נכנסות לכרטיס החוגה ---------- */
+  const txt = $("txt"), main = document.querySelector("main");
+  if (txt && main) {
+    const note = document.createElement("div"); note.id = "mNote"; note.hidden = true; note.setAttribute("role", "status");
+    const nt = document.createElement("span"), nx = document.createElement("button"); nx.type = "button"; nx.textContent = "✕"; nx.setAttribute("aria-label", "סגור את ההודעה"); nx.onclick = () => note.hidden = true;
+    note.append(nt, nx); const pr = $("plRow"); (pr || main.firstChild).after(note);
+    let last = txt.textContent, busy = false;
+    new MutationObserver(() => {
+      if (busy) return; const t = txt.textContent.trim();
+      if (t.length > 90 || txt.querySelector("button")) {
+        busy = true; nt.replaceChildren(...[...txt.childNodes].map(n => n)); note.hidden = false; txt.textContent = last; busy = false;
+      } else last = txt.textContent;
+    }).observe(txt, { childList: true, characterData: true, subtree: true });
+  }
   /* ---------- 4. חלונית רחבה מונחת מעל הדף ---------- */
   document.querySelectorAll(".pop .wideb").forEach(b => {
     b.innerHTML = '<svg viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l-6 6 6 6M15 6l6 6-6 6"/></svg>';

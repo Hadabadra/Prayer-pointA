@@ -24,7 +24,8 @@
         const w = document.createElement("span"); w.className = "plc" + (i === cur ? " on" : "");
         const b = document.createElement("button"); b.type = "button"; b.textContent = p.n; b.title = "עבור אל " + p.n; b.onclick = () => go(i);
         const d = document.createElement("button"); d.type = "button"; d.className = "plx"; d.textContent = "🗑"; d.title = "מחק את " + p.n; d.setAttribute("aria-label", "מחק את " + p.n);
-        d.onclick = () => { if (!confirm("למחוק את \"" + p.n + "\" מהמקומות השמורים?")) return; places.splice(i, 1); plStore(); if (cur === i) cur = null; else if (cur > i) cur--; pl.value = ""; plFill() };
+        /* 3.2.0: confirm() תוקע את התוסף באוצריא — אישור בלחיצה שנייה */
+        d.onclick = () => { if (!d.classList.contains("sure")) { d.classList.add("sure"); d.textContent = "למחוק?"; setTimeout(() => { if (d.isConnected) { d.classList.remove("sure"); d.textContent = "🗑" } }, 3500); return } places.splice(i, 1); plStore(); if (cur === i) cur = null; else if (cur > i) cur--; pl.value = ""; plFill() };
         w.append(b, d); chips.appendChild(w);
       });
     }
