@@ -66,11 +66,31 @@
   }
 
   /* ---------- 3. סמלים בסרגל ---------- */
-  const ICON = { bSet: ["⚙", "הגדרות"], bDl: ["⬇", "הורדות"], bFb: ["ⓘ", "אודות והארות"], bPrint: ["🖨", "הדפסת דף כיוון למקום הנוכחי"] };
+  const ICON = { bSet: ["⚙", "הגדרות"], bDl: ["⬇", "הורדות"], bFb: ["ⓘ", "אודות והארות"], bPrint: ["", "הדפסת דף כיוון למקום הנוכחי"] };
   for (const id in ICON) { const b = $(id); if (!b) continue; b.textContent = ICON[id][0]; b.title = ICON[id][1]; b.setAttribute("aria-label", ICON[id][1]); b.classList.add("ico") }
+  /* מדפסת: סמל קווי ברור (האימוג'י 🖨 לא ברור בכל מחשב) */
+  if ($("bPrint")) $("bPrint").innerHTML = '<svg viewBox="0 0 24 24" width="1.2em" height="1.2em" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M7 9V3h10v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M7 14h10v7H7z"/><circle cx="17.5" cy="12" r=".6" fill="currentColor"/></svg>';
+
+  /* הלכות → "תלפיות" (תל שכל פיות פונים אליו, ברכות ל ע"א); מניינים → סמל בית כנסת */
+  if ($("bHal")) { $("bHal").textContent = "תלפיות"; $("bHal").title = "הלכות כיוון התפילה" }
+  if ($("bMin")) { const m = $("bMin"); m.classList.add("ico"); m.title = "מניינים קרובים (קו טלפוני)"; m.setAttribute("aria-label", "מניינים קרובים");
+    m.innerHTML = '<svg viewBox="0 0 24 24" width="1.25em" height="1.25em" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M3 21V10l9-6 9 6v11z"/><path d="M10 21v-4a2 2 0 0 1 4 0v4"/><path d="M12 7.2l1.6 2.8h-3.2zM12 12.4l-1.6-2.8h3.2z"/></svg>' }
+
+  /* ---------- 6. הביקורים בכותל — כפתור וחלונית משלהם ---------- */
+  const ks = $("kvSum");
+  if (ks && bar) {
+    const vb = ks.parentNode, em = vb.nextElementSibling;
+    const vp = document.createElement("div"); vp.id = "visits"; vp.className = "pop"; vp.hidden = true; ($("dlp") || set).after(vp);
+    vp.appendChild(vb); if (em && /עינים למקרא/.test(em.textContent)) vp.appendChild(em);
+    const bv = document.createElement("button"); bv.id = "bVis"; bv.type = "button"; bv.className = "sec ico"; bv.textContent = "🗓"; bv.title = "הביקורים שלי בכותל"; bv.setAttribute("aria-label", "הביקורים שלי בכותל"); bv.setAttribute("aria-expanded", "false");
+    $("bKria").after(bv);
+    if (typeof PANELS === "object") PANELS.visits = "bVis";
+    bv.onclick = () => pop("bVis", "visits", $("visits").hidden);
+    addEventListener("keydown", e => { if (e.key === "Escape" && !vp.hidden) pop("bVis", "visits", false) });
+  }
 
   /* ---------- 4. הרחבת חלוניות צד ---------- */
-  ["help", "set", "dlp", "fb", "hal", "fly", "minyan", "kotel"].forEach(id => {
+  ["help", "set", "dlp", "visits", "fb", "hal", "fly", "minyan", "kotel"].forEach(id => {
     const p = $(id); if (!p) return;
     const b = document.createElement("button"); b.type = "button"; b.className = "wideb"; b.textContent = "⇔"; b.title = "הרחב / צמצם את החלונית"; b.setAttribute("aria-label", "הרחב את החלונית");
     b.onclick = () => { const w = p.classList.toggle("wide"); b.setAttribute("aria-label", w ? "צמצם את החלונית" : "הרחב את החלונית"); document.body.classList.toggle("sidewide", w) };
@@ -82,7 +102,7 @@
   if (map) {
     const wrap = document.createElement("div"); wrap.id = "mapWrap"; map.before(wrap);
     const tool = document.createElement("div"); tool.id = "mapTool";
-    ["mapMode", "zIn", "zOut", "zReset", "zFull"].forEach(i => { const e = $(i); if (e) tool.appendChild(e) });
+    ["mapMode", "zIn", "zOut", "zReset", "zFull"].forEach(i => { const e = $(i); if (e) { tool.appendChild(e); if (e.__btn) tool.appendChild(e.__btn) } });
     wrap.append(tool, map); const rr = $("stRotRow"); if (rr) wrap.appendChild(rr);
   }
 })();

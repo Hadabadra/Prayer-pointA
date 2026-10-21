@@ -118,7 +118,7 @@ input[type=checkbox]:disabled{opacity:.45;cursor:default}
 .pcline{display:inline-flex;gap:.3em;align-items:center;margin-inline-start:.6em}
 #fly .setrow label>span{display:inline-flex;gap:.4em;align-items:center;white-space:nowrap}
 #bar button.ico{font-size:1.15em;min-width:2.2em;padding-inline:.4em}
-#dlp.pop{top:var(--bar-h,2.6rem);bottom:0;inset-inline-start:auto;inset-inline-end:0;margin:0;width:min(22rem,92vw);max-width:none;max-height:none;border-radius:0;border-width:0 1px 0 0;border-inline-start:1px solid var(--color-outline);z-index:4;overflow:auto}
+#dlp.pop,#visits.pop{top:var(--bar-h,2.6rem);bottom:0;inset-inline-start:auto;inset-inline-end:0;margin:0;width:min(22rem,92vw);max-width:none;max-height:none;border-radius:0;border-width:0 1px 0 0;border-inline-start:1px solid var(--color-outline);z-index:4;overflow:auto}
 .pop.wide{width:min(46rem,96vw) !important}
 @media (min-width:60rem){body.side.sidewide main{margin-inline-end:47rem}}
 .wideb{position:sticky;top:0;float:inline-end;z-index:2;padding:.1em .5em}
@@ -133,5 +133,5 @@ input[type=checkbox]:disabled{opacity:.45;cursor:default}
 body.mapfull #mapTool{display:none}
 #pl,#plDel{display:none !important}
 /* 3.1.0: בלי סימון כחול בלחיצות על הממשק; טקסט ההלכות, התפילה ושדות הקלט נשארים ניתנים לסימון והעתקה */
-body{-webkit-user-select:none;user-select:none}
-input,textarea,#zecher,#kria .kria,#hal,#kotel,#tfText,#stUrl,.xline,#fb textarea{-webkit-user-select:text;user-select:text}
+button,#bar,svg,#mapTool,#stRotRow,.sfx,.sfxb,label,summary,.plc,.chip{-webkit-user-select:none;user-select:none}
+#pl+.sfxb{display:none !important}

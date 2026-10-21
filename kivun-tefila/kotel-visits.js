@@ -23,7 +23,7 @@
    <div class="row" style="flex-wrap:wrap;gap:.3rem"><button id="kvCal" type="button">📅 שליחה ללוח השנה של אוצריא</button><button id="kvIcs" type="button">קובץ ליומן חיצוני (.ics)</button></div>
    <p id="kvMsg" style="font-size:.85rem;min-height:1.1em" aria-live="polite"></p>
    <details><summary style="font-size:.9rem">כל הביקורים</summary><ul id="kvList" style="margin:.2rem 0"></ul></details>
-   <p><small>התזכורת עוזרת לזכור את ענין הקריעה כשעברו שלושים יום. מתי חייבים ומי פטור (למשל תושבי ירושלים) — ראו בנקודות למעלה ובמקורות, ובשאלה מעשית יש לשאול רב.</small></p>`;
+   <p><small>התזכורת עוזרת לזכור את ענין הקריעה כשעברו שלושים יום. מתי חייבים ומי פטור (למשל תושבי ירושלים) — ראו בכפתור "זכר לחורבן", ובשאלה מעשית יש לשאול רב.</small></p>`;
   kr.appendChild(box);
   /* 3.0.0: מעבר לתוסף "עינים למקרא" — תמונות והסברים על הכותל ובית המקדש */
   const em = document.createElement("div"); em.style.cssText = "border-top:1px solid var(--color-outline);margin-top:.5rem;padding-top:.4rem";
