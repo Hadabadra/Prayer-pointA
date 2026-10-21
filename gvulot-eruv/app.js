@@ -17,6 +17,12 @@
   D.maps.forEach(m => byCity.get(m.city).maps.push(m));
   D.areas.forEach(a => byCity.get(a.city).areas.push(a));
   const areasOfMap = id => D.areas.filter(a => a.maps.includes(id));
+  const srcOf = (m, thumb) => m.user ? m.url : `maps/${m.id}${thumb ? '.t' : ''}.webp`;
+  // מפה כללית של העיר — לשכונה שאין לה מפה משלה (למשל פרדס כץ במפת בני ברק)
+  function generalMap(city) {
+    const ms = (byCity.get(city) || { maps: [] }).maps.filter(m => !m.user);
+    return ms.find(m => /כלל|השכונתיים|כל העיר|מפה כללית/.test(m.title)) || (ms.length === 1 ? ms[0] : null);
+  }
 
   // ── מצב ושמירה ──────────────────────────────────────────────
   const state = { view: 'home', city: null, q: '', favs: [], recent: [] };
@@ -84,23 +90,27 @@
 
   // ── כרטיס אחראי ─────────────────────────────────────────────
   function areaHTML(a, q, opts = {}) {
-    const mapsChips = opts.noMaps ? '' : a.maps.map(id => {
+    let mapsChips = opts.noMaps ? '' : a.maps.map(id => {
       const m = mapById.get(id);
       return `<button class="chip map" data-open-map="${id}" title="פתיחת המפה">${ICON.map}${esc(m.title)}</button>`;
     }).join('');
+    const own = (byCity.get(a.city) || { maps: [] }).maps.filter(m => m.user && m.area && norm(a.area).includes(norm(m.area)));
+    if (!opts.noMaps) mapsChips += own.map(m => `<button class="chip map" data-open-map="${m.id}">${ICON.map}${esc(m.title)} (שלי)</button>`).join('');
+    const gm = !opts.noMaps && !a.maps.length && !own.length && generalMap(a.city);
+    if (gm) mapsChips += `<button class="chip map" data-open-map="${gm.id}" title="השכונה מסומנת במפה הכללית של העיר">${ICON.map}מפה כללית</button>`;
     const phones = a.phones.map(p => `<button class="chip" data-phone="${esc(p)}" title="העתקת המספר">${ICON.phone}${esc(fmtPhone(p))}</button>`).join('');
     return `<div class="area${opts.hl ? ' hl' : ''}">
       <span class="area-num">${esc(a.n || '•')}</span>
       <div class="area-body">
         <div class="area-title">${opts.withCity ? esc(a.city) + ' · ' : ''}${hl(a.area || 'כל השכונה', q)}</div>
         <div class="area-names">${a.names.length ? hl(a.names.join(' · '), q) : 'שם האחראי לא צוין'}</div>
-        <div class="area-actions">${phones}${mapsChips}${opts.withCity && !a.maps.length && byCity.get(a.city).maps.length ? `<button class="chip map" data-city="${esc(a.city)}">${ICON.map}מפות ${esc(a.city)}</button>` : ''}</div>
+        <div class="area-actions">${phones}${mapsChips}</div>
       </div></div>`;
   }
   function mapCardHTML(m) {
     return `<button class="map-card" data-open-map="${m.id}">
-      <img src="maps/${m.id}.t.webp" alt="" loading="lazy">
-      <div class="meta"><strong>${esc(m.title)}</strong><span>${areasOfMap(m.id).length || ''}${areasOfMap(m.id).length ? ' אחראים' : ''}</span></div>
+      <img src="${esc(srcOf(m, true))}" alt="" loading="lazy">
+      <div class="meta"><strong>${esc(m.title)}</strong>${m.user ? '<span class="own">שלי</span>' : ''}<span>${areasOfMap(m.id).length || ''}${areasOfMap(m.id).length ? ' אחראים' : ''}</span></div>
     </button>`;
   }
 
@@ -131,7 +141,7 @@
   function homeView() {
     const card = c => {
       const n = byCity.get(c); const m = n.maps[0];
-      const thumb = m ? `<div class="city-thumb" style="background-image:url('maps/${m.id}.t.webp')"></div>`
+      const thumb = m ? `<div class="city-thumb" style="background-image:url('${esc(srcOf(m, true))}')"></div>`
         : `<div class="city-thumb empty">${ICON.phone}</div>`;
       const fav = state.favs.includes(c) ? `<span class="fav-pin">${ICON.star}</span>` : '';
       return `<button class="city-card" data-city="${esc(c)}">${fav}${thumb}
@@ -141,7 +151,8 @@
     const recent = state.recent.filter(c => byCity.has(c)).slice(0, 4);
     return `<div class="wrap">
       <div class="hero"><div class="grow"><h2>גבולות העירובים השכונתיים</h2>
-      <p>${D.maps.length} מפות ו־${D.areas.length} אחראים ב־${D.cities.length} ערים. בחרו עיר או חפשו שכונה, רחוב או שם רב.</p></div></div>
+      <p>${D.maps.length} מפות ו־${D.areas.length} אחראים ב־${D.cities.length} ערים. בחרו עיר או חפשו שכונה, רחוב או שם רב.</p></div>
+      <button class="btn tonal" data-add-map="">${ICON.map} הוספת מפה משלי</button></div>
       ${recent.length ? `<div class="section-title">נצפו לאחרונה</div><div class="city-grid">${recent.map(card).join('')}</div>` : ''}
       <div class="section-title">כל הערים</div>
       <div class="city-grid">${D.cities.map(card).join('')}</div>
@@ -154,6 +165,7 @@
     return `<div class="wrap">
       <div class="hero"><div class="grow"><h2>${esc(c)}</h2>
         <p>${n.maps.length ? n.maps.length + ' מפות עירוב' : 'אין עדיין מפה לעיר זו, אך יש אחראים מקומיים'}${n.areas.length ? ' · ' + n.areas.length + ' שכונות עם אחראי' : ''}</p></div>
+        <button class="btn text" data-add-map="${esc(c)}">${ICON.map} הוספת מפה משלי</button>
         <button class="btn ${fav ? 'tonal' : 'text'}" data-fav="${esc(c)}">${ICON.star} ${fav ? 'במועדפים' : 'הוספה למועדפים'}</button>
       </div>
       ${n.maps.length ? `<div class="section-title">מפות</div><div class="map-grid">${n.maps.map(mapCardHTML).join('')}</div>` : ''}
@@ -178,7 +190,7 @@
       <p>${cities.length} ערים · ${maps.length} מפות · ${areas.length} אחראים</p></div></div>
       ${cities.length ? `<div class="section-title">ערים</div><div class="city-grid">${cities.map(c => {
         const n = byCity.get(c);
-        return `<button class="city-card" data-city="${esc(c)}">${n.maps[0] ? `<div class="city-thumb" style="background-image:url('maps/${n.maps[0].id}.t.webp')"></div>` : ''}
+        return `<button class="city-card" data-city="${esc(c)}">${n.maps[0] ? `<div class="city-thumb" style="background-image:url('${esc(srcOf(n.maps[0], true))}')"></div>` : ''}
           <div class="city-meta"><strong>${hl(c, qh)}</strong><span>${n.maps.length} מפות · ${n.areas.length} שכונות</span></div></button>`;
       }).join('')}</div>` : ''}
       ${maps.length ? `<div class="section-title">מפות</div><div class="map-grid">${maps.map(m => mapCardHTML(m).replace(`<strong>${esc(m.title)}</strong>`, `<strong>${hl(m.city + ' · ' + m.title, qh)}</strong>`)).join('')}</div>` : ''}
@@ -232,17 +244,18 @@
     const m = mapById.get(id); if (!m) return;
     V.m = m; V.r = 0; V.w = m.w; V.h = m.h;
     $('#vTitle').textContent = m.city + ' · ' + m.title;
-    $('#vSub').textContent = 'מוקד העירוב · להתמצאות בלבד';
+    $('#vSub').textContent = m.user ? 'מפה שהוספת · להתמצאות בלבד' : 'מוקד העירוב · להתמצאות בלבד';
     const ar = areasOfMap(id);
     const side = $('#vSidePanel');
     side.innerHTML = `<h3>אחראים במפה זו</h3>` +
       (ar.length ? ar.map(a => areaHTML(a, '', { noMaps: true })).join('') : `<p class="area-names">לא שויכו אחראים למפה זו. בדף העיר ${esc(m.city)} יש רשימה מלאה.</p>`) +
-      `<button class="btn text" data-url="${esc(m.pageUrl)}">פתיחת הדף באתר המוקד</button>`;
-    $('#viewer').classList.toggle('side-off', !ar.length || innerWidth < 760);
+      (m.user ? `<button class="btn text" data-del-map="${m.id}">הסרת המפה שהוספתי</button>` : `<button class="btn text" data-url="${esc(m.pageUrl)}">פתיחת הדף באתר המוקד</button>`);
+    $('#viewer').classList.toggle('side-off', (!ar.length && !m.user) || innerWidth < 760);
     $('#vSide').classList.toggle('on', !$('#viewer').classList.contains('side-off'));
     $('#viewer').hidden = false;
-    img.style.transform = ''; img.src = `maps/${id}.webp`; img.width = m.w; img.height = m.h;
-    requestAnimationFrame(() => fit(false));
+    img.style.transform = ''; img.onload = () => { if (!V.w || m.user) { V.w = m.w = img.naturalWidth; V.h = m.h = img.naturalHeight; } fit(false); };
+    img.removeAttribute('width'); img.removeAttribute('height');
+    img.src = srcOf(m); if (m.w) { img.width = m.w; img.height = m.h; requestAnimationFrame(() => fit(false)); }
     const hint = $('#vHint'); hint.classList.remove('gone'); setTimeout(() => hint.classList.add('gone'), 3500);
     $('#vClose').focus();
   }
@@ -334,13 +347,72 @@
     const m = V.m, ps = $('#printSheet');
     ps.innerHTML = `<h1>גבולות עירוב · ${esc(m.city)} · ${esc(m.title)}</h1>
       <p>מקור: מוקד העירוב (${esc(D.source.phone)}). להתמצאות בלבד — יש לוודא מול האחראי המקומי לפני שבת.</p>
-      <img src="maps/${m.id}.webp" alt="">`;
+      <img src="${esc(srcOf(m))}" alt="">`;
     const go = () => {
       document.body.classList.add('printing');
       const done = () => { document.body.classList.remove('printing'); ps.innerHTML = ''; removeEventListener('afterprint', done); };
       addEventListener('afterprint', done); window.print(); setTimeout(done, 60000);
     };
     const pi = ps.querySelector('img'); pi.complete ? go() : (pi.onload = go);
+  }
+
+  // ── מפות שהמשתמש מוסיף (למשל מפה מקומית של פרדס כץ) ─────────
+  // נשמרים רק ה-token של הקובץ ופרטי התיאור, ב-storage 'userMaps'. ה-URL נבנה מחדש בכל הפעלה.
+  async function loadOwnMaps() {
+    const r = await call('storage.get', { key: 'userMaps' });
+    const list = r && r.success && Array.isArray(r.data) ? r.data : [];
+    for (const u of list) {
+      const f = await call('fs.resolveFileUrl', { token: u.token });
+      if (!f.success) continue;
+      attachOwn({ ...u, url: f.data.url });
+    }
+  }
+  function attachOwn(u) {
+    const m = { id: u.id, city: u.city, title: u.title, area: u.area || '', user: true, url: u.url, token: u.token, w: 0, h: 0 };
+    if (!byCity.has(m.city)) { byCity.set(m.city, { maps: [], areas: [] }); D.cities.push(m.city); D.cities.sort((a, b) => a.localeCompare(b, 'he')); }
+    byCity.get(m.city).maps.push(m); mapById.set(m.id, m); D.maps.push(m);
+  }
+  const ownList = () => D.maps.filter(m => m.user).map(({ id, city, title, area, token }) => ({ id, city, title, area, token }));
+  async function addOwnMap(city) {
+    if (!hasOtz) { toast('הוספת מפה זמינה בתוך אוצריא'); return; }
+    const f = await call('fs.pickUserFile', { title: 'בחירת תמונת מפת עירוב', extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp'] });
+    if (!f.success) { toast('אין הרשאה לבחירת קובץ'); return; }
+    if (f.data.cancelled) return;
+    const base = (f.data.name || 'מפה').replace(/\.[^.]+$/, '');
+    const ans = await ownMapDialog(city, base);
+    if (!ans) return;
+    const { title, area } = ans; city = ans.city;
+    attachOwn({ id: 'u-' + Date.now().toString(36), city, title, area, token: f.data.token, url: f.data.url });
+    await call('storage.set', { key: 'userMaps', value: ownList() });
+    render(); toast('המפה נוספה ל' + city);
+  }
+  // דיאלוג בתוך הדף (prompt/confirm חוסמים באוצריא)
+  function ownMapDialog(city, title) {
+    return new Promise(res => {
+      const sc = document.createElement('div'); sc.className = 'sheet-scrim';
+      sc.innerHTML = `<form class="sheet" role="dialog"><h2>הוספת מפה משלי</h2>
+        <p>המפה תישמר אצלך בלבד, ותופיע בעיר ובשכונה שתבחרי.</p>
+        <label class="field"><span>עיר</span><input name="city" list="dlCities" required value="${esc(city || '')}"></label>
+        <datalist id="dlCities">${D.cities.map(c => `<option value="${esc(c)}">`).join('')}</datalist>
+        <label class="field"><span>שם המפה</span><input name="title" required value="${esc(title)}"></label>
+        <label class="field"><span>שכונה (לקישור לאחראים, לא חובה)</span><input name="area" placeholder="למשל: פרדס כץ"></label>
+        <div class="sheet-actions"><button type="button" class="btn text" data-x>ביטול</button><button class="btn filled">הוספה</button></div></form>`;
+      document.body.appendChild(sc);
+      const f = sc.querySelector('form'); (city ? f.title : f.city).focus();
+      const done = v => { sc.remove(); res(v); };
+      sc.querySelector('[data-x]').onclick = () => done(null);
+      sc.addEventListener('keydown', e => { if (e.key === 'Escape') { e.stopPropagation(); done(null); } });
+      f.onsubmit = e => { e.preventDefault(); done({ city: f.city.value.trim(), title: f.title.value.trim(), area: f.area.value.trim() }); };
+    });
+  }
+  async function delOwnMap(id) {
+    const m = mapById.get(id); if (!m) return;
+    const ok = await call('ui.showConfirm', { title: 'הסרת מפה', content: 'להסיר את "' + m.title + '" מהתוסף? הקובץ עצמו לא יימחק.' });
+    if (ok.success && ok.data && !ok.data.confirmed) return;
+    D.maps.splice(D.maps.indexOf(m), 1); mapById.delete(id);
+    const c = byCity.get(m.city); c.maps.splice(c.maps.indexOf(m), 1);
+    await call('storage.set', { key: 'userMaps', value: ownList() });
+    closeMap(); render(); toast('המפה הוסרה');
   }
 
   // ── אודות ───────────────────────────────────────────────────
@@ -361,9 +433,11 @@
 
   // ── אירועים כלליים ─────────────────────────────────────────
   document.addEventListener('click', e => {
-    const t = e.target.closest('[data-open-map],[data-city],[data-phone],[data-fav],[data-url]');
+    const t = e.target.closest('[data-open-map],[data-city],[data-phone],[data-fav],[data-url],[data-add-map],[data-del-map]');
     if (!t) return;
-    if (t.dataset.openMap) openMap(t.dataset.openMap);
+    if (t.dataset.addMap !== undefined) addOwnMap(t.dataset.addMap);
+    else if (t.dataset.delMap) delOwnMap(t.dataset.delMap);
+    else if (t.dataset.openMap) openMap(t.dataset.openMap);
     else if (t.dataset.fav) toggleFav(t.dataset.fav);
     else if (t.dataset.city) goCity(t.dataset.city);
     else if (t.dataset.phone) copyPhone(t.dataset.phone);
@@ -398,6 +472,7 @@
     if (payload && payload.theme) applyTheme(payload.theme);
     else { const r = await call('app.getTheme'); if (r.success) applyTheme(r.data); }
     await loadPrefs();
+    await loadOwnMaps();
     render();
     $('#q').focus();
   }

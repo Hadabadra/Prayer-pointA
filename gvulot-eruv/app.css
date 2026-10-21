@@ -332,6 +332,19 @@ mark { background: var(--color-primary-container); color: var(--color-on-primary
 }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
+/* ── שדות בדיאלוג ─────────────────────────────────────────────── */
+.field { display: flex; flex-direction: column; gap: .3em; margin: .7em 0; }
+.field span { font-size: .82em; color: var(--color-on-surface-variant); }
+.field input {
+  padding: .65em .9em; border: 1px solid var(--color-outline); border-radius: var(--radius-sm);
+  background: var(--color-surface); color: var(--color-on-surface);
+}
+.field input:focus { outline: 0; border-color: var(--color-primary); box-shadow: 0 0 0 1px var(--color-primary); }
+.own {
+  padding: .05em .6em; border-radius: var(--radius-pill); font-size: .75em;
+  background: var(--color-tertiary-container); color: var(--color-on-tertiary-container);
+}
+
 /* ── תפריט ייצוא ──────────────────────────────────────────────── */
 .exp-wrap { position: relative; }
 .menu {
