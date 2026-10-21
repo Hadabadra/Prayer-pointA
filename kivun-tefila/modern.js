@@ -90,8 +90,8 @@
       return b;
     };
     wrap.append(
-      mk("eyMik", "בית המקדש", "beit-hamikdash", "פתח בעינים למקרא את העמוד של בית המקדש"),
-      mk("eyArch", "ארכיאולוגיה — הכותל הישן", "archaeology-kotel", "פתח בעינים למקרא את הארכיאולוגיה, עם תמונת הכותל הישן")
+      mk("eyMik", "בית המקדש", "temple-guide", "פתח בעינים למקרא את העמוד של בית המקדש"),
+      mk("eyArch", "ארכיאולוגיה — הכותל הישן", "kotel-archaeology", "פתח בעינים למקרא את הארכיאולוגיה, עם תמונת הכותל הישן")
     );
     eyes.classList.add("eyMain"); eyes.after(wrap); wrap.prepend(eyes);
   }

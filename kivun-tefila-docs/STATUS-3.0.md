@@ -67,7 +67,7 @@
   כשחלונית צד פתוחה. חלונית רחבה (.pop.wide) מונחת מעל הדף ואינה מזיזה את main.
 - כפתורי המפה אטומים (רקע surface + צל); .sfxp (ה-select המוסתר של selfix) מוחרג מהכללים.
 - קריעה: body.printkria מדפיס רק את #kria עם רקע הכותל (print-color-adjust:exact) ומראי המקומות כטקסט.
-- עינים למקרא: plugin.openOther עם param { type:"open-section", section:"beit-hamikdash" | "archaeology-kotel", from } —
+- עינים למקרא: plugin.openOther עם param { type:"open-section", section:"temple-guide" | "kotel-archaeology", from } —
   צריך תמיכה בצד עינים למקרא (Hadabadra/madaei-hatanach#173); בכישלון נפתח דף הבית.
 - פורום (#86): datalist #nsList לכבישים/נהרות (כבישי ישראל המובנים + קובץ השמות + שמות הנהרות בעברית). בחירת "כביש N — …" מחפשת לפי המספר.
   פתוח מאותה הארה: נחלים בארץ (רק הירדן בקובץ) — צריך נתוני נחלים מ-OSM.
@@ -76,3 +76,4 @@
   מחיקת מקום שמור תקעה את התוסף — confirm() חוסם באוצריא; עכשיו לחיצה שנייה על הפח ("למחוק?"). עדיין יש confirm ב-pcsend.js (שליחת מיקוד);
   הודעות ארוכות ב-#txt (מעל 90 תווים או עם כפתור) עוברות לפס #mNote מתחת לשורת החיפוש, ו-#txt חוזר לטקסט הכיוון האחרון.
 - פורסם: מוזג לענף כיוון-תפילה; החנות מתעדכנת מ-kivun-tefila-store.yml ב-Hadabadra/madaei-hatanach (כל 3 שעות).
+- 3.2.1: מזהי החלקים תוקנו לפי OPEN_SECTIONS בעינים למקרא 5.2.0 (shell/bridge.js, #173 סגור): temple-guide, kotel-archaeology, archaeology, places, או catId ישיר; term אופציונלי.
