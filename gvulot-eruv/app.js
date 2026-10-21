@@ -415,6 +415,23 @@
     closeMap(); render(); toast('המפה הוסרה');
   }
 
+  // ── יומן שינויים ותגובות ─────────────────────────────────────
+  const REPO = 'https://github.com/Hadabadra/Prayer-pointA';
+  const CHANGELOG = [
+    ['0.2.1', ['שליחת תגובה מתוך התוסף דרך אוצריא', 'יומן שינויים וקישור לתכנון המתעדכן בגיטהאב']],
+    ['0.2.0', ['כפתור "מפה כללית" לשכונות בלי מפה משלהן (פרדס כץ, קרית הרצוג ועוד)', 'הוספת מפה משלי מהמחשב, עם קישור לשכונה ולאחראים']],
+    ['0.1.0', ['66 מפות ו־206 אחראים מאת מוקד העירוב', 'חיפוש, מציג עם הגדלה וסיבוב, ייצוא לתמונה ולהדפסה, מועדפים']]
+  ];
+  async function sendFeedback() {
+    const t = ($('#fbText').value || '').trim();
+    if (!t) { $('#fbText').focus(); return; }
+    const r = await call('feedback.report', { details: '[גבולות עירוב ' + VERSION + '] ' + t, reportType: 'feedback' });
+    if (r.success && r.data === 'cancelled') return;
+    if (r.success) { $('#fbText').value = ''; toast(r.data === 'queued' ? 'התגובה תישלח כשיהיה חיבור' : 'התגובה נשלחה, תודה!'); }
+    else toast('השליחה זמינה בתוך אוצריא');
+  }
+  const VERSION = '0.2.1';
+
   // ── אודות ───────────────────────────────────────────────────
   function openInfo() {
     $('#infoBody').innerHTML = `
@@ -427,7 +444,15 @@
         <div class="level"><span class="dot">4</span><div><b>עדכונים מהמוקד</b>משיכת שינויים ממוקד העירוב כשהאינטרנט זמין.</div></div>
       </div>
       <p>קיצורי מקשים: <b>/</b> חיפוש · במציג: <b>+ / -</b> הגדלה, <b>0</b> התאמה, <b>R</b> סיבוב, <b>Esc</b> סגירה.</p>
-      <p>הנתונים עודכנו ב־${esc(D.built)}.</p>`;
+      <p>הנתונים עודכנו ב־${esc(D.built)}.</p>
+      <h3 class="info-h">שליחת תגובה</h3>
+      <textarea id="fbText" rows="3" placeholder="הערה, תיקון או שכונה חסרה — נשלח דרך אוצריא למפתחת"></textarea>
+      <div class="sheet-actions"><button class="btn filled" id="fbSend">שליחה</button></div>
+      <h3 class="info-h">יומן שינויים</h3>
+      ${CHANGELOG.map(c => `<div class="cl"><b>${esc(c[0])}</b><ul>${c[1].map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>`).join('')}
+      <p><button class="btn text" data-url="${REPO}/blob/%D7%92%D7%91%D7%95%D7%9C%D7%95%D7%AA-%D7%A2%D7%99%D7%A8%D7%95%D7%91/gvulot-eruv-docs/PLAN.md">התכנון המלא בגיטהאב (מתעדכן)</button>
+      <button class="btn text" data-url="${REPO}/releases">כל הגרסאות</button></p>`;
+    $('#fbSend').onclick = sendFeedback;
     $('#infoScrim').hidden = false; $('#infoClose').focus();
   }
 

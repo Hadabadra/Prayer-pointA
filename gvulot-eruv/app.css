@@ -332,6 +332,15 @@ mark { background: var(--color-primary-container); color: var(--color-on-primary
 }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
+/* ── אודות: תגובה ויומן ───────────────────────────────────────── */
+.info-h { margin: 1.2em 0 .4em; font-size: 1em; font-weight: 600; }
+#fbText {
+  width: 100%; padding: .6em .8em; resize: vertical; font: inherit;
+  border: 1px solid var(--color-outline); border-radius: var(--radius-sm);
+  background: var(--color-surface); color: var(--color-on-surface);
+}
+.cl ul { margin: .2em 0 .6em; padding-inline-start: 1.2em; }
+
 /* ── שדות בדיאלוג ─────────────────────────────────────────────── */
 .field { display: flex; flex-direction: column; gap: .3em; margin: .7em 0; }
 .field span { font-size: .82em; color: var(--color-on-surface-variant); }
