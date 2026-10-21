@@ -1,0 +1,115 @@
+/* כיוון תפילה 3.2.0 — שכבת עיצוב מודרנית (נטענת אחרונה). צבעים רק כטוקנים ב-:root, מידות ב-em/rem. */
+:root{
+  --color-bg:#f7f4ee;--color-surface:#ffffff;--color-outline:#e3dccd;--color-outline-strong:#cfc5ae;
+  --color-primary:#8f6a1a;--color-on-primary:#ffffff;
+  --m-tonal:color-mix(in srgb,var(--color-primary) 11%,transparent);
+  --m-hover:color-mix(in srgb,var(--color-on-surface) 6%,transparent);
+  --m-shadow:0 .06em .2em color-mix(in srgb,var(--color-on-surface) 8%,transparent),0 .5em 1.6em color-mix(in srgb,var(--color-on-surface) 6%,transparent);
+  --m-shadow-pop:0 .3em 1.2em color-mix(in srgb,var(--color-on-surface) 16%,transparent);
+  --m-r:.7em;--m-r-lg:1.1em;--radius-sm:.5em;--radius-md:.75em;--radius-lg:1.1em;--radius-pill:62em
+}
+:root[data-theme="dark"]{--color-bg:#16130f;--color-surface:#211d18;--color-outline:#3a3229;--color-outline-strong:#4d4336;--color-primary:#d8ab52;--color-on-primary:#1a1610}
+body{background:var(--color-bg)}
+#wall{opacity:.06}
+
+/* ---------- סרגל עליון ---------- */
+#bar{background:var(--color-surface);border-bottom:1px solid var(--color-outline);padding:.35em .9em;gap:.15em;min-height:3.1em;box-shadow:none}
+#bar .ttl{display:inline-flex;align-items:center;gap:.4em;font-size:1.05em !important;font-weight:700;color:var(--color-on-surface);margin-inline-end:.7em}
+#bar .ttl .logo{color:var(--color-primary)}
+#bar>button,#bar>.sfxb{display:inline-flex;align-items:center;gap:.35em;background:transparent;border:0;border-radius:var(--m-r);padding:.4em .6em !important;font-size:.86em !important;font-weight:500;color:var(--color-on-surface);min-height:2.35em !important;transition:background-color .15s,color .15s}
+#bar>button:hover:not(.dis){background:var(--m-hover);opacity:1}
+#bar>button.on{background:var(--m-tonal);color:var(--color-primary);border:0}
+#bar>button.ico{min-width:2.35em;justify-content:center;padding-inline:.45em !important}
+#bar>button .bi{flex:none;opacity:.85}
+#bar>button.on .bi{opacity:1}
+#bar>#bOn{background:var(--color-primary);color:var(--color-on-primary);padding-inline:.8em !important;font-weight:600}
+#bar>#bOn:hover{background:color-mix(in srgb,var(--color-primary) 88%,var(--color-on-surface))}
+#bar>#bGps.dis{opacity:.4}
+#bar>#methBtn{border:1px solid var(--color-outline);font-size:.8em !important}
+#bar>#bNoComp{color:var(--color-error);border:1px solid color-mix(in srgb,var(--color-error) 45%,transparent);min-width:2.35em;justify-content:center}
+#bar .bsep{flex:0 0 1px;align-self:center;height:1.4em;background:var(--color-outline);margin:0 .35em}
+#bar .bspc{flex:1 1 0}
+#bar>[hidden],#bar>.sfxp{display:none !important}
+@media (min-width:40.01rem){#bar>#bMore{display:none !important}}
+#bar>#bLang{font-weight:700;min-width:2.35em;justify-content:center}
+
+/* ---------- הדף ---------- */
+main{max-width:84rem;padding:.9em 1.2em 1.2em;container-type:inline-size}
+#loc{font-size:.88em;margin:.1em .2em .5em;color:var(--color-on-surface-dim)}
+#plRow{background:var(--color-surface);border-radius:var(--m-r-lg);box-shadow:var(--m-shadow);padding:.45em .55em;margin:0 0 .9em;gap:.4em}
+#plRow .sep{display:none}
+button,select,input,.sfxb{border-radius:var(--m-r)}
+input:not([type=checkbox]):not([type=range]),select,.sfxb{border:1px solid var(--color-outline);background:var(--color-surface)}
+input:not([type=checkbox]):not([type=range]):focus{border-color:var(--color-primary);outline:0;box-shadow:0 0 0 .2em var(--m-tonal)}
+#plRow .sfxb,#plRow input,#plRow button{min-height:2.4em}
+#stGo,#nsGo{padding-inline:1.2em}
+
+/* מפה גדולה, חוגה צרה */
+.pair{grid-template-columns:minmax(14rem,18rem) minmax(0,calc((100vh - var(--bar-h,3rem) - 10.5rem) * 1.25 + 1em));justify-content:center;gap:1em;align-items:stretch}
+.pair>div{background:var(--color-surface);border:0;border-radius:var(--m-r-lg);box-shadow:var(--m-shadow);padding:.9em 1em}
+.pair>div:first-child{display:flex;flex-direction:column;justify-content:center}
+.pair>div:nth-child(2){padding:.5em}
+#dial{max-width:12rem;margin:.2em auto .1em}
+#big{font-size:2.6em;font-weight:300;letter-spacing:-.02em;line-height:1.1;margin:.1em 0 0}
+#txt{font-size:.92em;color:var(--color-on-surface-dim);margin:.3em 0 .8em}
+#rot{accent-color:var(--color-primary)}
+.pair>div:first-child>.row{margin-top:auto;font-size:.85em;color:var(--color-on-surface-dim)}
+#mapWrap{border-radius:calc(var(--m-r-lg) - .4em);overflow:hidden}
+#map{max-height:none !important;border:0 !important;border-radius:0}
+/* כפתורי המפה: אטומים, עם צל — קריאים על כל רקע */
+#mapTool,#mapWrap #stRotRow{gap:.3em}
+#mapTool>*:not(.sfxp),#mapWrap #stRotRow>button,#mapWrap #stRotRow>label,#mapTool .sfxb,#mapFullBar>*:not(.sfxp),body.mapfull #stRotRow>*{background:var(--color-surface) !important;border:1px solid var(--color-outline) !important;box-shadow:var(--m-shadow-pop);font-size:.84em;font-weight:500;color:var(--color-on-surface);min-height:2.2em;opacity:1 !important}
+#mapTool>button:hover,#mapWrap #stRotRow>button:hover{background:color-mix(in srgb,var(--color-surface) 90%,var(--color-primary)) !important}
+#mapTool #zIn,#mapTool #zOut{min-width:2.2em;font-size:1em;padding:0}
+#mapWrap #stRotRow{bottom:.6em}
+#mapTool{top:.6em;inset-inline-end:.6em}
+#stPanel{background:var(--color-surface);border-radius:var(--m-r-lg);box-shadow:var(--m-shadow);padding:.6em 1em;margin-top:1em}
+#stTxt{font-weight:600}
+.foot{text-align:center;opacity:.85;margin-top:.8em}
+.nocomp{border:0;background:var(--m-tonal);border-radius:var(--m-r)}
+#news.newsbox{border:0;border-inline-start:.25em solid var(--color-primary);box-shadow:var(--m-shadow);border-radius:var(--m-r-lg)}
+
+/* צר (למשל כשחלונית צד פתוחה): חוגה מעל, מפה לכל הרוחב */
+@container (max-width:46rem){
+  .pair{grid-template-columns:minmax(0,1fr)}
+  .pair>div:first-child{flex-direction:row;flex-wrap:wrap;align-items:center;gap:0 1em}
+  #dial{max-width:7rem;margin:0}
+  .pair>div:first-child>.row{flex-basis:100%}
+  .pair{grid-template-columns:minmax(0,1fr)}
+}
+
+/* ---------- חלוניות ---------- */
+.pop{border:0;border-radius:var(--m-r-lg);box-shadow:var(--m-shadow-pop);padding:.8em 1.2em}
+#help.pop,#set.pop,#fb.pop,#hal.pop,#fly.pop,#minyan.pop,#kotel.pop,#dlp.pop,#visits.pop{border-radius:0;border:0;border-inline-start:1px solid var(--color-outline);box-shadow:var(--m-shadow-pop);width:min(24rem,94vw)}
+@media (min-width:60rem){body.side main{margin-inline-end:24.5rem}}
+/* הרחבה: החלונית מונחת מעל הדף; הדף לא מתכווץ ולא נשבר */
+.pop.wide{width:min(48rem,96vw) !important;z-index:20 !important}
+@media (min-width:60rem){body.side.sidewide main{margin-inline-end:24.5rem}}
+.wideb{border:0;background:var(--m-hover);border-radius:var(--m-r);padding:.35em .55em;margin-inline-start:.4em}
+.pop h2,.pop h3{color:var(--color-on-surface)}
+details.sd,details.box,.hsec,.dlitem,details.way{border-color:var(--color-outline);border-radius:var(--m-r)}
+#nsRes li{border:0;box-shadow:var(--m-shadow);border-radius:var(--m-r-lg)}
+.dd{border-radius:var(--m-r);box-shadow:var(--m-shadow-pop);border-color:var(--color-outline)}
+#zecher.pop,#kria.pop{border-radius:var(--m-r-lg)}
+#zecher .zx,#kria .zx{border:0;background:var(--m-hover);border-radius:var(--radius-pill);width:2.2em;height:2.2em;padding:0}
+#kria .kria{border:0;background:color-mix(in srgb,var(--color-surface) 82%,transparent);border-radius:var(--m-r-lg);box-shadow:var(--m-shadow)}
+.kprt{display:flex;gap:.4em;justify-content:center;margin:.6em 0}
+.kprt button{display:inline-flex;align-items:center;gap:.4em}
+.eyes{display:flex;flex-wrap:wrap;gap:.35em;margin:.3em 0}
+.eyes button{border-radius:var(--radius-pill)}
+#splash #spGo{box-shadow:var(--m-shadow-pop)}
+
+/* ---------- הדפסת נוסח הקריעה עם הרקע ---------- */
+@media print{
+  body.printkria>*:not(#bar){display:none !important}
+  body.printkria #bar{display:block !important;position:static;background:none;border:0;padding:0;min-height:0;box-shadow:none;backdrop-filter:none}
+  body.printkria #bar>*:not(#kria){display:none !important}
+  body.printkria #kria{display:block !important;position:relative;inset:auto;box-shadow:none;border:0;min-height:96vh;overflow:visible;padding:2em 1.5em;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body.printkria #kria .kwall{opacity:.2}
+  body.printkria #kria .zx,body.printkria #kria .kprt,body.printkria #kria .kshort,body.printkria #kria .kvsrc{display:none !important}
+  body.printkria #kria .kria::after{content:"ישעיהו סד, ט–י · מועד קטן כו ע\"א · שולחן ערוך אורח חיים סימן תקסא";display:block;margin-top:1em;font-size:.85em;opacity:.75}
+  body.printkria #kria .kria{background:none;box-shadow:none}
+}
+#fly .setrow label{flex-wrap:wrap}
+/* מסך בינוני: הסרגל נשאר בשורה אחת — כפתורי ההלכה והכלים כסמלים (השם במעבר העכבר) */
+@media (max-width:80rem){#bar>button:not(#bOn):not(#bManT)>.bl{display:none}#bar>button:not(#bOn):not(#bManT):has(>.bl){min-width:2.35em;justify-content:center;padding-inline:.45em !important}}

@@ -89,7 +89,22 @@
     say("nsMsg", s ? "" : (N ? "" : "קובץ השמות לא הורד: נהרות וכבישים בצפון אמריקה דורשים הורדה בהגדרות. כבישים במדינות אחרות יחפשו דרך האינטרנט."));
   }
   async function rdBox() { const k = $("nsKind").value, c = $("nsCountry").value; $("rdBox").hidden = !(k === "rd" && c) || !!(await roadsLocal(c)) }
-  $("nsKind").onchange = () => { mode(); rdBox() }; $("nsCountry").onchange = rdBox; mode();
+  /* 3.2.0 (פורום, post #86): רשימה נפתחת של הכבישים/הנהרות, כמו ברחובות */
+  const nsList = document.createElement("datalist"); nsList.id = "nsList"; document.body.appendChild(nsList); $("nsQ").setAttribute("list", "nsList"); $("nsQ").setAttribute("autocomplete", "off");
+  async function fillList() {
+    const k = $("nsKind").value, c = $("nsCountry").value; if (k === "st") return;
+    const t = k === "rv" ? "w" : "r", seen = new Set(), opts = [];
+    const add = e => { const v = e[2] ? (t === "r" && /^\d/.test(e[1]) ? "כביש " + e[1] + " — " + e[2] : e[2]) : (t === "r" && /^\d/.test(e[1]) ? "כביש " + e[1] : e[1]); if (!v || seen.has(v)) return; seen.add(v); opts.push([v, e]) };
+    if (t === "r") { const ce = await roadsLocal(c || "ISR"); if (ce) ce.forEach(add) }
+    if (N) N.e.forEach(e => { if (e[0] === t && (!c || (e[3] || []).includes(c))) add(e) });
+    if (t === "w") Object.keys(HEBN).forEach(h => { if (!seen.has(h)) { seen.add(h); opts.push([h, null]) } });
+    opts.sort((a, b) => { const na = parseInt(a[1] && a[1][1]), nb = parseInt(b[1] && b[1][1]); return (isNaN(na) ? 1e9 : na) - (isNaN(nb) ? 1e9 : nb) || a[0].localeCompare(b[0], "he") });
+    nsList.replaceChildren(...opts.slice(0, 1500).map(([v]) => { const o = document.createElement("option"); o.value = v; return o }));
+  }
+  /* בחירה מהרשימה: "כביש 6 — כביש חוצה ישראל" → חיפוש לפי המספר */
+  $("nsQ").addEventListener("change", () => { const m = $("nsQ").value.match(/^כביש (\d+)( — |$)/); if (m) $("nsQ").value = m[1]; if (nsList.querySelector("option[value='" + CSS.escape($("nsQ").value) + "']") || m) go() });
+  $("nsQ").addEventListener("focus", fillList);
+  $("nsKind").onchange = () => { mode(); rdBox(); fillList() }; $("nsCountry").onchange = () => { rdBox(); fillList() }; mode();
   $("rdDl").onclick = async () => {
     const c = $("nsCountry").value; if (!c) return; say("nsMsg", "מוריד את כבישי " + cName() + "…");
     try { const j = await getJ(BASE + "roads/" + c + ".json"); if (!j || !j.e) throw 0; await roadsSet(c, JSON.stringify(j)); say("nsMsg", "כבישי " + cName() + " נשמרו ✓ (" + j.e.length + ")"); rdBox() }
