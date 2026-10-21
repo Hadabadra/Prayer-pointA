@@ -135,3 +135,8 @@ body.mapfull #mapTool{display:none}
 /* 3.1.0: בלי סימון כחול בלחיצות על הממשק; טקסט ההלכות, התפילה ושדות הקלט נשארים ניתנים לסימון והעתקה */
 button,#bar,svg,#mapTool,#stRotRow,.sfx,.sfxb,label,summary,.plc,.chip{-webkit-user-select:none;user-select:none}
 #pl+.sfxb{display:none !important}
+/* 3.1.1: סרגל עליון מצומצם — נכנס בשורה אחת */
+#bar{gap:.2rem;min-height:0}
+#bar button,#bar .sfxb{padding:.15rem .35rem !important;font-size:.85em !important;min-height:0 !important}
+#bar button.ico{font-size:.95em !important;min-width:1.8em;padding-inline:.2em !important}
+#bar h1,#bar .ttl{font-size:1em}
