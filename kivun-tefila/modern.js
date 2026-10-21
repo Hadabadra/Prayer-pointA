@@ -142,6 +142,47 @@
       } else last = txt.textContent;
     }).observe(txt, { childList: true, characterData: true, subtree: true });
   }
+
+  /* ---------- 8. 3.2.2: עינים למקרא — כפתור עין בסרגל עם תפריט ---------- */
+  {
+    const eyeB = document.createElement("button"); eyeB.id = "bEyes"; eyeB.type = "button"; eyeB.className = "ico";
+    eyeB.title = "עינים למקרא — תמונות והסברים על הכותל ובית המקדש"; eyeB.setAttribute("aria-label", eyeB.title); eyeB.setAttribute("aria-haspopup", "menu"); eyeB.setAttribute("aria-expanded", "false");
+    eyeB.innerHTML = svg('<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>');
+    const menu = document.createElement("div"); menu.id = "eyeMenu"; menu.setAttribute("role", "menu"); menu.hidden = true;
+    const srcs = [["eyMik", "בית המקדש"], ["eyArch", "ארכיאולוגיה — הכותל הישן"]];
+    const home = document.createElement("button"); home.type = "button"; home.setAttribute("role", "menuitem"); home.textContent = "דף הבית של עינים למקרא";
+    home.onclick = () => { menu.hidden = true; const e = document.querySelector(".eyMain"); if (e) e.click() };
+    srcs.forEach(([id, t]) => { const b = document.createElement("button"); b.type = "button"; b.setAttribute("role", "menuitem"); b.textContent = t; b.onclick = () => { menu.hidden = true; const o = $(id); if (o) o.click() }; menu.appendChild(b) });
+    menu.appendChild(home);
+    const close = () => { menu.hidden = true; eyeB.setAttribute("aria-expanded", "false") };
+    eyeB.onclick = e => { e.stopPropagation(); const o = menu.hidden; menu.hidden = !o; eyeB.setAttribute("aria-expanded", String(o));
+      if (o) { const r = eyeB.getBoundingClientRect(); menu.style.top = (r.bottom + 4) + "px"; menu.style.left = Math.max(8, Math.min(innerWidth - 240, r.left + r.width / 2 - 110)) + "px" } };
+    addEventListener("click", e => { if (!menu.contains(e.target)) close() }); addEventListener("keydown", e => { if (e.key === "Escape") close() });
+    const anchorB = $("bVis") || $("bKria"); if (anchorB) anchorB.after(eyeB); document.body.appendChild(menu);
+  }
+
+  /* ---------- 9. 3.2.2: שורת החיפוש נפתחת מסמל חיפוש בסרגל ---------- */
+  {
+    const row = $("plRow"), SK = "kivun-search-open";
+    if (row) {
+      const sb = document.createElement("button"); sb.id = "bFind"; sb.type = "button"; sb.className = "ico";
+      sb.title = "חיפוש עיר, רחוב, כביש או מקום שמור"; sb.setAttribute("aria-label", sb.title); sb.setAttribute("aria-controls", "plRow");
+      sb.innerHTML = svg('<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>');
+      const set = (o, save) => { row.classList.toggle("shut", !o); sb.classList.toggle("on", o); sb.setAttribute("aria-expanded", String(o));
+        if (save) try { localStorage.setItem(SK, o ? "1" : "0") } catch (e) {}
+        if (o && save) { const f = row.querySelector("input:not([hidden]),.sfxb"); if (f) setTimeout(() => f.focus(), 30) } };
+      sb.onclick = () => set(row.classList.contains("shut"), true);
+      let o0 = false; try { const v = localStorage.getItem(SK); if (v != null) o0 = v === "1" } catch (e) {}
+      set(o0, false);
+      const after = $("bManT"); if (after) after.after(sb); else bar.appendChild(sb);
+    }
+  }
+
+  /* ---------- 10. 3.2.2: שורת המיקום מתחת למפה, ליד ההסבר ---------- */
+  {
+    const loc = $("loc"), foot = document.querySelector("main > .foot");
+    if (loc && foot) { loc.classList.add("locfoot"); foot.before(loc) }
+  }
   /* ---------- 4. חלונית רחבה מונחת מעל הדף ---------- */
   document.querySelectorAll(".pop .wideb").forEach(b => {
     b.innerHTML = '<svg viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l-6 6 6 6M15 6l6 6-6 6"/></svg>';

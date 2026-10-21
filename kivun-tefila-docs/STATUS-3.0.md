@@ -77,3 +77,6 @@
   הודעות ארוכות ב-#txt (מעל 90 תווים או עם כפתור) עוברות לפס #mNote מתחת לשורת החיפוש, ו-#txt חוזר לטקסט הכיוון האחרון.
 - פורסם: מוזג לענף כיוון-תפילה; החנות מתעדכנת מ-kivun-tefila-store.yml ב-Hadabadra/madaei-hatanach (כל 3 שעות).
 - 3.2.1: מזהי החלקים תוקנו לפי OPEN_SECTIONS בעינים למקרא 5.2.0 (shell/bridge.js, #173 סגור): temple-guide, kotel-archaeology, archaeology, places, או catId ישיר; term אופציונלי.
+- 3.2.2: כפתור עין #bEyes בסרגל (אחרי 🗓) עם תפריט #eyeMenu (fixed ב-body, לא בתוך #bar) שמפעיל את הכפתורים הקיימים eyMik/eyArch/.eyMain;
+  #plRow נסגר/נפתח מ-#bFind (class shut; localStorage kivun-search-open, ברירת מחדל סגור); #loc הועבר מעל .foot (class locfoot).
+  בחירת עיר מחילה מיד; רחוב צריך "מצא" או Enter.

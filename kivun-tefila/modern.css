@@ -123,3 +123,11 @@ details.sd,details.box,.hsec,.dlitem,details.way{border-color:var(--color-outlin
 #mNote>button{border:0;background:none;padding:.1em .4em;opacity:.7}
 .plx.sure{color:var(--color-error);opacity:1 !important;font-weight:700}
 @media (max-width:75rem){#bar>.bdate{font-size:0;padding:0}}
+/* 3.2.2 */
+#plRow.shut{display:none !important}
+#nsRes:has(~*){}
+#eyeMenu{position:fixed;z-index:70;display:grid;min-width:13.5em;background:var(--color-surface);border:1px solid var(--color-outline);border-radius:var(--m-r);box-shadow:var(--m-shadow-pop);padding:.3em}
+#eyeMenu[hidden]{display:none}
+#eyeMenu button{border:0;background:none;text-align:start;padding:.5em .8em;border-radius:calc(var(--m-r) - .2em);font-weight:500}
+#eyeMenu button:hover{background:var(--m-tonal);color:var(--color-primary)}
+#loc.locfoot{text-align:center;margin:.9em 0 0;font-size:.85em}
