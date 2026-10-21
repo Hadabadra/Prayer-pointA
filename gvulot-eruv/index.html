@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>גבולות עירוב</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div class="app-shell">
+  <header class="topbar">
+    <div class="topbar-brand">
+      <svg class="topbar-logo" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18 L8 6 L12 15 L16 5 L20 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><circle cx="8" cy="6" r="1.6" fill="currentColor"/><circle cx="16" cy="5" r="1.6" fill="currentColor"/></svg>
+      <div class="topbar-titles">
+        <h1 class="topbar-title">גבולות עירוב</h1>
+        <span class="topbar-sub" id="crumb">כל הארץ</span>
+      </div>
+    </div>
+    <label class="topbar-search">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15 15l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <input id="q" type="search" autocomplete="off" placeholder="עיר, שכונה, רחוב או שם האחראי" aria-label="חיפוש" autofocus>
+      <kbd class="topbar-kbd">/</kbd>
+    </label>
+    <div class="topbar-actions">
+      <button class="icon-btn topbar-btn" id="btnHome" title="כל הערים" aria-label="כל הערים"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></button>
+      <button class="icon-btn topbar-btn" id="btnInfo" title="אודות ומקור הנתונים" aria-label="אודות"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 11v6M12 7.5v.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+    </div>
+  </header>
+
+  <div class="notice" id="notice" role="note">
+    <span class="notice-dot"></span>
+    <span>המפות להתמצאות בלבד. עירוב יכול להיפסל בכל שבוע, ולכן לפני שבת יש לוודא מול האחראי המקומי.</span>
+    <button class="notice-call" data-phone="054-8483320">מוקד העירוב · 054-8483320</button>
+  </div>
+
+  <div class="layout">
+    <nav class="rail" id="rail" aria-label="ערים">
+      <div class="rail-head">
+        <span>ערים</span><span class="count" id="cityCount"></span>
+      </div>
+      <div class="rail-list" id="cityList"></div>
+    </nav>
+    <main class="app-content" id="main" tabindex="-1"></main>
+  </div>
+</div>
+
+<!-- מציג מפה -->
+<div class="viewer" id="viewer" hidden>
+  <div class="viewer-bar">
+    <button class="icon-btn" id="vClose" title="סגירה (Esc)" aria-label="סגירה"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+    <div class="viewer-titles"><strong id="vTitle"></strong><span id="vSub"></span></div>
+    <div class="viewer-tools">
+      <button class="icon-btn" id="vOut" title="הקטנה (-)" aria-label="הקטנה"><svg viewBox="0 0 24 24"><path d="M6 12h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+      <span class="zoom-val" id="vZoom">100%</span>
+      <button class="icon-btn" id="vIn" title="הגדלה (+)" aria-label="הגדלה"><svg viewBox="0 0 24 24"><path d="M6 12h12M12 6v12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+      <button class="icon-btn" id="vFit" title="התאמה למסך (0)" aria-label="התאמה למסך"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+      <button class="icon-btn" id="vRot" title="סיבוב (R)" aria-label="סיבוב"><svg viewBox="0 0 24 24"><path d="M19 12a7 7 0 1 1-2.05-4.95M19 4v4h-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+      <span class="exp-wrap">
+        <button class="icon-btn" id="vExp" title="ייצוא: תמונה או הדפסה" aria-label="ייצוא" aria-haspopup="menu"><svg viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="menu" id="expMenu" role="menu" hidden>
+          <button role="menuitem" data-exp="png">שמירה כתמונה PNG</button>
+          <button role="menuitem" data-exp="jpg">שמירה כתמונה JPG</button>
+          <button role="menuitem" data-exp="print">הדפסה / שמירה כ-PDF</button>
+        </div>
+      </span>
+      <button class="icon-btn" id="vSide" title="אחראים במפה זו" aria-label="אחראים"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4zM14 5v14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></button>
+    </div>
+  </div>
+  <div class="viewer-body">
+    <div class="stage" id="stage"><img id="vImg" alt="" draggable="false"></div>
+    <aside class="viewer-side" id="vSidePanel"></aside>
+  </div>
+  <div class="viewer-hint" id="vHint">גלגלת או צביטה להגדלה · גרירה להזזה · לחיצה כפולה להגדלה מהירה</div>
+</div>
+
+<div class="sheet-scrim" id="infoScrim" hidden>
+  <div class="sheet" role="dialog" aria-labelledby="infoTitle">
+    <h2 id="infoTitle">אודות גבולות עירוב</h2>
+    <div id="infoBody"></div>
+    <div class="sheet-actions"><button class="btn tonal" id="infoClose">סגירה</button></div>
+  </div>
+</div>
+<div class="print-sheet" id="printSheet" aria-hidden="true"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

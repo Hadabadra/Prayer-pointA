@@ -1,0 +1,35 @@
+{
+  "id": "com.hadabadra.gvulot-eruv",
+  "name": "גבולות עירוב",
+  "version": "0.1.0",
+  "description": "מפות העירובים השכונתיים ברחבי הארץ ורשימת האחראים המקומיים, מתוך מוקד העירוב ובאישורו. עובד בלי אינטרנט.",
+  "author": "חד בדרא",
+  "schemaVersion": 1,
+  "sdkVersion": "1.x",
+  "stability": "beta",
+  "minAppVersion": "0.9.98",
+  "entrypoint": "index.html",
+  "permissions": [
+    "app.open_url",
+    "app.info.read",
+    "events.subscribe:theme.changed",
+    "plugin.storage.read",
+    "plugin.storage.write",
+    "ui.feedback",
+    "fs.user_files.write"
+  ],
+  "network": {
+    "enabled": false,
+    "allowlist": []
+  },
+  "contributes": {
+    "toolTab": {
+      "title": "גבולות עירוב",
+      "order": 215,
+      "defaultPinned": false,
+      "iconName": "map_24_regular"
+    }
+  },
+  "homepage": "https://github.com/Hadabadra/Prayer-pointA/tree/%D7%92%D7%91%D7%95%D7%9C%D7%95%D7%AA-%D7%A2%D7%99%D7%A8%D7%95%D7%91",
+  "icon": "icon.png"
+}

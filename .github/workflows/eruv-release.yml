@@ -1,0 +1,32 @@
+name: גבולות עירוב — Release
+
+# יוצר GitHub Release לכל גרסה חדשה, עם קובץ ה-.otzplugin ותיאור מתוך README.
+# בודק קודם שהחבילה בענף זהה לאריזה של הקוד (אריזה דטרמיניסטית).
+on:
+  push:
+    branches: ['גבולות-עירוב']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check package matches source
+        run: |
+          v="$(node -p "require('./gvulot-eruv/manifest.json').version")"
+          python3 gvulot-eruv-build/pack.py gvulot-eruv /tmp/e.otzplugin
+          cmp /tmp/e.otzplugin "gvulot-eruv-$v.otzplugin" || { echo "::error::gvulot-eruv-$v.otzplugin אינו תואם לקוד. ארזו מחדש."; exit 1; }
+      - name: Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          v="$(node -p "require('./gvulot-eruv/manifest.json').version")"
+          tag="gvulot-eruv-v$v"; file="gvulot-eruv-$v.otzplugin"
+          if gh release view "$tag" >/dev/null 2>&1; then echo "Release $tag כבר קיים"; exit 0; fi
+          awk -v h="## מה חדש ב-$v" 'index($0,h)==1{f=1;next} /^## /{if(f)exit} f' README.md > notes.md
+          printf '\n### התקנה\nבאוצריא: כלים ← תוספים ← התקן תוסף חדש, ובחירת הקובץ.\n' >> notes.md
+          gh release create "$tag" "$file" --target "$GITHUB_SHA" --title "גבולות עירוב $v" --notes-file notes.md --prerelease
