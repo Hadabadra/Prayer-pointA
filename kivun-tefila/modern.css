@@ -144,7 +144,7 @@ details.sd,details.box,.hsec,.dlitem,details.way{border-color:var(--color-outlin
 /* 3.3.1 — חלוניות הגדרות / הורדות / הלכות במראה חדשני: כותרת קבועה, קבוצות ככרטיסים, שורות רשימה */
 .pnlHd{position:sticky;top:-.8em;z-index:2;display:flex;align-items:center;gap:.6em;margin:-.8em -1.2em .8em;padding:.75em 1.2em;background:color-mix(in srgb,var(--color-surface) 92%,transparent);backdrop-filter:blur(6px);border-bottom:1px solid var(--color-outline)}
 .pnlHd h2{flex:1;margin:0;font-size:1.1em;font-weight:700}
-.pnlHd .pnlX{display:inline-flex;align-items:center;justify-content:center;width:2.2em;height:2.2em;min-height:0;padding:0;border:0;border-radius:50%;background:transparent;color:var(--color-on-surface-dim);font-size:1em}
+.pnlHd .pnlX{display:inline-flex;align-items:center;justify-content:center;width:2.2em;height:2.2em;min-height:0;padding:0;border:0;border-radius:var(--radius-pill);background:transparent;color:var(--color-on-surface-dim);font-size:1em}
 .pnlHd .pnlX:hover{background:var(--m-hover);color:var(--color-on-surface)}
 #set.pop,#hal.pop,#dlp.pop,#help.pop,#kotel.pop,#fly.pop,#minyan.pop,#fb.pop{background:var(--color-background,var(--color-surface));padding-top:.8em}
 #set details.sd,#hal details,#dlp details,#help details.sd{background:var(--color-surface);border:1px solid var(--color-outline);border-radius:var(--radius-md);padding:0;margin:0 0 .6em;overflow:hidden}
@@ -163,7 +163,7 @@ details.sd,details.box,.hsec,.dlitem,details.way{border-color:var(--color-outlin
 #set .setrow label{display:flex;align-items:center;justify-content:space-between;gap:.8em;width:100%}
 #set .setrow select{max-width:55%}
 #set>p,#hal>p,#dlp>p{font-size:.9em;color:var(--color-on-surface-dim);line-height:1.6}
-#set button:not(.pnlX):not(.sw),#dlp button:not(.pnlX),#hal button:not(.pnlX){border-radius:999px;padding:.35em .95em;font-size:.85em;min-height:2.1em}
+#set button:not(.pnlX):not(.sw),#dlp button:not(.pnlX),#hal button:not(.pnlX){border-radius:var(--radius-pill);padding:.35em .95em;font-size:.85em;min-height:2.1em}
 #hal a,#hal .src{color:var(--color-primary)}
 #hal li{margin:.25em 0;line-height:1.65}
 /* חיפוש רחוב: Enter בלבד, בלי כפתור "מצא" */
