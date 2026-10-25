@@ -141,3 +141,31 @@ details.sd,details.box,.hsec,.dlitem,details.way{border-color:var(--color-outlin
 #ovfMenu[hidden]{display:none}
 #ovfMenu>button{display:flex;align-items:center;gap:.6em;justify-content:flex-start;background:transparent;border:0;border-radius:var(--radius-md);padding:.5em .7em;font-size:.9em;color:var(--color-on-surface);text-align:start;min-height:0}
 #ovfMenu>button:hover,#ovfMenu>button:focus-visible{background:var(--m-hover)}
+/* 3.3.1 — חלוניות הגדרות / הורדות / הלכות במראה חדשני: כותרת קבועה, קבוצות ככרטיסים, שורות רשימה */
+.pnlHd{position:sticky;top:-.8em;z-index:2;display:flex;align-items:center;gap:.6em;margin:-.8em -1.2em .8em;padding:.75em 1.2em;background:color-mix(in srgb,var(--color-surface) 92%,transparent);backdrop-filter:blur(6px);border-bottom:1px solid var(--color-outline)}
+.pnlHd h2{flex:1;margin:0;font-size:1.1em;font-weight:700}
+.pnlHd .pnlX{display:inline-flex;align-items:center;justify-content:center;width:2.2em;height:2.2em;min-height:0;padding:0;border:0;border-radius:50%;background:transparent;color:var(--color-on-surface-dim);font-size:1em}
+.pnlHd .pnlX:hover{background:var(--m-hover);color:var(--color-on-surface)}
+#set.pop,#hal.pop,#dlp.pop,#help.pop,#kotel.pop,#fly.pop,#minyan.pop,#fb.pop{background:var(--color-background,var(--color-surface));padding-top:.8em}
+#set details.sd,#hal details,#dlp details,#help details.sd{background:var(--color-surface);border:1px solid var(--color-outline);border-radius:var(--radius-md);padding:0;margin:0 0 .6em;overflow:hidden}
+#set details.sd>summary,#hal details>summary,#dlp details>summary,#help details.sd>summary{list-style:none;display:flex;align-items:center;gap:.5em;padding:.7em .9em;cursor:pointer;font-size:.95em}
+#set details.sd>summary::-webkit-details-marker,#hal details>summary::-webkit-details-marker,#dlp details>summary::-webkit-details-marker,#help details.sd>summary::-webkit-details-marker{display:none}
+#set details.sd>summary::after,#hal details>summary::after,#dlp details>summary::after,#help details.sd>summary::after{content:"";margin-inline-start:auto;width:.5em;height:.5em;border:solid var(--color-on-surface-dim);border-width:0 .12em .12em 0;transform:rotate(45deg);transition:transform .15s}
+#set details.sd[open]>summary::after,#hal details[open]>summary::after,#dlp details[open]>summary::after,#help details.sd[open]>summary::after{transform:rotate(-135deg)}
+#set details.sd[open]>summary,#hal details[open]>summary,#dlp details[open]>summary,#help details.sd[open]>summary{border-bottom:1px solid var(--color-outline);background:color-mix(in srgb,var(--color-primary) 5%,transparent)}
+#set details.sd>:not(summary),#hal details>:not(summary),#dlp details>:not(summary),#help details.sd>:not(summary){margin-inline:.9em}
+#set details.sd>:last-child,#hal details>:last-child,#dlp details>:last-child{margin-bottom:.8em}
+#set .dlitem{display:grid;gap:.3em;padding:.7em 0;border-bottom:1px solid color-mix(in srgb,var(--color-outline) 60%,transparent)}
+#set .dlitem:last-of-type{border-bottom:0}
+#set .dlitem small,#set .setrow small{color:var(--color-on-surface-dim)}
+#set .dlitem .row{display:flex;flex-wrap:wrap;gap:.35em;align-items:center}
+#set .setrow,#set>label,#set>.row{display:flex;align-items:center;justify-content:space-between;gap:.8em;background:var(--color-surface);border:1px solid var(--color-outline);border-radius:var(--radius-md);padding:.65em .9em;margin:0 0 .45em}
+#set .setrow label{display:flex;align-items:center;justify-content:space-between;gap:.8em;width:100%}
+#set .setrow select{max-width:55%}
+#set>p,#hal>p,#dlp>p{font-size:.9em;color:var(--color-on-surface-dim);line-height:1.6}
+#set button:not(.pnlX):not(.sw),#dlp button:not(.pnlX),#hal button:not(.pnlX){border-radius:999px;padding:.35em .95em;font-size:.85em;min-height:2.1em}
+#hal a,#hal .src{color:var(--color-primary)}
+#hal li{margin:.25em 0;line-height:1.65}
+/* חיפוש רחוב: Enter בלבד, בלי כפתור "מצא" */
+#stGo,#fGo{display:none !important}
+#set .setrow:not(:has(>:not([hidden]):not(:empty))),#set>.row:not(:has(>:not([hidden]))){display:none}
