@@ -169,3 +169,4 @@ details.sd,details.box,.hsec,.dlitem,details.way{border-color:var(--color-outlin
 /* חיפוש רחוב: Enter בלבד, בלי כפתור "מצא" */
 #stGo,#fGo{display:none !important}
 #set .setrow:not(:has(>:not([hidden]):not(:empty))),#set>.row:not(:has(>:not([hidden]))){display:none}
+#dls>summary{display:none !important}#dls{border:0 !important;background:none !important}#dls>:not(summary){margin-inline:0 !important}
