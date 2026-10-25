@@ -170,3 +170,40 @@ details.sd,details.box,.hsec,.dlitem,details.way{border-color:var(--color-outlin
 #stGo,#fGo{display:none !important}
 #set .setrow:not(:has(>:not([hidden]):not(:empty))),#set>.row:not(:has(>:not([hidden]))){display:none}
 #dls>summary{display:none !important}#dls{border:0 !important;background:none !important}#dls>:not(summary){margin-inline:0 !important}
+/* 3.4.0 — הגדרות והורדות: סעיפים, כרטיסים, שורות עם פקד בצד, כרטיסי הורדה */
+#set.pop,#dlp.pop{background:color-mix(in srgb,var(--color-surface) 70%,var(--color-background,var(--color-surface)));padding-inline:1em}
+.ks-sec{margin:0 0 1.1em}
+.ks-h{margin:0 .2em .45em;font-size:.78em;font-weight:700;letter-spacing:.02em;color:var(--color-primary)}
+.ks-card{background:var(--color-surface);border:1px solid var(--color-outline);border-radius:var(--radius-lg);overflow:hidden}
+.ks-row{display:flex;align-items:center;gap:.9em;padding:.8em 1em;min-height:3.2em}
+.ks-row+.ks-row,.ks-dl+.ks-dl{border-top:1px solid color-mix(in srgb,var(--color-outline) 70%,transparent)}
+.ks-txt{flex:1;min-width:0}
+.ks-tt{font-size:.93em;font-weight:600;color:var(--color-on-surface);line-height:1.4}
+.ks-ds{font-size:.8em;color:var(--color-on-surface-dim);line-height:1.5;margin-top:.15em}
+.ks-ctl{flex:none;display:flex;align-items:center;gap:.4em}
+.ks-ctl input[type=checkbox]{margin:0}
+.ks-ctl .sfxb,.ks-ctl select{font-size:.85em}
+.ks-list{margin:0;padding:.3em 0;list-style:none}
+.ks-list>li{padding:.55em 1em;font-size:.88em}
+.ks-list>li+li{border-top:1px solid color-mix(in srgb,var(--color-outline) 70%,transparent)}
+.ks-dl{display:flex;gap:.85em;padding:.9em 1em;align-items:flex-start}
+.ks-ico{flex:none;display:flex;align-items:center;justify-content:center;width:2.4em;height:2.4em;border-radius:var(--radius-md);background:color-mix(in srgb,var(--color-primary) 12%,transparent);color:var(--color-primary)}
+.ks-body{flex:1;min-width:0;display:grid;gap:.4em}
+.ks-chip{display:inline-block;margin-inline-start:.3em;padding:.05em .55em;border-radius:var(--radius-pill);background:var(--m-hover);font-size:.75em;font-weight:500;color:var(--color-on-surface-dim);vertical-align:.1em}
+.ks-acts{display:flex !important;flex-wrap:wrap;align-items:center;gap:.4em;margin:0 !important}
+.ks-acts>span{font-size:.82em;color:var(--color-on-surface-dim);min-width:3.5em}
+.ks-acts small{font-size:.78em;color:var(--color-on-surface-dim);flex-basis:100%}
+.ks-acts small:empty{display:none}
+#dlp .ks-pri,#set .ks-pri{background:var(--color-primary) !important;color:var(--color-on-primary) !important;border:0 !important;border-radius:var(--radius-pill) !important;padding:.4em 1.1em !important;font-size:.83em !important;font-weight:600;min-height:2.1em}
+#dlp .ks-pri:hover{filter:brightness(1.08)}
+#dlp .ks-sec-b,#set .ks-sec-b{background:transparent !important;color:var(--color-primary) !important;border:1px solid color-mix(in srgb,var(--color-primary) 35%,transparent) !important;border-radius:var(--radius-pill) !important;padding:.35em .95em !important;font-size:.8em !important;min-height:2em}
+#dlp .ks-sec-b:hover,#set .ks-sec-b:hover{background:var(--m-hover) !important}
+details.ks-more{background:var(--color-surface);border:1px solid var(--color-outline) !important;border-radius:var(--radius-lg) !important;padding:0 !important;margin:0 0 .5em !important;overflow:hidden}
+details.ks-more>summary{list-style:none;display:flex;align-items:center;gap:.5em;padding:.8em 1em;cursor:pointer;font-size:.9em;font-weight:600}
+details.ks-more>summary::-webkit-details-marker{display:none}
+details.ks-more>summary::after{content:"";margin-inline-start:auto;width:.45em;height:.45em;border:solid var(--color-on-surface-dim);border-width:0 .12em .12em 0;transform:rotate(45deg);transition:transform .15s}
+details.ks-more[open]>summary::after{transform:rotate(-135deg)}
+details.ks-more[open]>summary{border-bottom:1px solid var(--color-outline)}
+details.ks-more>:not(summary){margin:.6em 1em !important;font-size:.86em;line-height:1.65;color:var(--color-on-surface)}
+details.ks-more small{font-size:1em;color:var(--color-on-surface-dim)}
+#set>.wideb,#dlp>.wideb{display:none}
