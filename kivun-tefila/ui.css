@@ -48,8 +48,7 @@ body.mapfull .pair>div{background:none;border:0;border-radius:0;padding:0}
 @media (max-width:40rem){
   #bar{min-height:44px}
   #bMore{display:inline-block}
-  #bar .sec{display:none}
-  #bar.more .sec:not([hidden]){display:inline-block}
+  #bar .sec:not(.ovf):not([hidden]){display:inline-flex}
   #help.pop,#set.pop,#fb.pop,#hal.pop,#fly.pop,#minyan.pop{top:auto;bottom:0;inset-inline:0;width:100%;max-height:78vh;border-radius:var(--radius-lg) var(--radius-lg) 0 0;border-width:1px 0 0;border-inline-start:0;box-shadow:0 -4px 16px var(--color-shadow)}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}

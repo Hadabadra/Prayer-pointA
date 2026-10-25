@@ -30,7 +30,6 @@ body{background:var(--color-bg)}
 #bar .bsep{flex:0 0 1px;align-self:center;height:1.4em;background:var(--color-outline);margin:0 .35em}
 #bar .bspc{flex:1 1 0}
 #bar>[hidden],#bar>.sfxp{display:none !important}
-@media (min-width:40.01rem){#bar>#bMore{display:none !important}}
 #bar>#bLang{font-weight:700;min-width:2.35em;justify-content:center}
 
 /* ---------- הדף ---------- */
@@ -131,3 +130,14 @@ details.sd,details.box,.hsec,.dlitem,details.way{border-color:var(--color-outlin
 #eyeMenu button{border:0;background:none;text-align:start;padding:.5em .8em;border-radius:calc(var(--m-r) - .2em);font-weight:500}
 #eyeMenu button:hover{background:var(--m-tonal);color:var(--color-primary)}
 #loc.locfoot{text-align:center;margin:.9em 0 0;font-size:.85em}
+/* 3.3.0 — סרגל בשורה אחת, עודף לתפריט ⋯ */
+#bar{flex-wrap:nowrap !important;overflow:hidden}
+#bar>*{flex-shrink:0}
+#bar>.bdate{flex-shrink:1}
+#bar>button.ovf{display:none !important}
+#bar>#bMore{display:none !important}
+#bar>#bMore.need{display:inline-flex !important;min-width:2.35em;justify-content:center}
+#ovfMenu{position:fixed;width:auto !important;max-width:20em;right:auto !important;z-index:60;display:flex;flex-direction:column;gap:.1em;min-width:13em;max-height:70vh;overflow:auto;padding:.35em;background:var(--color-surface);border:1px solid var(--color-outline);border-radius:var(--radius-md);box-shadow:0 .5em 1.5em color-mix(in srgb,var(--color-on-surface) 18%,transparent)}
+#ovfMenu[hidden]{display:none}
+#ovfMenu>button{display:flex;align-items:center;gap:.6em;justify-content:flex-start;background:transparent;border:0;border-radius:var(--radius-md);padding:.5em .7em;font-size:.9em;color:var(--color-on-surface);text-align:start;min-height:0}
+#ovfMenu>button:hover,#ovfMenu>button:focus-visible{background:var(--m-hover)}

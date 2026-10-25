@@ -43,4 +43,5 @@ jobs:
           sv="$(node -p "require('./siduron/src/manifest.json').version")"
           sfile="siduron/com.moshenahari.siduron-$sv.otzplugin"
           printf '\n### סידורון התואם\n%s מצורף ל-Release הזה (נדרש לכפתור "תפילה").\n' "$(basename "$sfile")" >> notes.md
-          gh release create "$tag" "$file" "$sfile" --target "$GITHUB_SHA" --title "כיוון תפילה $v" --notes-file notes.md --latest
+          python3 kivun-tefila-build/web.py kivun-tefila /tmp/web
+          gh release create "$tag" "$file" "$sfile" /tmp/web/* --target "$GITHUB_SHA" --title "כיוון תפילה $v" --notes-file notes.md --latest
