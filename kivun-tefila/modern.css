@@ -111,7 +111,8 @@ details.sd,details.box,.hsec,.dlitem,details.way{border-color:var(--color-outlin
 }
 #fly .setrow label{flex-wrap:wrap}
 /* מסך בינוני: הסרגל נשאר בשורה אחת — כפתורי ההלכה והכלים כסמלים (השם במעבר העכבר) */
-@media (max-width:96rem){#bar>button:not(#bOn):not(#bManT)>.bl{display:none}#bar>button:not(#bOn):not(#bManT):has(>.bl){min-width:2.35em;justify-content:center;padding-inline:.45em !important}}
+/* 3.5.0: #bFind מוחרג מהסתרת הכיתובים. הכלל הקודם: @media (max-width:96rem)(#bar>button:not(#bOn):not(#bManT)>.bl(display:none)#bar>button:not(#bOn):not(#bManT):has(>.bl)(min-width:2.35em;justify-content:center;padding-inline:.45em !important)) */
+@media (max-width:96rem){#bar>button:not(#bOn):not(#bManT):not(#bFind)>.bl{display:none}#bar>button:not(#bOn):not(#bManT):not(#bFind):has(>.bl){min-width:2.35em;justify-content:center;padding-inline:.45em !important}}
 /* 3.2.0: מצב לילה — גובר על צבעי ערכת הנושא של אוצריא */
 :root.night{--color-bg:#14110d !important;--color-surface:#201c17 !important;--color-surface-container-high:#262019 !important;--color-surface-container-highest:#1d1914 !important;--color-on-surface:#efe7d8 !important;--color-on-surface-variant:#c3b8a3 !important;--color-on-surface-dim:#b9ae99 !important;--color-outline:#3d342a !important;--color-outline-strong:#52473a !important;--color-primary:#d8ab52 !important;--color-on-primary:#1a1610 !important;--color-error:#f2b8b5 !important;color-scheme:dark}
 :root.night #wall{opacity:.05}
@@ -207,3 +208,41 @@ details.ks-more[open]>summary{border-bottom:1px solid var(--color-outline)}
 details.ks-more>:not(summary){margin:.6em 1em !important;font-size:.86em;line-height:1.65;color:var(--color-on-surface)}
 details.ks-more small{font-size:1em;color:var(--color-on-surface-dim)}
 #set>.wideb,#dlp>.wideb{display:none}
+
+/* ============ 3.5.0 ============ */
+/* כפתור "חפש" בסרגל: סמל + כיתוב. בסרגל צר הכיתוב מוסתר (התפריט ⋯ מטפל בשאר) */
+#bar>#bFind{border:1px solid var(--color-outline);padding-inline:.7em !important;min-width:0}
+#bar>#bFind.on{border-color:var(--color-primary)}
+@media (max-width:72rem){#bar>#bFind .bl{display:none}#bar>#bFind{padding-inline:.45em !important;min-width:2.35em;justify-content:center}}
+
+/* מסך מלא: הכפתורים התחתונים בשורה אחת בתחתית (הכלל של ui.css: #mapWrap #stRotRow, absolute, גבר על body.mapfull) */
+body.mapfull #mapWrap #stRotRow,body.mapfull #stRotRow{position:fixed !important;top:auto !important;bottom:.7rem;left:50%;right:auto;transform:translateX(-50%);z-index:31;margin:0;flex-wrap:nowrap;justify-content:flex-start;max-width:96vw;overflow-x:auto;padding:.2em .3em;scrollbar-width:none}
+body.mapfull #stRotRow::-webkit-scrollbar{display:none}
+body.mapfull #stRotRow>*{flex:none;white-space:nowrap}
+body.mapfull #stRotRow>label{display:inline-flex !important}
+body.mapfull #stRotRow[hidden]{display:none !important}
+#fMode+#fQ{width:14em !important}
+
+/* ---------- 3.5.0: הלכות במראה מודרני ---------- */
+#hal.pop{padding-inline:1em}
+#hal>.pnlHd+details.hsec,#hal>details.hsec{margin-top:0}
+#hal details.hsec{border-radius:var(--radius-lg);margin:0 0 .6em;transition:box-shadow .15s,border-color .15s}
+#hal details.hsec[open]{border-color:var(--color-outline-strong);box-shadow:var(--m-shadow)}
+#hal details.hsec>summary{padding:.85em 1em;gap:.7em;counter-increment:halsec}
+#hal details.hsec>summary>h3{display:block;flex:1;margin:0;font-size:.98em;font-weight:700;line-height:1.45;color:var(--color-on-surface)}
+#hal details.hsec>summary:hover h3{color:var(--color-primary)}
+#hal details.hsec>:not(summary){margin-inline:1em}
+#hal .hsrc{display:flex;align-items:center;gap:.5em;margin:1em 1em .35em;font-size:.8em;font-weight:700;letter-spacing:.01em;color:var(--color-primary)}
+#hal .hsrc::before{content:"";flex:none;width:.45em;height:.45em;border-radius:50%;background:var(--color-primary);opacity:.75}
+#hal .hsrc b{font-weight:700}
+#hal blockquote{position:relative;margin:.2em 1em .6em;padding:.8em 1em;border:0;border-inline-start:.28em solid var(--color-primary);border-radius:var(--radius-md);background:color-mix(in srgb,var(--color-primary) 7%,var(--color-surface));font-size:.93em;line-height:1.85}
+#hal blockquote .src,#hal button.src{display:inline-flex;align-items:center;gap:.3em;margin-inline-start:.4em;padding:.15em .8em;min-height:0;font-size:.76em;font-weight:600;color:var(--color-primary);background:var(--color-surface);border:1px solid color-mix(in srgb,var(--color-primary) 35%,transparent);border-radius:var(--radius-pill);vertical-align:.1em}
+#hal button.src:hover{background:var(--m-tonal)}
+#hal details.hsec p:not(.hsrc){margin:.55em 1em;font-size:.9em;line-height:1.7}
+#hal details.hsec>:last-child{margin-bottom:1em}
+#halHere{margin:.9em 0 .6em !important;padding:.7em 1em;border-radius:var(--radius-lg);background:var(--m-tonal);border:1px solid color-mix(in srgb,var(--color-primary) 25%,transparent);font-size:.92em;font-weight:600}
+#hal button.fl{display:flex;align-items:center;gap:.6em;width:100%;text-align:start;padding:.75em 1em;border:1px solid var(--color-outline);border-radius:var(--radius-lg);background:var(--color-surface);color:var(--color-on-surface);font-size:.88em;font-weight:500;line-height:1.5;min-height:0}
+#hal button.fl::before{content:"↗";flex:none;color:var(--color-primary);font-weight:700}
+#hal button.fl:hover{background:var(--m-tonal);color:var(--color-primary)}
+#hal>p:last-of-type small{display:block;padding:.7em 1em;border-radius:var(--radius-md);background:var(--m-hover);line-height:1.6}
+#hal button.src{opacity:1 !important}

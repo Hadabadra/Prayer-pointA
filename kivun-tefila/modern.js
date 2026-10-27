@@ -165,9 +165,11 @@
   {
     const row = $("plRow"), SK = "kivun-search-open";
     if (row) {
-      const sb = document.createElement("button"); sb.id = "bFind"; sb.type = "button"; sb.className = "ico";
+      /* 3.5.0: סמל + כיתוב "חפש" (הקודם: סמל בלבד, className "ico") */
+      const sb = document.createElement("button"); sb.id = "bFind"; sb.type = "button"; /* sb.className = "ico"; */ sb.className = "findb";
       sb.title = "חיפוש עיר, רחוב, כביש או מקום שמור"; sb.setAttribute("aria-label", sb.title); sb.setAttribute("aria-controls", "plRow");
-      sb.innerHTML = svg('<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>');
+      /* sb.innerHTML = svg('<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>'); */
+      sb.innerHTML = svg('<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>') + '<span class="bl">חפש</span>';
       const set = (o, save) => { row.classList.toggle("shut", !o); sb.classList.toggle("on", o); sb.setAttribute("aria-expanded", String(o));
         if (save) try { localStorage.setItem(SK, o ? "1" : "0") } catch (e) {}
         if (o && save) { const f = row.querySelector("input:not([hidden]),.sfxb"); if (f) setTimeout(() => f.focus(), 30) } };
