@@ -8,6 +8,15 @@ areas = json.loads(re.search(r"EMB_STREETS=(\[.*\]);", txt, re.S).group(1))
 for f in glob.glob(os.path.join(out, "st-*.js")):
     os.remove(f)
 idx = []
+# 3.5.2: תיקונים ידניים (overrides.json) — כדי שבנייה מחדש לא תדרוס אותם
+ov = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "overrides.json"), encoding="utf-8"))
+for a in areas:
+    o = ov.get(a["k"], {})
+    for r in o.get("rename", []):
+        a["w"] = [[r["to"] if (nm == r["from"] and hw == r["hw"]) else nm, hw, g] for nm, hw, g in a["w"]]
+    for y in o.get("syn", []):
+        if not any(q[0] == y["name"] for q in a.get("s", [])):
+            a.setdefault("s", []).append([y["name"], y["lat"], y["lon"]])
 for n, a in enumerate(areas, 1):
     B = (round(a["lat"] * 1e5), round(a["lon"] * 1e5))
     w = []
