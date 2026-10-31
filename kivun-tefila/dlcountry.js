@@ -22,3 +22,15 @@
   const dl = $("dataLink"); if (dl) { const u = "https://github.com/Hadabadra/Prayer-pointA/releases/tag/kivun-tefila-data";
     dl.textContent = "פתח את דף ההורדות"; dl.onclick = e => { e.stopImmediatePropagation(); let w = null; try { w = window.open(u, "_blank", "noopener") } catch (x) {} if (!w && window.Otzaria) window.Otzaria.call("app.openUrl", { url: u }).catch(() => {}) } }
 })();
+/* 3.5.2 (#8): קבצי כבישים/שכבות מוכנים קיימים רק לחלק מהמדינות. למדינה בלי קובץ, הקישור הוביל לדף "Not Found"
+   בדפדפן, והקובץ שנשמר משם נדחה כ"לא תקין". עכשיו: למדינה בלי קובץ — הודעה ברורה במקום הורדה או קישור. */
+(function () {
+  const $ = id => document.getElementById(id);
+  const HAS = { rd: ["ISR", "AUS", "AUT", "BEL", "CHE", "GBR", "HUN", "NLD", "UKR", "ZAF"], ly: ["ISR"] };
+  const msg = t => { ["nsMsg", "dcMsg"].forEach(i => { const e = $(i); if (e) e.textContent = t }) };
+  const guard = (id, k, what) => { const b = $(id); if (!b) return;
+    b.addEventListener("click", e => { const c = ($("nsCountry") || {}).value; if (!c || HAS[k].includes(c)) return;
+      e.stopImmediatePropagation(); e.preventDefault();
+      msg("אין עדיין קובץ " + what + " מוכן למדינה זו. " + (k === "ly" ? "בתי כנסת, תחנות ושדות תעופה נמצאים בחיפוש סביב המיקום (דרך האינטרנט)." : "אפשר לבקש קובץ דרך \"דיווח\".")) }, true) };
+  guard("rdDl", "rd", "כבישים"); guard("rdLink", "rd", "כבישים"); guard("lyDl", "ly", "שכבות"); guard("lyLink", "ly", "שכבות");
+})();

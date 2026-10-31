@@ -10,12 +10,13 @@
   .sfx div{padding:.35rem .8rem;cursor:pointer;white-space:nowrap}.sfx div:hover,.sfx div.k{background:var(--color-primary-container,#dde)}
   .sfx div.s{font-weight:700}.sfx div.d{opacity:.45;cursor:default}.sfx .g{font-size:.8em;opacity:.7;cursor:default;padding-top:.5rem}`;
   document.head.appendChild(css);
-  function close() { if (box) { box.remove(); box = null } if (cur) { const s = cur; cur = null; try { s.focus({ preventScroll: true }) } catch (e) {} } }
+  let shut = 0;
+  function close() { if (box) { shut = Date.now(); box.remove(); box = null } if (cur) { const s = cur; cur = null; try { s.focus({ preventScroll: true }) } catch (e) {} } }
   function pick(s, v) { close(); if (s.value === v) return; s.value = v; s.dispatchEvent(new Event("input", { bubbles: true })); s.dispatchEvent(new Event("change", { bubbles: true })) }
   function open(s) {
     close(); cur = s; box = document.createElement("div"); box.className = "sfx"; box.setAttribute("role", "listbox"); box.dir = getComputedStyle(s).direction;
     const add = (o) => { const d = document.createElement("div"); d.textContent = o.label || o.text; d.setAttribute("role", "option");
-      if (o.disabled) d.className = "d"; else { if (o.value === s.value) d.className = "s"; d.onmousedown = e => { e.preventDefault(); e.stopPropagation(); pick(s, o.value) } }
+      if (o.disabled) d.className = "d"; else { if (o.value === s.value) d.className = "s"; d.onmousedown = e => { e.preventDefault(); e.stopPropagation() }; d.onclick = e => { e.preventDefault(); e.stopPropagation(); pick(s, o.value) } }
       box.appendChild(d) };
     for (const c of s.children) { if (c.tagName === "OPTGROUP") { const g = document.createElement("div"); g.className = "g"; g.textContent = c.label; box.appendChild(g); for (const o of c.children) add(o) } else add(c) }
     document.body.appendChild(box);
@@ -39,13 +40,16 @@
     if (box) {
       const items = [...box.querySelectorAll("div[role=option]:not(.d)")], k = box.querySelector(".k") || box.querySelector(".s"); let i = items.indexOf(k);
       if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); i = Math.max(0, Math.min(items.length - 1, i + (e.key === "ArrowDown" ? 1 : -1))); items.forEach(x => x.classList.remove("k")); if (items[i]) { items[i].classList.add("k"); items[i].scrollIntoView({ block: "nearest" }) } return }
-      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); const t = box.querySelector(".k"); if (t) t.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true })); else close(); return }
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); const t = box.querySelector(".k"); if (t) t.click(); else close(); return }
       if (e.key === "Escape" || e.key === "Tab") { if (e.key === "Escape") e.preventDefault(); close() }
       return;
     }
     const s = e.target && e.target.tagName === "SELECT" ? e.target : null;
     if (own(s) && (e.key === " " || e.key === "Enter" || e.key === "F4" || (e.altKey && (e.key === "ArrowDown" || e.key === "ArrowUp")))) { e.preventDefault(); open(s) }
   }, true);
+  /* 3.5.2 (#8): הבחירה נעשית ב-click (לא ב-mousedown) כדי שהרשימה לא תיעלם באמצע הלחיצה;
+     ובכל זאת, click/pointerup שמגיעים מיד אחרי סגירה לא יעברו לרכיב שמתחת (מפה וכו') */
+  ["click", "pointerup", "mouseup"].forEach(t => document.addEventListener(t, e => { if (!box && Date.now() - shut < 400 && !(e.target.closest && e.target.closest(".sfxb,select"))) { e.preventDefault(); e.stopPropagation() } }, true));
   addEventListener("resize", close); addEventListener("blur", close);
   let opened = 0; const _o = open; open = s => { _o(s); opened = Date.now() };
   document.addEventListener("scroll", e => { if (box && !box.contains(e.target) && Date.now() - opened > 300) close() }, true);

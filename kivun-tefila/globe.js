@@ -1,3 +1,5 @@
+/* 3.5.2 (#5): ראש חץ בקצה הקו לירושלים */
+var ARW=(f,t)=>{const dx=t[0]-f[0],dy=t[1]-f[1],L=Math.hypot(dx,dy)||1,ux=dx/L,uy=dy/L,k=13,w=7,bx=t[0]-ux*k,by=t[1]-uy*k;return`<polygon points="${t[0].toFixed(1)},${t[1].toFixed(1)} ${(bx-uy*w).toFixed(1)},${(by+ux*w).toFixed(1)} ${(bx+uy*w).toFixed(1)},${(by-ux*w).toFixed(1)}" fill="var(--color-primary)" stroke="var(--color-surface)" stroke-width="1.5"/>`};
 /* כיוון תפילה 2.1 — תצוגת "כדור הארץ": הטלה אורתוגרפית, שני קווי החישוב, מסלול טיסה. גרירה מסובבת את הכדור. */
 const GL = { dla: 0, dlo: 0 };
 function rhumbPts(a, b, n) {
@@ -30,7 +32,8 @@ function globeMap() {
     const now = Date.now(), f = (now - FLY.t0) / (FLY.t1 - FLY.t0);
     h += `<path d="${line(fr)}" fill="none" stroke="var(--color-on-surface)" stroke-width="1.5" stroke-dasharray="2 3"/>` + D(FLY.A0, 3, "outline") + D(FLY.b, 3, "outline") + (f >= 0 && f <= 1 ? T(flyPos(now), "✈", "on-surface") : "");
   }
-  h += D(J, 6, "primary") + T(J, "ירושלים", "on-surface") + D(pos, 5, "on-surface") + T(pos, "אתה", "on-surface");
+  const pts = (sel === "rh" ? rh : g).map(pr).filter(q => q[2]); const jp = pr(J);
+  h += (jp[2] && pts.length > 1 ? ARW(pts[Math.max(0, pts.length - 4)], jp) : D(J, 6, "primary")) + T(J, "ירושלים", "on-surface") + D(pos, 5, "on-surface") + T(pos, "אתה", "on-surface");
   const ly = (vb ? vb.y : 0) + Hh - 8, lx = (vb ? vb.x : 0) + W - 8;
   h += `<text x="${lx}" y="${ly - 16}" text-anchor="end" font-size="11" fill="var(--color-${sel === "gc" ? "primary" : "on-surface-dim"})">${sel === "gc" ? "━" : "╌"} ${typeof LANG !== "undefined" && LANG === "en" ? "shortest line (globe)" : "קו קצר (כדור)"} ${Math.round(bearing(pos, J))}°</text>`
     + `<text x="${lx}" y="${ly}" text-anchor="end" font-size="11" fill="var(--color-${sel === "rh" ? "primary" : "on-surface-dim"})">${sel === "rh" ? "━" : "╌"} ${typeof LANG !== "undefined" && LANG === "en" ? "fixed bearing (map)" : "כיוון קבוע (מפה)"} ${Math.round(rhumb(pos, J))}°</text>`

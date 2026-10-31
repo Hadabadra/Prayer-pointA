@@ -84,6 +84,7 @@ input[type=checkbox]:disabled{opacity:.45;cursor:default}
 #spBox h1{font-size:clamp(2rem,6vw,3.4rem);margin:0;color:var(--color-on-surface)}
 #spBox p{margin:0;color:var(--color-on-surface-variant);font-size:1.1rem}
 #spGo{font-size:1.2rem;padding:.7rem 3rem;border-radius:var(--radius-pill);background:var(--color-primary);color:var(--color-on-primary);border:0}
+#spNo{display:flex;gap:.4rem;align-items:center;cursor:pointer;color:var(--color-on-surface-variant)}
 #spBox small{color:var(--color-on-surface-variant)}
 @media print{#splash{display:none!important}}
 

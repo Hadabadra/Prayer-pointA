@@ -1,3 +1,5 @@
+/* 3.5.2 (#5): ראש חץ בקצה הקו לירושלים */
+var ARW=(f,t)=>{const dx=t[0]-f[0],dy=t[1]-f[1],L=Math.hypot(dx,dy)||1,ux=dx/L,uy=dy/L,k=13,w=7,bx=t[0]-ux*k,by=t[1]-uy*k;return`<polygon points="${t[0].toFixed(1)},${t[1].toFixed(1)} ${(bx-uy*w).toFixed(1)},${(by+ux*w).toFixed(1)} ${(bx+uy*w).toFixed(1)},${(by-ux*w).toFixed(1)}" fill="var(--color-primary)" stroke="var(--color-surface)" stroke-width="1.5"/>`};
 /* כיוון תפילה — זיהוי הכיוון לפי רחוב (נתוני OpenStreetMap דרך Overpass).
    אזור שהורד פעם אחת נשמר בתיקייה הפרטית של התוסף ועובד מאז בלי אינטרנט.
    בלי רשת באוצריא אפשר לפתוח את אותה כתובת בדפדפן, לשמור את הקובץ ולטעון אותו כאן. */
@@ -158,7 +160,7 @@ async function streetMap(){const svg=$("map"),panel=$("stPanel");panel.hidden=fa
   syn+=`<g><title>${esc(stNm(sn)||"בית כנסת")}</title><text x="${f(p[0])}" y="${f(p[1]+5)}" text-anchor="middle" font-size="14" fill="var(--color-primary)" paint-order="stroke" stroke="var(--color-surface)" stroke-width="3">✡</text>`
    +(zoom>=2&&sn?`<text x="${f(p[0])}" y="${f(p[1]+18)}" text-anchor="middle" font-size="10" fill="var(--color-primary)" paint-order="stroke" stroke="var(--color-surface)" stroke-width="3">${esc(stNm(sn))}</text>`:"")+"</g>"}
  const a=P(pos[0],pos[1]),L=150,br=b+ST.rot,e=[a[0]+Math.sin(br*R)*L,a[1]-Math.cos(br*R)*L];
- svg.innerHTML=lines+hl+labels+syn+`<line x1="${f(a[0])}" y1="${f(a[1])}" x2="${f(e[0])}" y2="${f(e[1])}" stroke="var(--color-primary)" stroke-width="3" stroke-dasharray="8 4"/><circle cx="${f(e[0])}" cy="${f(e[1])}" r="6" fill="var(--color-primary)"/>`
+ svg.innerHTML=lines+hl+labels+syn+`<line x1="${f(a[0])}" y1="${f(a[1])}" x2="${f(e[0])}" y2="${f(e[1])}" stroke="var(--color-primary)" stroke-width="3" stroke-dasharray="8 4"/>`+ARW([+a[0],+a[1]],[+e[0],+e[1]])
   +`<text x="${f(e[0])}" y="${f(e[1]-9)}" text-anchor="middle" font-size="12" fill="var(--color-on-surface)" paint-order="stroke" stroke="var(--color-surface)" stroke-width="3">לירושלים</text>`
   +`<circle cx="${f(a[0])}" cy="${f(a[1])}" r="6" fill="var(--color-on-surface)" stroke="var(--color-surface)" stroke-width="2"/>`
   +`<g transform="translate(${ST.vb.x1-20},${ST.vb.y0+30}) rotate(${f(ST.rot)})"><path d="M0,-12 L6,7 L0,3 L-6,7Z" fill="var(--color-on-surface)" stroke="var(--color-surface)" stroke-width="1.5"/><text y="-15" text-anchor="middle" font-size="11" fill="var(--color-on-surface)" paint-order="stroke" stroke="var(--color-surface)" stroke-width="3">צ N</text></g>`

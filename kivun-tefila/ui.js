@@ -146,11 +146,19 @@
     const skip = /nosplash/.test(location.search);
     const sw = $("splashShow");
     (async () => {
-      let v = null; try { v = O ? dat0(await O.call("storage.get", { key: "kivun-splash" })) : localStorage.getItem("kivun-splash") } catch (e) {}
-      if (skip || v === "0") { sp.remove(); if (sw) sw.checked = false; return }
+      /* 3.5.2 (#4): קוראים גם מאוצריא וגם מ-localStorage — "0" באחד מהם מספיק */
+      let v = null, w = null;
+      try { if (O) { v = dat0(await O.call("storage.get", { key: "kivun-splash" })); if (v && typeof v === "object") v = v.value } } catch (e) {}
+      try { w = localStorage.getItem("kivun-splash") } catch (e) {}
+      if (skip || String(v) === "0" || (v == null && w === "0")) { sp.remove(); if (sw) sw.checked = false; return }
       $("spGo").focus();
     })();
-    if (sw) sw.onchange = () => { const x = sw.checked ? "1" : "0"; try { O ? O.call("storage.set", { key: "kivun-splash", value: x }).catch(() => {}) : localStorage.setItem("kivun-splash", x) } catch (e) {} };
+    const save = x => { try { if (O) O.call("storage.set", { key: "kivun-splash", value: x }).catch(() => {}) } catch (e) {} try { localStorage.setItem("kivun-splash", x) } catch (e) {} };
+    if (sw) sw.onchange = () => save(sw.checked ? "1" : "0");
+    /* 3.5.2 (#4): "אל תציג שוב" במסך הפתיחה עצמו */
+    const ns = document.createElement("label"); ns.id = "spNo"; ns.innerHTML = '<input type="checkbox" id="spNoC"> אל תציג מסך זה שוב';
+    $("spGo").after(ns);
+    $("spNoC").onchange = e => { const x = e.target.checked ? "0" : "1"; save(x); if (sw) sw.checked = x === "1" };
   }
   /* 2.6.0: מצב תפילה על רקע הכותל, כמו מסך הפתיחה */
   (function () {
