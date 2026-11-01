@@ -92,7 +92,7 @@
   /* 3.2.0 (פורום, post #86): רשימה נפתחת של הכבישים/הנהרות, כמו ברחובות */
   const nsList = document.createElement("datalist"); nsList.id = "nsList"; document.body.appendChild(nsList); $("nsQ").setAttribute("list", "nsList"); $("nsQ").setAttribute("autocomplete", "off");
   async function fillList() {
-    const k = $("nsKind").value, c = $("nsCountry").value; if (k === "st") return;
+    const k = $("nsKind").value, c = $("nsCountry").value; if (k !== "rd" && k !== "rv") { nsList.replaceChildren(); return }  /* 3.6.0 (#9): בבתי כנסת / תחנות / שדות תעופה לא מציעים רשימת כבישים */
     const t = k === "rv" ? "w" : "r", seen = new Set(), opts = [];
     const add = e => { const v = e[2] ? (t === "r" && /^\d/.test(e[1]) ? "כביש " + e[1] + " — " + e[2] : e[2]) : (t === "r" && /^\d/.test(e[1]) ? "כביש " + e[1] : e[1]); if (!v || seen.has(v)) return; seen.add(v); opts.push([v, e]) };
     if (t === "r") { const ce = await roadsLocal(c || "ISR"); if (ce) ce.forEach(add) }
@@ -104,7 +104,7 @@
   /* בחירה מהרשימה: "כביש 6 — כביש חוצה ישראל" → חיפוש לפי המספר */
   $("nsQ").addEventListener("change", () => { const m = $("nsQ").value.match(/^כביש (\d+)( — |$)/); if (m) $("nsQ").value = m[1]; if (nsList.querySelector("option[value='" + CSS.escape($("nsQ").value) + "']") || m) go() });
   $("nsQ").addEventListener("focus", fillList);
-  $("nsKind").onchange = () => { mode(); rdBox(); fillList() }; $("nsCountry").onchange = () => { rdBox(); fillList() }; mode();
+  $("nsKind").onchange = () => { res.replaceChildren(); res.hidden = true; $("nsQ").value = ""; mode(); rdBox(); fillList() };  /* 3.6.0 (#9): רשימת התוצאות הקודמת נסגרת במעבר */ $("nsCountry").onchange = () => { rdBox(); fillList() }; mode();
   $("rdDl").onclick = async () => {
     const c = $("nsCountry").value; if (!c) return; say("nsMsg", "מוריד את כבישי " + cName() + "…");
     try { const j = await getJ(BASE + "roads/" + c + ".json"); if (!j || !j.e) throw 0; await roadsSet(c, JSON.stringify(j)); say("nsMsg", "כבישי " + cName() + " נשמרו ✓ (" + j.e.length + ")"); rdBox() }
