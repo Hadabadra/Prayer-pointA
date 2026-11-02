@@ -324,8 +324,8 @@
     }
     const north = o.chrome === false ? '' : `<g transform="translate(${W - 20},30) rotate(${f(v.rot)})"><path d="M0,-12 L6,7 L0,3 L-6,7Z" fill="var(--color-on-surface)" stroke="var(--color-surface)" stroke-width="1.5"/><text y="-15" text-anchor="middle" font-size="11" fill="var(--color-on-surface)" paint-order="stroke" stroke="var(--color-surface)" stroke-width="3">צ N</text></g>`;
     // טקסט עברי מתיישר מימין: מעוגן ב-rtl ליד חץ הצפון, ומתפרש שמאלה (כמו בכיוון תפילה)
-    const scale = o.chrome === false ? '' : `<text x="${W - 38}" y="18" direction="rtl" text-anchor="start" font-size="12" fill="var(--color-on-surface-variant, #5f6368)">${widthLabel(v.hw * 2)} לרוחב</text>`;
-    const attr = o.chrome !== false && area && o.streets !== false ? `<text x="8" y="${H - 8}" direction="ltr" font-size="10" fill="var(--color-on-surface-variant, #5f6368)">© OpenStreetMap contributors${area.d ? ' · ' + esc(area.d) : ''}</text>` : '';
+    const scale = o.chrome === false ? '' : `<text x="${W - 14}" y="46" direction="rtl" text-anchor="start" font-size="11" paint-order="stroke" stroke="var(--color-surface)" stroke-width="3" stroke-linejoin="round" fill="var(--color-on-surface-variant, #5f6368)">${widthLabel(v.hw * 2)} לרוחב</text>`;
+    const attr = o.chrome !== false && area && o.streets !== false ? `<text x="${W - 14}" y="${H - 62}" direction="ltr" text-anchor="end" font-size="9" paint-order="stroke" stroke="var(--color-surface)" stroke-width="3" stroke-linejoin="round" fill="var(--color-on-surface-variant, #5f6368)">© OpenStreetMap contributors${area.d ? ' · ' + esc(area.d) : ''}</text>` : '';
     return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img">${base}${lines}${sel}${labels}${syn}${pts}${me}${north}${scale}${attr}</svg>`;
   }
 

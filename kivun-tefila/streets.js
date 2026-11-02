@@ -164,8 +164,8 @@ async function streetMap(){const svg=$("map"),panel=$("stPanel");panel.hidden=fa
   +`<text x="${f(e[0])}" y="${f(e[1]-9)}" text-anchor="middle" font-size="12" fill="var(--color-on-surface)" paint-order="stroke" stroke="var(--color-surface)" stroke-width="3">לירושלים</text>`
   +`<circle cx="${f(a[0])}" cy="${f(a[1])}" r="6" fill="var(--color-on-surface)" stroke="var(--color-surface)" stroke-width="2"/>`
   +`<g transform="translate(${ST.vb.x1-20},${ST.vb.y0+30}) rotate(${f(ST.rot)})"><path d="M0,-12 L6,7 L0,3 L-6,7Z" fill="var(--color-on-surface)" stroke="var(--color-surface)" stroke-width="1.5"/><text y="-15" text-anchor="middle" font-size="11" fill="var(--color-on-surface)" paint-order="stroke" stroke="var(--color-surface)" stroke-width="3">צ N</text></g>`
-  +`<text x="${ST.vb.x1-38}" y="${ST.vb.y0+18}" direction="rtl" text-anchor="start" font-size="12" fill="var(--color-on-surface-dim)">${Math.round(v.hw*2*(ST.vb.x1-ST.vb.x0)/400)} מ' לרוחב</text>`
-  +`<text x="${ST.vb.x0+8}" y="${ST.vb.y1-8}" direction="ltr" text-anchor="start" font-size="10" fill="var(--color-on-surface-dim)">© OpenStreetMap contributors · ${esc(ST.area.d||"")}</text>`;
+  +`<text x="${ST.vb.x1-14}" y="${ST.vb.y0+46}" direction="rtl" text-anchor="start" font-size="11" paint-order="stroke" stroke="var(--color-surface)" stroke-width="3" stroke-linejoin="round" fill="var(--color-on-surface-dim)">${Math.round(v.hw*2*(ST.vb.x1-ST.vb.x0)/400)} מ' לרוחב</text>`
+  +`<text x="${ST.vb.x1-14}" y="${ST.vb.y1-62}" direction="ltr" text-anchor="end" font-size="9" paint-order="stroke" stroke="var(--color-surface)" stroke-width="3" stroke-linejoin="round" fill="var(--color-on-surface-dim)">© OpenStreetMap contributors · ${esc(ST.area.d||"")}</text>`;
  stText()}
 /* ההוראה: לאורך איזה רחוב לעמוד, ובכמה מעלות להסתובב ממנו */
 function stText(){const t=$("stTxt");if(!ST.sel){t.textContent=ST.setHere?"לחץ במפה על המקום שבו אתה נמצא.":"לחץ במפה על הרחוב שלידך, ותקבל הוראה ביחס לכיוון שלו.";return}

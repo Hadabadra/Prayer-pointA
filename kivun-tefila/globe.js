@@ -35,9 +35,9 @@ function globeMap() {
   const pts = (sel === "rh" ? rh : g).map(pr).filter(q => q[2]); const jp = pr(J);
   h += (jp[2] && pts.length > 1 ? ARW(pts[Math.max(0, pts.length - 4)], jp) : D(J, 6, "primary")) + T(J, "ירושלים", "on-surface") + D(pos, 5, "on-surface") + T(pos, "אתה", "on-surface");
   const ly = (vb ? vb.y : 0) + Hh - 8, lx = (vb ? vb.x : 0) + W - 8;
-  h += `<text x="${lx}" y="${ly - 16}" text-anchor="end" font-size="11" fill="var(--color-${sel === "gc" ? "primary" : "on-surface-dim"})">${sel === "gc" ? "━" : "╌"} ${typeof LANG !== "undefined" && LANG === "en" ? "shortest line (globe)" : "קו קצר (כדור)"} ${Math.round(bearing(pos, J))}°</text>`
-    + `<text x="${lx}" y="${ly}" text-anchor="end" font-size="11" fill="var(--color-${sel === "rh" ? "primary" : "on-surface-dim"})">${sel === "rh" ? "━" : "╌"} ${typeof LANG !== "undefined" && LANG === "en" ? "fixed bearing (map)" : "כיוון קבוע (מפה)"} ${Math.round(rhumb(pos, J))}°</text>`
-    + `<text x="${(vb ? vb.x : 0) + 8}" y="${(vb ? vb.y : 0) + 16}" font-size="11" fill="var(--color-on-surface-dim)">גרירה מסובבת את הכדור</text>`;
+  h += `<text x="${lx}" y="${ly - 16}" direction="rtl" text-anchor="start" font-size="11" fill="var(--color-${sel === "gc" ? "primary" : "on-surface-dim"})">${sel === "gc" ? "━" : "╌"} ${typeof LANG !== "undefined" && LANG === "en" ? "shortest line (globe)" : "קו קצר (כדור)"} ${Math.round(bearing(pos, J))}°</text>`
+    + `<text x="${lx}" y="${ly}" direction="rtl" text-anchor="start" font-size="11" fill="var(--color-${sel === "rh" ? "primary" : "on-surface-dim"})">${sel === "rh" ? "━" : "╌"} ${typeof LANG !== "undefined" && LANG === "en" ? "fixed bearing (map)" : "כיוון קבוע (מפה)"} ${Math.round(rhumb(pos, J))}°</text>`
+    + `<text x="${(vb ? vb.x : 0) + 8}" y="${(vb ? vb.y : 0) + 16}" direction="rtl" text-anchor="end" font-size="11" fill="var(--color-on-surface-dim)">גרירה מסובבת את הכדור</text>`;
   svg.innerHTML = h;
   if (typeof $ === "function" && $("stPanel")) $("stPanel").hidden = true;
 }

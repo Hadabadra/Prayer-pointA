@@ -41,7 +41,7 @@
         kids[1].setAttribute("stroke", "#9cc3ea"); kids[2].setAttribute("stroke", "#e9f3d4"); kids[2].setAttribute("stroke-width", "1.1");
       }
       /* 5. לילה: נקודות שקופות כהות בכל מקום שהשמש מתחת לאופק */
-      let night = "", step = 4, dot = Math.max(1.6, r * step * R * .62);
+      let night = "", step = 4, dot = Math.max(1.6, r * step * R * .82);
       for (let la = -88; la <= 88; la += step) for (let lo = -180; lo < 180; lo += step) {
         const q = [la, lo]; if (sunAlt(S, q) >= 0) continue; const [x, y, v] = pr(q); if (v) night += `M${(x - dot).toFixed(1)},${y.toFixed(1)}a${dot.toFixed(1)},${dot.toFixed(1)} 0 1,0 ${(2 * dot).toFixed(1)},0a${dot.toFixed(1)},${dot.toFixed(1)} 0 1,0 ${(-2 * dot).toFixed(1)},0`;
       }
