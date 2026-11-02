@@ -219,11 +219,22 @@ function stFind(){const q=$("stQ").value.trim();if(!q||!ST.area)return;
  const Q=nq(q);const nm2=x=>[nq(x[0]),nq(stNm(x[0]))];let ws=ST.area.w.map((x,i)=>[x,i]).filter(([x])=>nm2(x).some(v=>v===Q));if(!ws.length)ws=ST.area.w.map((x,i)=>[x,i]).filter(([x])=>nm2(x).some(v=>v.toLowerCase().includes(Q.toLowerCase())));
  if(!ws.length){$("stTxt").textContent=`לא נמצא רחוב בשם "${q}" באזור הזה.`;return}
  const[kx,ky]=stM();let best=null;for(const[[,,g],i]of ws)for(let k=0;k+3<g.length;k+=2){const L=Math.hypot((g[k+2]-g[k])*ky,(g[k+3]-g[k+1])*kx);if(!best||L>best[0])best=[L,i,k]}
- const g=ST.area.w[best[1]][2],k=best[2],mla=+((g[k]+g[k+2])/2).toFixed(6),mlo=+((g[k+1]+g[k+3])/2).toFixed(6),area=ST.area,sel={i:best[1],k},stName=stNm(area.w[best[1]][0]);
+ const g=ST.area.w[best[1]][2],k=best[2];let mla=+((g[k]+g[k+2])/2).toFixed(6),mlo=+((g[k+1]+g[k+3])/2).toFixed(6);const area=ST.area,sel={i:best[1],k},stName=stNm(area.w[best[1]][0]);
+ /* 3.7.0: ברחוב ארוך — המיקום נקבע בצומת (פינת רחובות) הקרוב למיקום הקודם, לא באמצע/תחילת הרחוב */
+ {const J=stJunction(ws,pos);if(J){mla=J[0];mlo=J[1];sel.i=J[2];sel.k=J[3];sel.pt=[mla,mlo];const cn=stCorner([mla,mlo],stName.replace(TR_PFX,""));
+  $("city").value="";ST.pan=[0,0];zoomKeep(()=>setPos([mla,mlo],cn+(area.name?", "+area.name:""),null,false));
+  mode="m:"+mla+","+mlo;save(mode);ST.area=area;ST.sel=sel;$("plName").value=cn;streetMap();return}}
  /* הרחוב שנמצא הופך למיקום הנוכחי — כך אפשר לשמור אותו כמקום שמור */
  $("city").value="";ST.pan=[0,0];zoomKeep(()=>setPos([mla,mlo],stName+(area.name?", "+area.name:""),null,false));
  mode="m:"+mla+","+mlo;save(mode);ST.area=area;ST.sel=sel;$("plName").value=stName;streetMap()}
 /* כשאין מפה למיקום: הצעה לעבור לאזור המובנה הקרוב (עד 60 ק"מ) */
+/* צמתים של רחוב עם רחובות אחרים בעלי שם; מחזיר את הקרוב לנקודה p (או הראשון) */
+function stJunction(ws,p){const o=[ST.area.lat,ST.area.lon],kx=111320*Math.cos(o[0]*R),ky=110540,ids=new Set(ws.map(x=>x[1])),out=[];
+ const others=ST.area.w.map((x,i)=>[x,i]).filter(([x,i])=>!ids.has(i)&&stNm(x[0])&&!/^(path|footway|track|steps|cycleway|bridleway|building)$/.test(x[1]));
+ for(const[[,,g],i]of ws)for(let k=0;k+1<g.length;k+=2){const a=[(g[k+1]-o[1])*kx,(g[k]-o[0])*ky];
+  for(const[[,,h]]of others)for(let j=0;j+3<h.length;j+=2){const b1=[(h[j+1]-o[1])*kx,(h[j]-o[0])*ky],b2=[(h[j+3]-o[1])*kx,(h[j+2]-o[0])*ky],dx=b2[0]-b1[0],dy=b2[1]-b1[1],
+   u=Math.max(0,Math.min(1,((a[0]-b1[0])*dx+(a[1]-b1[1])*dy)/(dx*dx+dy*dy||1)));if(Math.hypot(b1[0]+u*dx-a[0],b1[1]+u*dy-a[1])<12){out.push([+g[k].toFixed(6),+g[k+1].toFixed(6),i,Math.min(k,g.length-4)]);break}}}
+ if(!out.length)return null;if(!p)return out[0];out.sort((x,y)=>dist(p,[x[0],x[1]])-dist(p,[y[0],y[1]]));return out[0]}
 function stNear(){const b=$("stNearBox");if(!b)return;let n=null;for(const a of EMB){const d=dist(pos,[a.lat,a.lon]);if(!n||d<n[1])n=[a,d]}
  if(!n||n[1]>60){b.hidden=true;return}b.hidden=false;$("stNearTxt").textContent=`האזור המובנה הקרוב: ${n[0].name} (${n[1]<10?n[1].toFixed(1):Math.round(n[1])} ק"מ מכאן). `;
  $("stNearGo").onclick=()=>{const i=C.findIndex(c=>c[0]===n[0].name);if(i>=0){$("city").value=String(i);$("city").onchange()}else{setPos([n[0].lat,n[0].lon],n[0].name,null,false,true)}}}
