@@ -253,3 +253,7 @@ body.mapfull #stRotRow[hidden]{display:none !important}
 #mapTool .ktLayers .mu-pop { text-align: start; font-size: .95rem; }
 #bManT.icoOnly .bl { display: none; }
 .eyes .eyMsg { display: block; font-size: .85em; }
+/* 3.7.0: במסך מלא שורת החיפוש המלאה (עיר/רחוב/כבישים/נהרות/מקומות) גלויה תמיד, צפה למעלה */
+body.mapfull #plRow,body.mapfull #plRow.shut{display:flex !important;position:fixed;top:calc(var(--bar-h,2.6rem) + .5rem);inset-inline-start:.5rem;z-index:32;flex-wrap:wrap;gap:.3rem;max-width:calc(100vw - 24em);background:var(--color-surface);border:1px solid var(--color-outline);border-radius:var(--radius-sm);box-shadow:var(--m-shadow-pop);padding:.3em .4em;margin:0}
+body.mapfull #mapFullBar #fQ{display:none !important}
+@media (max-width:50em){body.mapfull #plRow,body.mapfull #plRow.shut{max-width:96vw;top:calc(var(--bar-h,2.6rem) + 3.2rem)}}
