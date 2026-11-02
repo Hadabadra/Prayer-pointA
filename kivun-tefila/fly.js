@@ -177,11 +177,13 @@ function flyText() { const S = flySheet(); if (!S) return "";
   return [head, "", "זמני היום לאורך הטיסה:", ...(S.L.route.length ? S.L.route.map(e => `${flyTm(e[0])}  ${e[1]}  (${flyLL(e[2])})`) : ["אין זריחה, שקיעה או צאת הכוכבים בזמן הטיסה."]),
     "", "כיוון ירושלים כל חצי שעה:", ...S.rows.map(r => `${flyTm(r[0])}  ${flyLL(r[1])}  ירושלים ${r[2]} (${r[3]}° מהצפון)`),
     "", "חישוב משוער (מסלול ישיר, מהירות קבועה). בשאלה מעשית יש לשאול רב. — כיוון תפילה, אוצריא"].join("\n") }
-function flyPrint() { const S = flySheet(); if (!S) return; const row = r => `<tr>${r.map(x => `<td>${x}</td>`).join("")}</tr>`;
+function flyPrintHead() { const S = flySheet(); if (!S) return false; const row = r => `<tr>${r.map(x => `<td>${x}</td>`).join("")}</tr>`;
   $("printHead").innerHTML = `<h1>זמני היום וכיוון התפילה בטיסה</h1><p><b>${esc(FLY.A0[2])} ← ${esc(FLY.b[2])}</b> · המראה ${flyTm(FLY.T0)} · נחיתה ${flyTm(FLY.t1)}</p>`
     + `<h2>זמני היום לאורך הטיסה</h2><table class="halt">${S.L.route.length ? S.L.route.map(e => row([flyTm(e[0]), esc(e[1]), flyLL(e[2])])).join("") : "<tr><td>אין זריחה, שקיעה או צאת הכוכבים בזמן הטיסה.</td></tr>"}</table>`
     + `<h2>כיוון ירושלים כל חצי שעה</h2><table class="halt">${S.rows.map(r => row([flyTm(r[0]), flyLL(r[1]), "ירושלים " + r[2], r[3] + "°"])).join("")}</table>`
-    + `<p><small>השעות לפי השעון במכשיר. חישוב משוער (מסלול ישיר, מהירות קבועה). בשאלה מעשית יש לשאול רב.</small></p>`;
+    + `<p><small>השעות לפי השעון במכשיר. חישוב משוער (מסלול ישיר, מהירות קבועה). בשאלה מעשית יש לשאול רב. מתוך התוסף "כיוון תפילה" לאוצריא: <a href="https://otzaria.org/plugins/6ac80057bd083fcc18562fa0">חנות התוספים</a> · <a href="https://github.com/Hadabadra/Prayer-pointA/releases">GitHub</a></small></p>`;
+  return true }
+function flyPrint() { if (!flyPrintHead()) return;
   document.body.classList.add("printfly"); try { window.print() } catch (e) {} setTimeout(() => document.body.classList.remove("printfly"), 1500) }
 function flyStop() { if (O) O.call("notifications.cancelAll").catch(() => {}); $("flyAlert").hidden = true; FLY.on = false; FLY.on0 = false; FLY.a = null; clearInterval(FLY.T); FLY.T = null; $("flyStop").hidden = true; flyChip(false);
   $("flyOut").innerHTML = ""; $("flyGlobe").innerHTML = ""; $("mapMode").value = FLY.prevMode && FLY.prevMode !== "globe" ? FLY.prevMode : "street"; if (typeof map === "function") map(); if (typeof draw === "function") draw();
