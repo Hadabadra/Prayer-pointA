@@ -97,7 +97,7 @@
     const add = e => { const v = e[2] ? (t === "r" && /^\d/.test(e[1]) ? "כביש " + e[1] + " — " + e[2] : e[2]) : (t === "r" && /^\d/.test(e[1]) ? "כביש " + e[1] : e[1]); if (!v || seen.has(v)) return; seen.add(v); opts.push([v, e]) };
     if (t === "r") { const ce = await roadsLocal(c || "ISR"); if (ce) ce.forEach(add) }
     if (N) N.e.forEach(e => { if (e[0] === t && (!c || (e[3] || []).includes(c))) add(e) });
-    if (t === "w") Object.keys(HEBN).forEach(h => { if (!seen.has(h)) { seen.add(h); opts.push([h, null]) } });
+    if (t === "w" && !c) Object.keys(HEBN).forEach(h => { if (!seen.has(h)) { seen.add(h); opts.push([h, null]) } });
     opts.sort((a, b) => { const na = parseInt(a[1] && a[1][1]), nb = parseInt(b[1] && b[1][1]); return (isNaN(na) ? 1e9 : na) - (isNaN(nb) ? 1e9 : nb) || a[0].localeCompare(b[0], "he") });
     nsList.replaceChildren(...opts.slice(0, 1500).map(([v]) => { const o = document.createElement("option"); o.value = v; return o }));
   }

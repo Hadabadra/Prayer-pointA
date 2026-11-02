@@ -20,10 +20,10 @@
     "fs.user_files.read",
     "fs.user_files.write",
     "reader.open",
-    "library.books.read", "library.content.read",
+    "library.books.read",
+    "library.content.read",
     "notifications.system",
     "ui.create_shortcut",
-    "reader.toolbar",
     "app.startup_contributions",
     "library.books.provide",
     "published_data.write"
@@ -50,17 +50,6 @@
       "iconName": "compass_northwest_24_regular"
     },
     "startup": {
-      "toolbarItems": [
-        {
-          "id": "kivun-open",
-          "title": "כיוון תפילה",
-          "icon": "compass_northwest_24_regular",
-          "contexts": [
-            "reader-text"
-          ],
-          "openPlugin": true
-        }
-      ],
       "libraryBooks": [
         {
           "id": "parts",
