@@ -4,7 +4,7 @@
 (function () {
   const $ = id => document.getElementById(id), O = window.Otzaria;
   const BASE = "https://raw.githubusercontent.com/Hadabadra/Prayer-pointA/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/kivun-tefila-data/";
-  const PAGE = "https://github.com/Hadabadra/Prayer-pointA/releases/download/kivun-tefila-data/"; /* 3.0.5: קבצים מצורפים — הדפדפן מוריד ישירות */
+  const PAGE = "https://github.com/Hadabadra/Prayer-pointA/releases/download/kivun-tefila-data/kivun-tefila-"; /* 3.0.5: קבצים מצורפים — הדפדפן מוריד ישירות */
   const dat = r => r && (r.data !== undefined ? r.data : r);
   const say = (id, t) => { const e = $(id); if (e) e.textContent = t };
   const BASIC = [["ISR", "ישראל", "Israel"], ["USA", "ארצות הברית", "United States of America"], ["CAN", "קנדה", "Canada"], ["MEX", "מקסיקו", "Mexico"], ["GBR", "בריטניה", "United Kingdom"], ["FRA", "צרפת", "France"], ["DEU", "גרמניה", "Germany"], ["BEL", "בלגיה", "Belgium"], ["NLD", "הולנד", "Netherlands"], ["CHE", "שווייץ", "Switzerland"], ["AUT", "אוסטריה", "Austria"], ["ITA", "איטליה", "Italy"], ["ESP", "ספרד", "Spain"], ["UKR", "אוקראינה", "Ukraine"], ["RUS", "רוסיה", "Russia"], ["POL", "פולין", "Poland"], ["HUN", "הונגריה", "Hungary"], ["ARG", "ארגנטינה", "Argentina"], ["BRA", "ברזיל", "Brazil"], ["AUS", "אוסטרליה", "Australia"], ["ZAF", "דרום אפריקה", "South Africa"], ["MAR", "מרוקו", "Morocco"], ["JOR", "ירדן", "Jordan"], ["EGY", "מצרים", "Egypt"], ["TUR", "טורקיה", "Turkey"]];

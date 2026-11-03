@@ -11,17 +11,19 @@
      layers: [{id, name, glyph, points, lines, on}],   // שכבות נוספות של התוסף עצמו
      call(method, params), openLink(url), onPick(id), pickLabel, nearby, nearbyLabel,
      builtinStreets, online, tab, jerusalem, onJerusalem, repo, forumUrl, issueUrl, future: [...] })
-   MapUI.layersButton(element, { self, getPos, call, openLink, online })   // אותו תפריט שכבות למפה שאינה map-ui (כיוון תפילה)
+   MapUI.layersButton(element, { self, getPos, call, openLink, online, extraHTML, onExtra(pop) })   // אותו תפריט שכבות למפה שאינה map-ui (כיוון תפילה, עינים למקרא)
+   guide: [{t, d}]                 // 2.1: שלבים של התוסף עצמו בהדרכה (לפני שלבי המפה המשותפים). links מגיעים מ-repo ומ-PLUGINS.
    MapUI.onOpenMap(cb)             // תוסף אחר ביקש לפתוח את המפה כאן: cb({lat, lon, from}) */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory(require('./map-core.js'));
   else root.MapUI = factory(root.MapCore);
 })(this, function (MC) {
   'use strict';
-  const VERSION = '2.0.0';
+  const VERSION = '2.2.0';
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const W = 400, H = 300, ZMIN = 0.00004, ZMAX = 10;
+  const W = 400, ZMIN = 0.00004, ZMAX = 10;
   const JERUSALEM = [31.7767, 35.2345];
+  let H = 300;   // 2.1: גובה ה-viewBox מחושב לפי יחס הרוחב-גובה של המיכל, כדי שהמפה תמלא את החלון בלי גלילה
   const SHARED_URL = 'https://github.com/Hadabadra/Mikvaot/tree/main/shared/map-core';
   const SHARED_DOC = 'https://github.com/Hadabadra/Mikvaot/blob/main/shared/map-core/SHARED-MAP.md';
 
@@ -48,6 +50,8 @@
     'לא נמצא': 'Not found', 'הרחובות לא נפגשים באזור הזה': 'The streets do not meet in this area', 'הקובץ לא נקרא': 'The file could not be read',
     'בקובץ אין רחובות': 'The file has no streets', 'הקובץ נטען': 'File loaded', 'פתיחה ברשימה': 'Open in the list', 'ניווט ב-Waze': 'Navigate with Waze',
     'פתיחה ב-Google Maps': 'Open in Google Maps', 'אין נקודות עם מיקום להצגה': 'No points with a location to show', 'לרוחב': 'across', 'ממני': 'from me',
+    'הוראות שלב אחר שלב': 'Step-by-step directions', 'הורדת הסבר המסלול': 'Download the route', 'נקודת מוצא מכאן': 'Start from here', 'מסלול הליכה לכאן': 'Walk here', 'מפה צבעונית': 'Colored map', 'הוספת קובץ': 'Add a file',
+    'הדרכה': 'Guide', 'הדרכה שלב אחר שלב': 'Step-by-step guide', 'הקודם': 'Previous', 'הבא': 'Next', 'סיום': 'Done', 'הורדת ההדרכה': 'Download the guide', 'מחיקת המסלול': 'Remove the route',
     'מספר בית מדויק נמצא בחיפוש ברשת': 'Exact house number found online', 'מוצג הרחוב; מספר בית מדויק דורש חיבור לאינטרנט': 'Showing the street; an exact house number needs internet'
   };
 
@@ -59,21 +63,29 @@
     layers: '<path d="M12 3 2.5 8 12 13l9.5-5z"/><path d="M2.5 12.5 12 17.5l9.5-5"/><path d="M2.5 16.5 12 21.5l9.5-5" opacity=".6"/>',
     search: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.8-4.8"/>', close: '<path d="M6 6l12 12M18 6 6 18"/>',
     jer: '<path d="M4 20h16M6 20v-7l6-5 6 5v7"/><path d="M10 20v-4h4v4"/><path d="M12 8V4"/>', ext: '<path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v6H4V6h6"/>',
+    add: '<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>', dl: '<path d="M12 4v11M7 10l5 5 5-5"/><path d="M5 20h14"/>',
+    help: '<circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .8-1 1.5v.4"/><path d="M12 16.8v.2"/>',
     route: '<circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="6" r="2.2"/><path d="M8 18h6a3 3 0 0 0 0-6h-4a3 3 0 0 1 0-6h6"/>'
   };
   const ic = (n, extra) => `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"${extra || ''}>${ICO[n]}</svg>`;
   const compass = rot => `<svg viewBox="0 0 24 24" aria-hidden="true"><g transform="rotate(${(+rot || 0).toFixed(1)} 12 12)"><path d="M12 3l3.6 9H8.4z" fill="var(--color-error, #c62828)"/><path d="M12 21l-3.6-9h7.2z" fill="currentColor" opacity=".55"/></g></svg>`;
 
   const CSS = `
+:root { --mu-sea: #a9cdea; --mu-coast: #6b8fae; --mu-river: #4f8fcf; --mu-land-street: #f3efe0;
+  --mu-land1: #e9e3b8; --mu-land2: #cfe3b0; --mu-land3: #f1cfa8; --mu-land4: #d9c9e6; --mu-land5: #f3dcc2; --mu-land6: #c6dfd2; }
 .mapui { --mu-r: var(--radius-lg, 1.1em); --mu-sh: 0 1px 2px rgba(0,0,0,.18), 0 4px 14px rgba(0,0,0,.12); }
 .mapui .mu-stage { position: relative; border-radius: var(--mu-r); overflow: hidden; background: var(--color-surface-container, rgba(128,128,128,.08)); }
 .mapui .mu-view { touch-action: none; user-select: none; -webkit-user-select: none; outline: none; }
 .mapui .mu-view svg { display: block; width: 100%; height: auto; max-height: 58vh; cursor: grab; }
 .mapui .mu-view svg:active { cursor: grabbing; }
 .mapui .mu-view svg g[data-id] { cursor: pointer; }
-.mapui.mapui-tab .mu-view svg { max-height: calc(100vh - 13em); min-height: 20em; }
-.mapui.mu-full { position: fixed; inset: 0; z-index: 9000; background: var(--color-surface, #fff); padding: .6em; overflow: auto; }
-.mapui.mu-full .mu-view svg { max-height: calc(100vh - 2em); min-height: calc(100vh - 2em); }
+.mapui.mapui-tab, .mapui.mu-full { display: flex; flex-direction: column; overflow: hidden; min-height: 0; box-sizing: border-box; }
+.mapui.mapui-tab > .mu-stage, .mapui.mu-full > .mu-stage { flex: 1 1 auto; min-height: 14em; }
+.mapui.mapui-tab .mu-view, .mapui.mu-full .mu-view { position: absolute; inset: 0; }
+.mapui.mapui-tab .mu-view svg, .mapui.mu-full .mu-view svg { width: 100%; height: 100%; max-height: none; }
+.mapui.mapui-tab > :not(.mu-stage), .mapui.mu-full > :not(.mu-stage) { flex: none; }
+.mapui.mapui-tab > details.mu-more[open], .mapui.mu-full > details.mu-more[open] { max-height: 38%; overflow: auto; }
+.mapui.mu-full { position: fixed; inset: 0; z-index: 9000; background: var(--color-surface, #fff); padding: .6em; }
 .mapui .mu-glass { background: var(--color-surface, #fff); color: var(--color-on-surface, inherit); box-shadow: var(--mu-sh); border-radius: var(--radius-pill, 2em); }
 .mapui .mu-search { position: absolute; top: .6em; inset-inline: .6em 3.6em; display: flex; align-items: center; gap: .3em; padding: .15em .25em .15em .7em; z-index: 3; }
 .mapui .mu-search input { flex: 1; min-width: 0; font: inherit; border: 0; outline: 0; background: transparent; color: inherit; padding: .45em .2em; }
@@ -96,23 +108,32 @@
 .mapui .mu-pop h5 { margin: .3em 0 .35em; font-size: .82em; letter-spacing: .02em; opacity: .75; font-weight: 600; }
 .mapui .mu-row { display: flex; align-items: center; gap: .6em; padding: .4em .45em; border-radius: .7em; cursor: pointer; }
 .mapui .mu-row:hover { background: var(--color-secondary-container, rgba(128,128,128,.12)); }
-.mapui .mu-row .mu-g { width: 1.75em; height: 1.75em; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: .85em; background: var(--color-primary); color: var(--color-on-primary, #fff); flex: none; }
+.mapui .mu-row .mu-g { width: 1.75em; height: 1.75em; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: .85em; background: var(--color-primary, #3f6fa8); color: var(--color-on-primary, #fff); flex: none; }
 .mapui .mu-row .mu-g.alt { background: var(--color-surface-container-high, rgba(128,128,128,.2)); color: var(--color-on-surface, inherit); }
 .mapui .mu-row .mu-t { flex: 1; min-width: 0; line-height: 1.25; }
 .mapui .mu-row .mu-t small { display: block; opacity: .7; font-size: .8em; }
 .mapui .mu-row.off { opacity: .5; cursor: default; }
 .mapui .mu-sw { appearance: none; -webkit-appearance: none; width: 2.2em; height: 1.25em; border-radius: 1em; background: var(--color-outline-variant, rgba(128,128,128,.4)); position: relative; cursor: pointer; flex: none; margin: 0; transition: background .15s; }
 .mapui .mu-sw::after { content: ''; position: absolute; top: .15em; inset-inline-start: .15em; width: .95em; height: .95em; border-radius: 50%; background: var(--color-surface, #fff); transition: inset-inline-start .15s; }
-.mapui .mu-sw:checked { background: var(--color-primary); }
+.mapui .mu-sw:checked { background: var(--color-primary, #3f6fa8); }
 .mapui .mu-sw:checked::after { inset-inline-start: 1.1em; }
 .mapui .mu-ask { margin: .2em 2.3em .4em 0; font-size: .9em; display: flex; flex-wrap: wrap; gap: .4em; align-items: center; }
 .mapui button.mu { font: inherit; cursor: pointer; padding: .38em .95em; border-radius: var(--radius-pill, 2em); border: 0; background: var(--color-secondary-container, rgba(128,128,128,.15)); color: var(--color-on-secondary-container, inherit); display: inline-flex; align-items: center; gap: .35em; transition: filter .15s, transform .15s; }
 .mapui button.mu:hover { filter: brightness(.96); }
 .mapui button.mu:active { transform: scale(.97); }
-.mapui button.mu.pri { background: var(--color-primary); color: var(--color-on-primary, #fff); }
+.mapui button.mu.pri { background: var(--color-primary, #3f6fa8); color: var(--color-on-primary, #fff); }
 .mapui button.mu svg { width: 1.05em; height: 1.05em; }
 .mapui button.mu[aria-disabled="true"] { opacity: .55; cursor: help; }
-.mapui .mu-card { position: absolute; bottom: .6em; inset-inline: .6em; z-index: 3; border-radius: var(--radius-md, 1em); padding: .7em .9em; animation: mu-in .16s ease-out; max-height: 45%; overflow: auto; }
+.mapui .mu-card { position: absolute; bottom: .6em; inset-inline: .6em; z-index: 3; border-radius: var(--radius-md, 1em); padding: .7em .9em; animation: mu-in .16s ease-out; max-height: 32%; overflow: auto; }
+.mapui .mu-card.mu-mini { inset-inline: auto .6em; inset-inline-start: .6em; max-width: calc(100% - 1.2em); padding: .4em 2.6em .4em .9em; }
+.mapui .mu-card.mu-mini .sub { display: flex; gap: .4em; align-items: center; opacity: .9; }
+.mapui .mu-card.mu-mini .mu-x { top: 50%; transform: translateY(-50%); }
+.mapui .mu-card { inset-inline-end: 3.7em; }
+.mapui .mu-card.mu-side { top: 3.7em; bottom: .6em; inset-inline-end: auto; width: min(23em, calc(100% - 5em)); max-height: none; }
+.mapui .mu-card.mu-side .mu-steps { max-height: none; }
+.mapui .mu-card.mu-side .mu-x { top: .35em; transform: none; }
+.mapui .mu-card.mu-side > .sub { display: block; padding-inline-end: 2.2em; }
+.mapui .mu-ctl { max-height: calc(100% - 1.2em); overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
 .mapui .mu-card .mu-x { position: absolute; top: .35em; inset-inline-end: .35em; width: 2em; height: 2em; }
 .mapui .mu-card strong { display: block; padding-inline-end: 2em; }
 .mapui .mu-card .sub { opacity: .8; font-size: .9em; }
@@ -120,9 +141,28 @@
 .mapui .mu-toast { position: absolute; top: 3.9em; left: 50%; transform: translateX(-50%); max-width: calc(100% - 2em); padding: .45em 1em; font-size: .9em; z-index: 5; text-align: center; animation: mu-in .16s ease-out; }
 .mapui .msg { margin: .35em 0; font-size: .9em; opacity: .85; }
 .mapui .mu-near { margin-top: .5em; }
+.mapui.mapui-tab .mu-near .bar, .mapui.mu-full .mu-near .bar { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; padding-bottom: .2em; }
+.mapui.mapui-tab .mu-near .bar .mu, .mapui.mu-full .mu-near .bar .mu { white-space: nowrap; flex: none; }
+.mapui .mu-near .msg { margin: .2em 0; }
 .mapui details.mu-more { margin-top: .6em; border-radius: var(--radius-md, .9em); background: var(--color-surface-container-low, rgba(128,128,128,.06)); padding: .35em .8em; }
 .mapui details.mu-more summary { cursor: pointer; padding: .3em 0; font-weight: 600; }
 .mapui h4 { margin: .8em 0 .2em; font-size: .95em; }
+.mapui .mu-guide { position: absolute; inset: 0; z-index: 8; display: grid; place-items: center; background: rgba(0,0,0,.28); padding: .8em; }
+.mapui .mu-guide > div { width: min(30em, 100%); max-height: 100%; overflow: auto; border-radius: var(--radius-lg, 1.1em); padding: 1em 1.1em .9em; animation: mu-in .16s ease-out; position: relative; }
+.mapui .mu-guide h3 { margin: 0 0 .15em; font-size: 1.05em; padding-inline-end: 2em; }
+.mapui .mu-guide .mu-step { font-size: .8em; opacity: .7; }
+.mapui .mu-guide p { margin: .55em 0 .2em; line-height: 1.5; }
+.mapui .mu-guide .mu-dots { display: flex; gap: .3em; justify-content: center; margin: .6em 0 .2em; }
+.mapui .mu-guide .mu-dots i { width: .45em; height: .45em; border-radius: 50%; background: var(--color-outline-variant, rgba(128,128,128,.4)); }
+.mapui .mu-guide .mu-dots i.on { background: var(--color-primary, #3f6fa8); }
+.mapui .mu-guide .mu-x { position: absolute; top: .45em; inset-inline-end: .45em; width: 2em; height: 2em; }
+.mapui .mu-steps { margin: .45em 0 0; padding: 0; list-style: none; max-height: 11em; overflow: auto; font-size: .9em; }
+.mapui .mu-steps li { display: flex; gap: .55em; align-items: flex-start; padding: .32em .4em; border-radius: .6em; cursor: pointer; }
+.mapui .mu-steps li:hover { background: var(--color-secondary-container, rgba(128,128,128,.12)); }
+.mapui .mu-steps li b { flex: none; width: 1.6em; height: 1.6em; border-radius: 50%; display: grid; place-items: center; background: var(--color-primary-container, rgba(128,128,128,.18)); font-size: .85em; }
+.mapui .mu-addpop { position: absolute; top: .6em; inset-inline-end: 3.75em; z-index: 6; border-radius: var(--radius-md, 1em); padding: .45em; display: flex; flex-direction: column; gap: .3em; animation: mu-in .16s ease-out; }
+.mapui .mu-addpop button { justify-content: flex-start; }
+.mapui .mu-drawbar { top: 3.7em; bottom: auto; }
 .mu-lbtn { position: relative; display: inline-block; }
 .mu-lbtn > .mu-pop { position: absolute; top: calc(100% + .4em); inset-inline-end: 0; inset-inline-start: auto; width: min(21em, 90vw); }
 @media (max-width: 520px) { .mapui .mu-search { inset-inline-end: 3.4em; } .mapui .mu-ib { width: 2.25em; height: 2.25em; } }
@@ -182,10 +222,12 @@
     css();
     const box = document.createElement('span'); box.className = 'mapui mu-lbtn';
     box.innerHTML = `<button type="button" class="mu-ib mu-glass" title="שכבות" aria-label="שכבות" aria-expanded="false">${ic('layers')}</button>
-      <div class="mu-pop mu-glass" hidden role="dialog" aria-label="שכבות"><h5>שכבות מתוספים אחרים</h5>${otherRows(opt.self)}
+      <div class="mu-pop mu-glass" hidden role="dialog" aria-label="שכבות">${opt.extraHTML || ''}<h5>שכבות מתוספים אחרים</h5>${otherRows(opt.self)}
       <p class="msg">כל תוסף מציג את השכבה שלו. הלחיצה פותחת אותו באותו מקום במפה.</p></div>`;
     el.append(box);
     const btn = box.firstElementChild, pop = box.lastElementChild;
+    // התפריט עובר לגוף הדף: אב עם transform/overflow (למשל פקדי Leaflet) לא יזיז ולא יחתוך אותו
+    const host = document.createElement('div'); host.className = 'mapui mu-float'; document.body.append(host); host.append(pop);
     btn.addEventListener('click', () => {
       pop.hidden = !pop.hidden; btn.setAttribute('aria-expanded', String(!pop.hidden));
       if (!pop.hidden) {   // מיקום קבוע מעל הכול, כדי שמיכל עם overflow לא יחתוך את התפריט
@@ -193,9 +235,25 @@
         Object.assign(pop.style, { position: 'fixed', top: (r.bottom + 6) + 'px', left: Math.max(8, Math.min(innerWidth - w - 8, r.left)) + 'px', width: w + 'px', maxHeight: (innerHeight - r.bottom - 20) + 'px', zIndex: 9500 });
       }
     });
-    document.addEventListener('pointerdown', e => { if (!box.contains(e.target)) { pop.hidden = true; btn.setAttribute('aria-expanded', 'false'); } });
+    document.addEventListener('pointerdown', e => { if (!box.contains(e.target) && !host.contains(e.target)) { pop.hidden = true; btn.setAttribute('aria-expanded', 'false'); } });
     wireOthers(pop, opt, () => (opt.getPos ? opt.getPos() : null));
+    if (opt.onExtra) opt.onExtra(pop);
     return box;
+  }
+
+  /* 2.1: "המיקום שלי" בכל תוסף עם המפה המשותפת — דרך הגשר "אחת שאלתי" (כל window.*_BRIDGE עם location(), כמו MIKVE_BRIDGE / ERUV_BRIDGE),
+     או o.locate() של התוסף, ואם אין — מיקום המחשב (navigator.geolocation). מחזיר [lat, lon] (עם .how) או null. */
+  async function locate(o) {
+    try { if (o && o.locate) { const p = await o.locate(); if (p && p[0] != null) return p; } } catch (e) {}
+    if (typeof window !== 'undefined') for (const k of Object.keys(window).filter(k => /_BRIDGE$/.test(k))) {
+      const B = window[k];
+      try { if (B && B.location && (!B.available || await B.available())) { const d = await B.location(); if (d && d.lat != null) return Object.assign([+d.lat, +d.lon], { how: 'מהגשר (Windows)' }); } } catch (e) {}
+    }
+    if (typeof navigator !== 'undefined' && navigator.geolocation) {
+      const p = await new Promise(res => navigator.geolocation.getCurrentPosition(g => res([g.coords.latitude, g.coords.longitude]), () => res(null), { timeout: 12000, maximumAge: 300000 }));
+      if (p) return Object.assign(p, { how: 'מהמחשב' });
+    }
+    return null;
   }
 
   function mount(el, o) {
@@ -205,7 +263,8 @@
     const extra = (o.layers || []).map(L => Object.assign({ on: true }, L));
     const NE = () => (typeof window !== 'undefined' && window.NE_DATA) || null;
     const S = { lat: 0, lon: 0, zoom: 1, rot: 0, area: null, areaName: '', sel: o.selectedId != null ? String(o.selectedId) : null, street: null,
-      show: { pts: true, streets: true, syn: true, base: true, route: true }, from: null, route: null, mark: null, jer: false };
+      show: { pts: true, streets: true, syn: true, base: true, route: true, color: false }, from: null, route: null, mark: null, jer: false, pick: null };
+    try { const c = localStorage.getItem('mapui-color'); S.show.color = c == null ? !!o.color : c === '1'; } catch (e) { S.show.color = !!o.color; }
     extra.forEach(L => { S.show['x-' + L.id] = L.on !== false; });
     const byId = new Map(pts.map(p => [String(p.id), p]));
     const ptsLayer = () => MC.toLayer({ type: 'FeatureCollection', features: pts.map(p => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [p.lon, p.lat] }, properties: { id: p.id, name: p.name } })) }, o.layerId || 'pts', o.glyph || '•');
@@ -235,14 +294,19 @@
         <div class="mu-ctl">
           <div class="mu-grp mu-glass"><button type="button" class="mu-ib" data-mu="in" title="זום פנימה" aria-label="זום פנימה">${ic('plus')}</button><button type="button" class="mu-ib" data-mu="out" title="זום החוצה" aria-label="זום החוצה">${ic('minus')}</button></div>
           <div class="mu-grp mu-glass"><button type="button" class="mu-ib" data-mu="rotl" title="סיבוב שמאלה" aria-label="סיבוב שמאלה">${ic('rotl')}</button><button type="button" class="mu-ib" data-mu="north" id="mu-north" title="צפון למעלה" aria-label="צפון למעלה">${compass(0)}</button><button type="button" class="mu-ib" data-mu="rotr" title="סיבוב ימינה" aria-label="סיבוב ימינה">${ic('rotr')}</button></div>
-          <div class="mu-grp mu-glass">${o.me ? `<button type="button" class="mu-ib" data-mu="me" title="המיקום שלי" aria-label="המיקום שלי">${ic('me')}</button>` : ''}<button type="button" class="mu-ib" data-mu="fit" title="מרכוז" aria-label="מרכוז">${ic('fit')}</button><button type="button" class="mu-ib" data-mu="full" id="mu-fullb" title="מסך מלא" aria-label="מסך מלא" aria-pressed="false">${ic('full')}</button></div>
+          <div class="mu-grp mu-glass"><button type="button" class="mu-ib" data-mu="me" title="המיקום שלי" aria-label="המיקום שלי">${ic('me')}</button><button type="button" class="mu-ib" data-mu="fit" title="מרכוז" aria-label="מרכוז">${ic('fit')}</button><button type="button" class="mu-ib" data-mu="full" id="mu-fullb" title="מסך מלא" aria-label="מסך מלא" aria-pressed="false">${ic('full')}</button></div>
           ${o.jerusalem ? `<div class="mu-grp mu-glass"><button type="button" class="mu-ib" data-mu="jer" id="mu-jer" title="ירושלים" aria-label="ירושלים" aria-pressed="false">${ic('jer')}</button></div>` : ''}
+          <div class="mu-grp mu-glass"><button type="button" class="mu-ib" data-mu="add" id="mu-addb" title="הוספת קובץ: רחובות או שכבה" aria-label="הוספת קובץ" aria-expanded="false">${ic('add')}</button></div>
+          <div class="mu-grp mu-glass"><button type="button" class="mu-ib" data-mu="guide" title="הדרכה שלב אחר שלב" aria-label="הדרכה">${ic('help')}</button></div>
           <div class="mu-grp mu-glass"><button type="button" class="mu-ib" data-mu="layers" id="mu-lb" title="שכבות" aria-label="שכבות" aria-expanded="false">${ic('layers')}</button></div>
         </div>
         <div class="mu-pop mu-glass" id="mu-pop" hidden role="dialog" aria-label="שכבות"></div>
+        <div class="mu-addpop mu-glass" id="mu-add" hidden role="menu" aria-label="הוספת קובץ"><button class="mu" data-mu="load" role="menuitem">טעינת רחובות מקובץ</button><button class="mu" data-mu="loadgeo" role="menuitem">טעינת שכבה מקובץ (GeoJSON)</button><button class="mu" data-mu="draw" role="menuitem">שרטוט קו או שטח על המפה</button>${off || o.builtinStreets ? '' : '<button class="mu" data-mu="url" role="menuitem">הורדת רחובות לאזור (דפדפן)</button>'}</div>
         <div class="mu-scale mu-glass" id="mu-scale"></div>
         <div class="mu-card mu-glass" id="mu-sel" hidden></div>
         <div class="mu-toast mu-glass" id="mu-msg" hidden role="status"></div>
+        <div class="mu-card mu-glass mu-drawbar" id="mu-draw" hidden></div>
+        <div class="mu-guide" id="mu-guide" hidden role="dialog" aria-modal="true" aria-label="הדרכה"></div>
       </div>
       <div class="mu-near" id="mu-near"></div>
       <details class="mu-more"><summary>רחובות, נתונים ועזרה</summary>
@@ -286,17 +350,23 @@
     // ── ציור ──
     let raf = 0;
     const draw = () => { if (raf) return; raf = requestAnimationFrame(() => { raf = 0; drawNow(); }); };
+    function sizeH() {   // 2.1: יחס ה-viewBox לפי המיכל (מסך מלא / לשונית ממלאים את הגובה)
+      if (!el.classList.contains('mapui-tab') && !el.classList.contains('mu-full')) { H = 300; return; }
+      const r = view.getBoundingClientRect();
+      if (r.width > 50 && r.height > 50) H = Math.max(150, Math.min(1600, Math.round(W * r.height / r.width)));
+    }
     function drawNow() {
-      setTimeout(updDl, 0);
+      setTimeout(updDl, 0); sizeH();
       const v = MC.createView({ lat: S.lat, lon: S.lon, zoom: S.zoom, rot: S.rot, width: W, height: H });
       const layers = [];
       if (S.route && S.show.route) layers.push({ id: 'route', lines: [{ coords: S.route.coords, label: 'מסלול הליכה', style: 'route' }], points: [] });
       if (S.jer && o.me) layers.push({ id: 'jer', lines: [{ coords: [o.me, JERUSALEM], label: 'הכיוון לירושלים', style: 'route' }], points: [{ lat: JERUSALEM[0], lon: JERUSALEM[1], label: 'ירושלים', id: '__jer' }], glyph: 'י' });
       for (const L of extra) if (S.show['x-' + L.id]) layers.push({ id: L.id, glyph: L.glyph || '•', points: L.points || [], lines: L.lines || [] });
+      if (S.draw && S.draw.pts.length) layers.push({ id: 'draw', glyph: '•', points: S.draw.pts.map((c, i) => ({ lat: c[0], lon: c[1], id: '__d' + i, label: '' })), lines: S.draw.pts.length > 1 ? [{ coords: S.draw.closed ? [...S.draw.pts, S.draw.pts[0]] : S.draw.pts, closed: S.draw.closed, label: 'שרטוט' }] : [] });
       if (S.mark) layers.push({ id: 'mark', glyph: '★', points: [{ lat: S.mark.lat, lon: S.mark.lon, label: S.mark.label, id: '__mark' }], lines: [] });
       if (S.show.pts) layers.push(ptsLayer());
       const base = S.show.base && NE() && (!S.area || S.zoom < 0.35) ? NE() : null;
-      view.innerHTML = MC.renderSVG({ area: S.area, view: v, layers, streets: S.show.streets, syn: S.show.syn, me: o.me, hl: S.sel, selected: S.street,
+      view.innerHTML = MC.renderSVG({ area: S.area, view: v, layers, streets: S.show.streets, syn: S.show.syn, me: o.me, hl: S.sel, selected: S.street, color: S.show.color,
         labels: S.zoom >= 2, outline: !S.area && !base, base, chrome: false });
       view._v = v;
       $('mu-north').innerHTML = compass(S.rot);
@@ -305,8 +375,20 @@
       const raw = 70 * mpp, pow = Math.pow(10, Math.floor(Math.log10(raw))), nice = [1, 2, 5, 10].map(x => x * pow).find(x => x >= raw * .7) || raw;
       $('mu-scale').innerHTML = `<i style="width:${Math.round(nice / mpp)}px"></i>${esc(MC.widthLabel ? MC.widthLabel(nice) : Math.round(nice) + " מ'")}`;
     }
+    const routeMsg = r => `מסלול הליכה${r.name ? ' אל ' + esc(r.name) : ''}: ${MC.widthLabel(r.m)} · כ-${Math.max(1, Math.round(r.m / 80))} דקות`;
     function showSel() {
       const p = selPt(), b = $('mu-sel');
+      b.classList.toggle('mu-side', !!(S.route && S.showSteps));
+      b.classList.toggle('mu-mini', !p && !!S.route);
+      // 2.1: סגירת הכרטיס לא מוחקת את המסלול — נשאר פס קטן עם המסלול וכפתור למחיקתו
+      if (!p && S.pick) {   // 2.1: רחוב שנבחר בלחיצה (כמו בכיוון תפילה)
+        const w = S.pick; b.classList.remove('mu-mini'); b.hidden = false;
+        b.innerHTML = `<button type="button" class="mu-ib mu-x" data-mu="unpick" title="סגירה" aria-label="סגירה">${ic('close')}</button><strong>${esc(w.name)}</strong><div class="sub">רחוב${S.areaName ? ' · ' + esc(S.areaName) : ''} · אורך כ-${MC.widthLabel(w.len)}${o.me ? ' · ' + MC.widthLabel(MC.distM(o.me, [w.lat, w.lon])) + ' ממני' : ''}</div>`
+          + `<div class="bar"><button class="mu pri" data-mu="from-here">${ic('me')}נקודת מוצא מכאן</button>${routeOn ? `<button class="mu" data-mu="route-street">${ic('route')}מסלול הליכה לכאן</button>` : ''}${off ? '' : `<button class="mu" data-mu-open="https://www.google.com/maps/search/?api=1&query=${w.lat},${w.lon}">פתיחה ב-Google Maps</button>`}</div>`
+          + (S.route && S.route.to === '__street' ? routeBox() : '');
+        return;
+      }
+      if (!p && S.route) { b.hidden = false; b.innerHTML = `<button type="button" class="mu-ib mu-x" data-mu="noroute" title="מחיקת המסלול" aria-label="מחיקת המסלול">${ic('close')}</button><span class="sub">${ic('route', ' style="width:1.1em;height:1.1em;vertical-align:-.2em"')} ${routeMsg(S.route)}</span><button class="mu" data-mu="steps">הוראות</button><button class="mu" data-mu="routedl">${ic('dl')}הורדה</button>` + (S.showSteps ? stepsHtml() : ''); if (S.showSteps) b.classList.remove('mu-mini'); return; }
       if (!p) { b.hidden = true; return; }
       const dMe = o.me ? MC.distM(o.me, [p.lat, p.lon]) : null;
       b.hidden = false;
@@ -317,7 +399,50 @@
         + (routeOn ? `<button class="mu" data-mu="route">${ic('route')}מסלול הליכה</button>` : '')
         + (off ? '' : `<button class="mu" data-mu-open="https://waze.com/ul?ll=${p.lat},${p.lon}&navigate=yes">ניווט ב-Waze</button><button class="mu" data-mu-open="https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lon}">פתיחה ב-Google Maps</button>`)
         + '</div>'
-        + (S.route && S.route.to === S.sel ? `<div class="msg">מסלול הליכה: ${MC.widthLabel(S.route.m)} · כ-${Math.max(1, Math.round(S.route.m / 80))} דקות. לפי רחובות OpenStreetMap, להתמצאות בלבד.</div>` : '');
+        + (S.route && S.route.to === S.sel ? routeBox() : '');
+    }
+    // 2.1: הוראות הליכה שלב אחר שלב (כמו ב-Google Maps) והורדת הסבר המסלול עם המפה
+    const ARROW = { start: '⬆', straight: '⬆', 'slight-right': '↗', right: '➡', 'slight-left': '↖', left: '⬅', back: '↩', arrive: '⚑' };
+    const stepsHtml = () => `<ol class="mu-steps">${(S.route.steps || []).map((st, i) => `<li data-mu-step="${i}" title="הצגה במפה"><b>${ARROW[st.turn] || '•'}</b><span>${esc(st.text)}</span></li>`).join('')}</ol>`;
+    const routeBox = () => `<div class="msg">${routeMsg(S.route)}. לפי רחובות OpenStreetMap, להתמצאות בלבד.</div>`
+      + `<div class="bar"><button class="mu" data-mu="steps" aria-pressed="${!!S.showSteps}">${S.showSteps ? 'הסתרת ההוראות' : 'הוראות שלב אחר שלב'}</button><button class="mu" data-mu="routedl">${ic('dl')}הורדת הסבר המסלול</button></div>`
+      + (S.showSteps ? stepsHtml() : '');
+    function fitRoute() {
+      const cs = S.route.coords, la = cs.map(c => c[0]), lo = cs.map(c => c[1]);
+      const c0 = [(Math.min(...la) + Math.max(...la)) / 2, (Math.min(...lo) + Math.max(...lo)) / 2];
+      const far = Math.max(120, ...cs.map(c => MC.distM(c0, c)));
+      S.lat = c0[0]; S.lon = c0[1]; S.zoom = Math.max(ZMIN, Math.min(4, 300 * Math.min(1, H / W) / (far * 1.7)));
+    }
+    function makeRoute(to, tid, name) {
+      const from = S.from || o.me;
+      if (!from) return say('לחיפוש מסלול: חפשו קודם את נקודת המוצא (רחוב, פינה או כתובת), לחצו על רחוב ← "נקודת מוצא מכאן", או "המיקום שלי".');
+      if (!S.area) return say('אין רחובות לאזור הזה. מתקרבים לעיר בזום (או טוענים קובץ רחובות) ומנסים שוב.');
+      const r = MC.walkRoute(S.area, from, to);
+      if (!r) return say('לא נמצא מסלול ברחובות שבאזור. ייתכן שהנקודות רחוקות מהרחובות הטעונים.');
+      S.route = Object.assign(r, { to: tid, name, fromLabel: S.fromLabel || (S.from ? '' : 'המיקום שלי') }); S.show.route = true; S.showSteps = true;
+      fitRoute(); panBy(0, -H * 0.12, S); refresh();
+    }
+    function routeFile() {
+      if (!S.route) return;
+      const keep = { lat: S.lat, lon: S.lon, zoom: S.zoom, rot: S.rot }; fitRoute(); S.rot = 0; drawNow();
+      const svg = (view.querySelector('svg') || {}).outerHTML || ''; Object.assign(S, keep); draw();
+      const links = gLinks(), R = S.route;
+      const html = `<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><title>מסלול הליכה${R.name ? ' אל ' + esc(R.name) : ''}</title>
+<style>:root{--color-primary:#3f6fa8;--color-on-primary:#fff;--color-surface:#fff;--color-on-surface:#1b1b1f;--color-on-surface-variant:#5f6368;--color-outline:#888;--color-error:#c62828;--mu-sea:#a9cdea;--mu-coast:#6b8fae;--mu-river:#4f8fcf;--mu-land-street:#f3efe0;--mu-land1:#e9e3b8;--mu-land2:#cfe3b0;--mu-land3:#f1cfa8;--mu-land4:#d9c9e6;--mu-land5:#f3dcc2;--mu-land6:#c6dfd2}
+body{font-family:system-ui,"Segoe UI",Arial,sans-serif;max-width:46em;margin:2em auto;padding:0 1em;line-height:1.6;color:#1b1b1f}
+h1{font-size:1.35em;margin-bottom:.2em}figure{margin:1em 0;border:1px solid #ccc;border-radius:12px;overflow:hidden}figure svg{display:block;width:100%;height:auto;background:#f5f6f8}
+ol li{margin:.45em 0}.sum{font-size:1.05em}footer{margin-top:2em;border-top:1px solid #ccc;padding-top:1em;font-size:.95em}@media print{figure{break-inside:avoid}}</style></head><body>
+<h1>מסלול הליכה${R.name ? ' אל ' + esc(R.name) : ''}</h1><p class="sum"><b>${MC.widthLabel(R.m)}</b> · כ-${Math.max(1, Math.round(R.m / 80))} דקות הליכה${S.areaName ? ' · ' + esc(S.areaName) : ''}</p>
+${svg ? `<figure>${svg}</figure>` : ''}
+<h2>הוראות</h2><ol>${(R.steps || []).map(st => `<li>${ARROW[st.turn] || ''} ${esc(st.text)}</li>`).join('')}</ol>
+<p><small>המסלול מחושב לפי רחובות OpenStreetMap, להתמצאות בלבד. יש לשים לב לתנועה ולשלטים בדרך.</small></p>
+<footer><strong>נוצר בתוסף ${esc(me.name)} לאוצריא. להורדת התוסף:</strong><ul>${links.map(([a, u]) => `<li>${esc(a)}: <a href="${esc(u)}">${esc(u)}</a></li>`).join('')}</ul>
+<p>התקנה: באוצריא ← כלים ← תוספים ← התקן תוסף חדש. © OpenStreetMap contributors · Natural Earth.</p></footer></body></html>`;
+      try {
+        const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }));
+        a.download = 'מסלול הליכה' + (R.name ? ' - ' + R.name.replace(/[\\/:*?"<>|]/g, ' ') : '') + '.html'; document.body.append(a); a.click(); a.remove();
+        say('הסבר המסלול נשמר (מפה, הוראות וקישורי ההורדה של התוסף). אפשר להדפיס אותו מהדפדפן.');
+      } catch (e) { say('השמירה לא הצליחה'); }
     }
     function nearList(center) {
       if (o.nearby === false || !center || !pts.length) { $('mu-near').innerHTML = ''; return; }
@@ -325,8 +450,8 @@
       $('mu-near').innerHTML = `<div class="msg"><strong>${esc(o.nearbyLabel || 'קרוב לכתובת')}</strong></div><div class="bar">` + L.map(([p, d]) => `<button class="mu" data-mu-sel="${esc(p.id)}">${esc(p.name)} · ${MC.widthLabel(d)}</button>`).join('') + '</div>';
     }
     function refresh() { draw(); showSel(); updDl(); }
-    function selectPt(id) { S.sel = String(id); const p = selPt(); if (p) { S.lat = p.lat; S.lon = p.lon; S.zoom = Math.max(S.zoom, 3); } S.street = null; refresh(); }
-    function goTo(lat, lon, zoom, label) { S.lat = lat; S.lon = lon; S.zoom = zoom; S.sel = null; S.street = null; S.mark = label ? { lat, lon, label } : null; S.from = [lat, lon]; S.route = null; refresh(); nearList([lat, lon]); }
+    function selectPt(id) { S.pick = null; S.sel = String(id); const p = selPt(); if (p) { S.lat = p.lat; S.lon = p.lon; S.zoom = Math.max(S.zoom, 3); } S.street = null; refresh(); }
+    function goTo(lat, lon, zoom, label) { S.lat = lat; S.lon = lon; S.zoom = zoom; S.sel = null; S.street = null; S.mark = label ? { lat, lon, label } : null; S.from = [lat, lon]; S.fromLabel = label || ''; S.route = null; S.pick = null; refresh(); nearList([lat, lon]); }
 
     // ── שכבות ──
     function popHTML() {
@@ -337,6 +462,7 @@
         + row('streets', '═', 'רחובות', S.area ? S.areaName || 'נטענו' : 'מתקרבים לעיר בזום', S.show.streets, !S.area)
         + row('syn', '✡', 'בתי כנסת', '', S.show.syn, !S.area)
         + (NE() ? row('base', '◍', 'מפת העולם', 'יבשות, ארצות, ערים ונהרות', S.show.base) : '')
+        + row('color', '🎨', 'מפה צבעונית', 'ים כחול וכל ארץ בצבע משלה', S.show.color)
         + (S.route ? row('route', '↝', 'מסלול הליכה', MC.widthLabel(S.route.m), S.show.route) : '')
         + `<h5 style="margin-top:.7em">שכבות מתוספים אחרים</h5>${otherRows(o.self)}`
         + `<p class="msg">השכבה של כל תוסף נפתחת בו, באותו מקום במפה.</p>`;
@@ -344,7 +470,7 @@
     const pop = $('mu-pop'), lb = $('mu-lb');
     const togglePop = show => { pop.hidden = show === undefined ? !pop.hidden : !show; if (!pop.hidden) pop.innerHTML = popHTML(); lb.setAttribute('aria-expanded', String(!pop.hidden)); lb.setAttribute('aria-pressed', String(!pop.hidden)); };
     wireOthers(pop, Object.assign({}, o, { online: !off }), () => [S.lat, S.lon]);
-    pop.addEventListener('change', e => { const c = e.target.closest('[data-mu-layer]'); if (c) { S.show[c.dataset.muLayer] = c.checked; draw(); } });
+    pop.addEventListener('change', e => { const c = e.target.closest('[data-mu-layer]'); if (c) { S.show[c.dataset.muLayer] = c.checked; if (c.dataset.muLayer === 'color') try { localStorage.setItem('mapui-color', c.checked ? '1' : '0'); } catch (er) {} draw(); } });
 
     // ── קבצים ──
     async function pickJSON(title) {
@@ -481,16 +607,94 @@
       else if (k === 'n' || k === 'N' || k === 'מ') S.rot = 0;
       else if (k === 'ArrowLeft') panBy(st, 0, S); else if (k === 'ArrowRight') panBy(-st, 0, S);
       else if (k === 'ArrowUp') panBy(0, st, S); else if (k === 'ArrowDown') panBy(0, -st, S);
+      else if (k === 'Escape' && !$('mu-guide').hidden) guide(null);
       else if (k === 'Escape' && el.classList.contains('mu-full')) { el.classList.remove('mu-full'); $('mu-fullb').setAttribute('aria-pressed', 'false'); }
       else return;
       e.preventDefault(); draw();
     });
+
+    // ── הדרכה שלב אחר שלב + הורדה (2.1) ──
+    const me = PLUGINS.find(p => p.id === o.self) || { name: o.layerName || 'התוסף', store: '' };
+    const gLinks = () => [o.repo ? ['הורדה מ-GitHub', o.repo + '/releases/latest'] : null, me.store ? ['חנות התוספים של אוצריא', me.store] : null].filter(Boolean);
+    const STEPS = () => (o.guide || []).concat([
+      { t: 'הזזה וזום', d: 'גוררים את המפה בעכבר (או באצבע). גלגלת, צביטה או כפתורי + ו-− לזום. במקלדת: חיצים, + ו-−.' },
+      { t: 'סיבוב וצפון', d: 'כפתורי החצים המעוגלים מסובבים את המפה. המצפן מחזיר את הצפון למעלה. במקלדת: [ ו-] לסיבוב, N לצפון.' },
+      { t: 'חיפוש', d: 'בשורת החיפוש כותבים מקום, עיר, רחוב, פינה ("הרצל פינת בן יהודה") או כתובת עם מספר בית ("רבי עקיבא 12, בני ברק"). בוחרים מהצעות בחצים ו-Enter.' },
+      { t: (o.layerName || 'נקודות') + ' במפה', d: 'לחיצה על נקודה פותחת כרטיס עם הפרטים' + (o.onPick ? ' וכפתור "' + (o.pickLabel || 'פתיחה ברשימה') + '"' : '') + (off ? '.' : ', וניווט ב-Waze או ב-Google Maps.') + ' ✕ סוגר את הכרטיס.' },
+      routeOn ? { t: 'מסלול הליכה (בלי אינטרנט)', d: 'מחפשים קודם את נקודת המוצא (רחוב, פינה או כתובת) או "המיקום שלי", בוחרים נקודה ולוחצים "מסלול הליכה". המסלול מצויר על הרחובות עם מרחק וזמן משוער, ונשאר גם אחרי סגירת הכרטיס. "הוראות שלב אחר שלב" מראה לאן לפנות בכל רחוב, ו"הורדת הסבר המסלול" שומרת את המפה וההוראות לקובץ. אפשר גם ללחוץ על רחוב ← "נקודת מוצא מכאן" או "מסלול הליכה לכאן".' } : null,
+      { t: 'בחירת רחוב', d: 'לחיצה על רחוב במפה מסמנת אותו ומראה את שמו ואורכו, עם "נקודת מוצא מכאן" ו"מסלול הליכה לכאן".' },
+      { t: 'רחובות', d: o.builtinStreets ? 'רחובות של ערים רבות מובנים בתוסף ונטענים לבד כשמתקרבים לעיר בזום. לעיר אחרת: "רחובות, נתונים ועזרה" ← טעינת רחובות מקובץ.' : 'מתקרבים לעיר ומורידים את קובץ הרחובות שלה, ואז "טעינת רחובות מקובץ" (מתחת למפה).' },
+      { t: 'הוספת קבצים ושרטוט', d: 'כפתור + פותח טעינת קובץ רחובות לעיר שאינה מובנית, שכבה מקובץ GeoJSON (נקודות, קווים ופוליגונים — למשל קו עירוב), ו"שרטוט קו או שטח": לוחצים על המפה נקודה אחר נקודה, ושומרים כשכבה וכקובץ.' },
+      { t: 'שכבות ותוספים אחרים', d: 'כפתור השכבות מדליק ומכבה שכבות (רחובות, בתי כנסת, מפת העולם, מפה צבעונית, המסלול), ופותח תוספים אחרים — כיוון תפילה, מקוואות, גבולות עירוב, עינים למקרא — באותו מקום במפה.' },
+      { t: 'מסך מלא ומרכוז', d: 'כפתור המסך המלא מגדיל את המפה לכל החלון (Esc חוזר). כפתור המרכוז מראה שוב את כל הנקודות.' },
+      { t: 'שמירת ההדרכה', d: 'הכפתור "הורדת ההדרכה" שומר קובץ עם כל השלבים, צילום של המפה כפי שהיא עכשיו וקישורי ההורדה של התוסף.' }
+    ]).filter(Boolean);
+    let gi = 0;
+    function guide(i) {
+      const L = STEPS(), g = $('mu-guide'); if (i == null) { g.hidden = true; return; }
+      gi = Math.max(0, Math.min(L.length - 1, i)); const st = L[gi];
+      g.hidden = false;
+      g.innerHTML = `<div class="mu-glass"><button type="button" class="mu-ib mu-x" data-mu="gclose" title="סגירה" aria-label="סגירה">${ic('close')}</button>
+        <div class="mu-step">הדרכה · שלב ${gi + 1} מתוך ${L.length}</div><h3>${esc(st.t)}</h3><p>${esc(st.d)}</p>
+        <div class="mu-dots">${L.map((x, k) => `<i class="${k === gi ? 'on' : ''}"></i>`).join('')}</div>
+        <div class="bar"><button class="mu" data-mu="gprev"${gi ? '' : ' disabled'}>הקודם</button>${gi < L.length - 1 ? '<button class="mu pri" data-mu="gnext">הבא</button>' : '<button class="mu pri" data-mu="gclose">סיום</button>'}<button class="mu" data-mu="gdl" style="margin-inline-start:auto">הורדת ההדרכה</button></div></div>`;
+      const f = g.querySelector('[data-mu="gnext"],[data-mu="gclose"]'); if (f) f.focus();
+    }
+    function guideFile() {
+      const L = STEPS(), links = gLinks();
+      const svg = (view.querySelector('svg') || {}).outerHTML || '';
+      const html = `<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><title>הדרכה למפה · ${esc(me.name)}</title>
+<style>:root{--color-primary:#3f6fa8;--color-on-primary:#fff;--color-surface:#fff;--color-on-surface:#1b1b1f;--color-on-surface-variant:#5f6368;--color-outline:#888;--color-error:#c62828}
+body{font-family:system-ui,"Segoe UI",Arial,sans-serif;max-width:46em;margin:2em auto;padding:0 1em;line-height:1.6;color:#1b1b1f}
+h1{font-size:1.4em}figure{margin:1em 0;border:1px solid #ccc;border-radius:12px;overflow:hidden}figure svg{display:block;width:100%;height:auto;background:#f5f6f8}
+figcaption{font-size:.85em;color:#555;padding:.4em .8em}ol li{margin:.5em 0}footer{margin-top:2em;border-top:1px solid #ccc;padding-top:1em;font-size:.95em}</style></head><body>
+<h1>הדרכה למפה — ${esc(me.name)}</h1><p>מפה משותפת לתוספי אוצריא (גרסת מפה ${VERSION}). עובדת בלי אינטרנט.</p>
+${svg ? `<figure>${svg}<figcaption>המפה כפי שהייתה בזמן שמירת ההדרכה${S.areaName ? ' · ' + esc(S.areaName) : ''}${S.route ? ' · ' + routeMsg(S.route) : ''}</figcaption></figure>` : ''}
+<ol>${L.map(x => `<li><strong>${esc(x.t)}</strong> — ${esc(x.d)}</li>`).join('')}</ol>
+<footer><strong>להורדת התוסף ${esc(me.name)}:</strong><ul>${links.map(([a, u]) => `<li>${esc(a)}: <a href="${esc(u)}">${esc(u)}</a></li>`).join('')}</ul>
+<p>התקנה: באוצריא ← כלים ← תוספים ← התקן תוסף חדש. © OpenStreetMap contributors · Natural Earth.</p></footer></body></html>`;
+      try {
+        const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }));
+        a.download = 'הדרכה למפה - ' + me.name + '.html'; document.body.append(a); a.click(); a.remove();
+        say('ההדרכה נשמרה (קובץ HTML עם המפה וקישורי ההורדה).');
+      } catch (e) { say('השמירה לא הצליחה'); }
+    }
+
+    // ── שרטוט קו / שטח (2.2): לחיצות על המפה מוסיפות נקודות; שמירה כשכבה וכקובץ GeoJSON ──
+    function drawBar() {
+      const d = $('mu-draw'); if (!S.draw) { d.hidden = true; return; }
+      const n = S.draw.pts.length; let len = 0; for (let i = 1; i < n; i++) len += MC.distM(S.draw.pts[i - 1], S.draw.pts[i]);
+      d.hidden = false;
+      d.innerHTML = `<strong>שרטוט ${S.draw.closed ? 'שטח' : 'קו'}</strong><div class="sub">לחצו על המפה כדי להוסיף נקודות · ${n} נקודות${n > 1 ? ' · ' + MC.widthLabel(len) : ''}</div>
+        <div class="bar"><button class="mu" data-mu="dundo"${n ? '' : ' disabled'}>ביטול נקודה</button><button class="mu" data-mu="dclose" aria-pressed="${S.draw.closed}">${S.draw.closed ? 'קו פתוח' : 'סגירה לשטח'}</button><button class="mu pri" data-mu="dsave"${n > 1 ? '' : ' disabled'}>שמירה כשכבה וכקובץ</button><button class="mu" data-mu="dend">יציאה</button></div>`;
+    }
+    function drawSave() {
+      const L = S.draw, coords = L.pts.map(c => [+c[1].toFixed(6), +c[0].toFixed(6)]);
+      const gj = { type: 'FeatureCollection', features: [{ type: 'Feature', properties: { name: 'שרטוט ' + (extra.length + 1), source: me.name }, geometry: L.closed ? { type: 'Polygon', coordinates: [[...coords, coords[0]]] } : { type: 'LineString', coordinates: coords } }] };
+      const lay = MC.toLayer(gj, 'draw-' + (extra.length + 1), '◆');
+      extra.push({ id: lay.id, name: 'שרטוט ' + (extra.length + 1), sub: L.closed ? 'שטח' : 'קו', glyph: '◆', points: [], lines: lay.lines, on: true }); S.show['x-' + lay.id] = true;
+      try { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(gj, null, 1)], { type: 'application/geo+json' })); a.download = 'שרטוט - ' + me.name + '.geojson'; document.body.append(a); a.click(); a.remove(); } catch (e) {}
+      S.draw = null; drawBar(); refresh(); say('השרטוט נשמר כשכבה וכקובץ GeoJSON. אפשר לטעון אותו שוב בכפתור +.');
+    }
 
     // ── לחיצות ──
     el.addEventListener('click', e => {
       const t = e.target;
       const g = t.closest && t.closest('#mu-view g[data-id]');
       if (g && !(drag && drag.moved)) { if (g.dataset.id && g.dataset.id.indexOf('__') !== 0) return selectPt(g.dataset.id); return; }
+      const stp = t.closest && t.closest('[data-mu-step]');
+      if (stp && S.route) { const st = S.route.steps[+stp.dataset.muStep]; if (st && st.at) { S.lat = st.at[0]; S.lon = st.at[1]; S.zoom = Math.max(S.zoom, 3); S.mark = { lat: st.at[0], lon: st.at[1], label: st.text.split(' · ')[0] }; draw(); } return; }
+      if (S.draw && t.closest && t.closest('#mu-view') && !(drag && drag.moved) && view._v) {   // 2.2: שרטוט
+        const svg = view.querySelector('svg'), r = svg.getBoundingClientRect();
+        S.draw.pts.push(MC.unproject(view._v, (e.clientX - r.left) * W / r.width, (e.clientY - r.top) * H / r.height)); drawBar(); draw(); return;
+      }
+      // 2.1: לחיצה על רחוב בוחרת אותו (כמו בכיוון תפילה)
+      if (t.closest && t.closest('#mu-view') && !(drag && drag.moved) && S.area && S.show.streets && view._v) {
+        const svg = view.querySelector('svg'), r = svg.getBoundingClientRect(), v = view._v;
+        const ll = MC.unproject(v, (e.clientX - r.left) * W / r.width, (e.clientY - r.top) * H / r.height);
+        const w = MC.nearestWay(S.area, ll, 14 / (v.scale * r.width / W));
+        if (w) { S.pick = w; S.sel = null; S.street = { i: w.i, k: w.k }; refresh(); return; }
+      }
       const open = t.closest && t.closest('[data-mu-open]'); if (open) { if (o.openLink) o.openLink(open.dataset.muOpen); return; }
       const sp = t.closest && t.closest('[data-mu-sel]'); if (sp) return selectPt(sp.dataset.muSel);
       const b = t.closest && t.closest('[data-mu]'); if (!b) return;
@@ -500,36 +704,51 @@
       else if (a === 'rotl') { S.rot = (S.rot + 345) % 360; draw(); }
       else if (a === 'rotr') { S.rot = (S.rot + 15) % 360; draw(); }
       else if (a === 'north') { S.rot = 0; draw(); }
-      else if (a === 'me') { if (o.me) { S.lat = o.me[0]; S.lon = o.me[1]; S.zoom = Math.max(S.zoom, 2); S.from = o.me.slice(); draw(); nearList(o.me); } }
+      else if (a === 'me') {
+        const go = () => { S.lat = o.me[0]; S.lon = o.me[1]; S.zoom = Math.max(S.zoom, 2); S.from = o.me.slice(); refresh(); nearList(o.me); };
+        if (o.me) return go();
+        say('מאתר את המיקום…');
+        locate(o).then(p => { if (!p) return say('המיקום לא נמצא. בלי הגשר "אחת שאלתי" — חפשו את הכתובת בשורת החיפוש.'); o.me = p; say(p.how ? 'המיקום ' + p.how : ''); go(); });
+      }
       else if (a === 'fit') { S.sel = null; S.street = null; S.mark = null; fit(); refresh(); }
       else if (a === 'full') { const f = el.classList.toggle('mu-full'); b.setAttribute('aria-pressed', String(f)); draw(); }
       else if (a === 'layers') togglePop();
+      else if (a === 'guide') guide(0);
+      else if (a === 'gnext') guide(gi + 1);
+      else if (a === 'gprev') guide(gi - 1);
+      else if (a === 'gclose') guide(null);
+      else if (a === 'gdl') guideFile();
       else if (a === 'jer') {
         if (o.onJerusalem) return o.onJerusalem();
         S.jer = !S.jer; b.setAttribute('aria-pressed', String(S.jer));
         if (S.jer) { const f = o.me || [S.lat, S.lon]; S.lat = (f[0] + JERUSALEM[0]) / 2; S.lon = (f[1] + JERUSALEM[1]) / 2; S.zoom = Math.max(ZMIN, Math.min(3, 300 / (MC.distM(f, JERUSALEM) * .65 || 1))); }
         draw();
       }
-      else if (a === 'unsel') { S.sel = null; S.route = null; refresh(); }
-      else if (a === 'load') loadFile();
-      else if (a === 'loadgeo') loadGeo();
+      else if (a === 'unsel') { S.sel = null; refresh(); }
+      else if (a === 'noroute') { S.route = null; S.showSteps = false; refresh(); }
+      else if (a === 'unpick') { S.pick = null; S.street = null; refresh(); }
+      else if (a === 'from-here') { const w = S.pick; if (w) { S.from = [w.lat, w.lon]; S.fromLabel = w.name; S.mark = { lat: w.lat, lon: w.lon, label: 'מוצא: ' + w.name }; say('נקודת המוצא: ' + w.name + '. עכשיו בחרו יעד ולחצו "מסלול הליכה".'); S.pick = null; refresh(); nearList([w.lat, w.lon]); } }
+      else if (a === 'route-street') { const w = S.pick; if (w) makeRoute([w.lat, w.lon], '__street', w.name); }
+      else if (a === 'draw') { $('mu-add').hidden = true; S.draw = { pts: [], closed: false }; S.pick = null; drawBar(); showSel(); }
+      else if (a === 'dundo') { S.draw.pts.pop(); drawBar(); draw(); }
+      else if (a === 'dclose') { S.draw.closed = !S.draw.closed; drawBar(); draw(); }
+      else if (a === 'dsave') drawSave();
+      else if (a === 'dend') { S.draw = null; drawBar(); draw(); }
+      else if (a === 'steps') { S.showSteps = !S.showSteps; showSel(); }
+      else if (a === 'routedl') routeFile();
+      else if (a === 'add') { const ap = $('mu-add'); ap.hidden = !ap.hidden; b.setAttribute('aria-expanded', String(!ap.hidden)); }
+      else if (a === 'load') { $('mu-add').hidden = true; loadFile(); }
+      else if (a === 'loadgeo') { $('mu-add').hidden = true; loadGeo(); }
       else if (a === 'dl') { const sl = b.dataset.slug; if (!sl) return say('אין קובץ רחובות מוכן לעיר הזו. אפשר לנסות מקור חלופי.'); say('ההורדה נפתחה בדפדפן. אחריה: "טעינת רחובות מקובץ".'); if (o.openLink) o.openLink((window.STREETS_BASE || '') + sl + '.json'); }
-      else if (a === 'url' || a === 'url2') { const u = MC.overpassUrl(S.lat, S.lon, 1500, a === 'url2' ? 1 : 0); say('נפתח בדפדפן. שומרים את הקובץ (Ctrl+S) ואז "טעינת רחובות מקובץ".'); if (o.openLink) o.openLink(u); }
-      else if (a === 'route') {
-        const p = selPt(), from = S.from || o.me;
-        if (!p) return;
-        if (!from) return say('לחיפוש מסלול: חפשו קודם את נקודת המוצא (רחוב, פינה או כתובת) או "המיקום שלי", ואז בחרו את הנקודה.');
-        if (!S.area) return say('אין רחובות לאזור הזה. מתקרבים לעיר בזום (או טוענים קובץ רחובות) ומנסים שוב.');
-        const r = MC.walkRoute(S.area, from, [p.lat, p.lon]);
-        if (!r) return say('לא נמצא מסלול ברחובות שבאזור. ייתכן שהנקודות רחוקות מהרחובות הטעונים.');
-        S.route = Object.assign(r, { to: S.sel }); S.show.route = true; refresh();
-      }
+      else if (a === 'url' || a === 'url2') { $('mu-add').hidden = true; const u = MC.overpassUrl(S.lat, S.lon, 1500, a === 'url2' ? 1 : 0); say('נפתח בדפדפן. שומרים את הקובץ (Ctrl+S) ואז "טעינת רחובות מקובץ".'); if (o.openLink) o.openLink(u); }
+      else if (a === 'route') { const p = selPt(); if (p) makeRoute([p.lat, p.lon], S.sel, p.name); }
       else if (a === 'pick') { const p = selPt(); if (p && o.onPick) o.onPick(p.id); }
       else if (a === 'soon') say('בפיתוח: הפעולה הזו עדיין לא קיימת. מחכה לעזרה.');
     });
     document.addEventListener('pointerdown', e => {
       if (!el.isConnected) return;
       if (!pop.hidden && !pop.contains(e.target) && !lb.contains(e.target)) togglePop(false);
+      const ap = $('mu-add'); if (ap && !ap.hidden && !ap.contains(e.target) && !$('mu-addb').contains(e.target)) ap.hidden = true;
       const sf = $('mu-sf'); if (sf && !sf.contains(e.target)) $('mu-sug').hidden = true;
     });
     if (typeof ResizeObserver !== 'undefined') new ResizeObserver(() => draw()).observe(view);
@@ -537,5 +756,5 @@
     return { state: S, refresh, select: selectPt, goTo };
   }
 
-  return { mount, layersButton, onOpenMap, PLUGINS, EN, CSS, VERSION, JERUSALEM };
+  return { mount, layersButton, onOpenMap, locate, PLUGINS, EN, CSS, VERSION, JERUSALEM };
 });

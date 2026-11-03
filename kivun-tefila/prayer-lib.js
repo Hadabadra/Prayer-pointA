@@ -39,6 +39,7 @@
       catch (e) { msg.textContent = "לא נמצאה התפילה בסידור הזה. נסו סידור אחר, או פתחו אותו בספרייה." }
     };
   }
+  window.ktLib = { findSiddurs, readPrayer, PRAY, which, panel, get pref() { try { return localStorage.getItem(K) || "" } catch (e) { return "" } }, set pref(v) { try { localStorage.setItem(K, v) } catch (e) {} } }; /* 3.8.0: לסרגל חלון התפילה */
   const t = $("tfText"); if (!t) return;
   new MutationObserver(() => { if (/כדי להציג כאן תפילה/.test(t.textContent) && !t.querySelector(".libpr")) panel(t) }).observe(t, { childList: true });
 })();

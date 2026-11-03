@@ -257,3 +257,16 @@ body.mapfull #stRotRow[hidden]{display:none !important}
 body.mapfull #plRow,body.mapfull #plRow.shut{display:flex !important;position:fixed;top:calc(var(--bar-h,2.6rem) + .5rem);inset-inline-start:.5rem;z-index:32;flex-wrap:wrap;gap:.3rem;max-width:calc(100vw - 24em);background:var(--color-surface);border:1px solid var(--color-outline);border-radius:var(--radius-sm);box-shadow:var(--m-shadow-pop);padding:.3em .4em;margin:0}
 body.mapfull #mapFullBar #fQ{display:none !important}
 @media (max-width:50em){body.mapfull #plRow,body.mapfull #plRow.shut{max-width:96vw;top:calc(var(--bar-h,2.6rem) + 3.2rem)}}
+
+/* 3.8.0: מפות צבעוניות */
+:root{--kt-sea:#9cc8ee;--kt-land:#b8cf8c;--kt-land-line:#7e9655}
+#map.kcolor{background:var(--kt-sea)}
+#map.kcolor .land{fill:var(--kt-land);stroke:var(--kt-land-line)}
+/* 3.8.0: סמלים בלבד בסרגל (ברירת מחדל), או סמל עם כיתוב מתחת */
+body.kicons #bar>button>.bl{display:none}
+body.kicons #bar>button:has(>svg.bi){min-width:2.35em;justify-content:center;padding-inline:.45em !important}
+body.klabels #bar>button:has(>svg.bi){flex-direction:column;gap:.1em;line-height:1.1;padding-block:.25em !important}
+body.klabels #bar>button>.bl{display:block !important;font-size:.72em;white-space:nowrap}
+/* 3.8.0: סרגל חלון התפילה */
+#tfBox .tfnav{display:inline-flex;gap:.3em;align-items:center;flex-wrap:wrap}
+#tfBox .tfnav select{max-width:14em}

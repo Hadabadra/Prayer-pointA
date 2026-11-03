@@ -28,7 +28,7 @@ function globeMap() {
     + (wat ? `<path d="${wat[1]}" fill="none" stroke="#5b9bd5" stroke-width=".8"/><path d="${wat[0]}" fill="none" stroke="#5b9bd5" stroke-opacity=".8" stroke-width=".7"/>` : "")
     + `<path d="${line(g)}" fill="none" ${st("gc")}/><path d="${line(rh)}" fill="none" ${st("rh")}/>`;
   if (typeof FLY !== "undefined" && FLY.on && FLY.A0) {
-    const fr = []; for (let i = 0; i <= 80; i++) fr.push(gc(FLY.A0, FLY.b, i / 80));
+    const fr = flyRoutePts();
     const now = Date.now(), f = (now - FLY.t0) / (FLY.t1 - FLY.t0);
     h += `<path d="${line(fr)}" fill="none" stroke="var(--color-on-surface)" stroke-width="1.5" stroke-dasharray="2 3"/>` + D(FLY.A0, 3, "outline") + D(FLY.b, 3, "outline") + (f >= 0 && f <= 1 ? T(flyPos(now), "✈", "on-surface") : "");
   }

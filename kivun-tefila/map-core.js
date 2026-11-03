@@ -253,13 +253,15 @@
     const fc = x => (x && x.features ? x.features.map(t => t.geometry) : x ? [x] : []);
     let s = '';
     // ים כרקע, יבשה מעליו. כל פוליגון בנתיב משלו (כיווני הטבעות בעולם ובאזור הפוכים, ובנתיב אחד נוצרים "חורים").
-    s += `<rect x="0" y="0" width="${v.width}" height="${v.height}" fill="var(--color-primary)" fill-opacity=".07"/>`;
+    // 2.1: o.color — מפה צבעונית (ים כחול, כל ארץ בצבע משלה, כמו בעינים למקרא). הצבעים כאסימוני :root (--mu-sea, --mu-land1..6) ב-map-ui.
+    const col = !!o.color;
+    s += col ? `<rect x="0" y="0" width="${v.width}" height="${v.height}" fill="var(--mu-sea, #a9cdea)"/>` : `<rect x="0" y="0" width="${v.width}" height="${v.height}" fill="var(--color-primary)" fill-opacity=".07"/>`;
     const land = lz >= 5 && NE.region ? [...fc(NE.world), ...fc(NE.region)] : fc(NE.world);
-    s += land.map(g => `<path d="${geoPath(v, geomRings(g), true)}" fill="var(--color-surface, #fff)" fill-rule="evenodd" stroke="none"/>`).join('');
+    s += land.map((g, i) => `<path d="${geoPath(v, geomRings(g), true)}" fill="${col ? `var(--mu-land${(i * 7) % 6 + 1}, #e8e2c8)` : 'var(--color-surface, #fff)'}" fill-rule="evenodd" stroke="${col ? 'var(--mu-coast, #6b8fae)' : 'none'}" stroke-width=".5"/>`).join('');
     const bl = lz >= 5 && NE.regionlines ? NE.regionlines : NE.worldlines;
     if (bl) s += `<path d="${geomRings(bl).map(r => geoPath(v, [r], false)).join('')}" fill="none" stroke="var(--color-outline, #888)" stroke-opacity=".55" stroke-width=".8" stroke-dasharray="3 2"/>`;
-    if (NE.lakes) s += `<path d="${fc(NE.lakes).map(g => geoPath(v, geomRings(g), true)).join('')}" fill="var(--color-primary)" fill-opacity=".14" stroke="none"/>`;
-    if (NE.rivers && lz >= 4) s += `<path d="${fc(NE.rivers).map(g => geoPath(v, geomRings(g), false)).join('')}" fill="none" stroke="var(--color-primary)" stroke-opacity=".4" stroke-width="1"/>`;
+    if (NE.lakes) s += `<path d="${fc(NE.lakes).map(g => geoPath(v, geomRings(g), true)).join('')}" fill="${col ? 'var(--mu-sea, #a9cdea)' : 'var(--color-primary)'}" fill-opacity="${col ? 1 : .14}" stroke="none"/>`;
+    if (NE.rivers && lz >= 4) s += `<path d="${fc(NE.rivers).map(g => geoPath(v, geomRings(g), false)).join('')}" fill="none" stroke="${col ? 'var(--mu-river, #4f8fcf)' : 'var(--color-primary)'}" stroke-opacity="${col ? .9 : .4}" stroke-width="${col ? 1.3 : 1}"/>`;
     if (o.labels !== false) for (const L of NE.labels || []) {
       if ((L.z || 0) > lz + .5) continue;
       const p = project(v, L.lat, L.lng);
@@ -276,7 +278,8 @@
   function renderSVG(o) {
     const v = o.view, area = o.area, f = n => n.toFixed(1), W = v.width, H = v.height;
     let lines = '', labels = '', pts = '';
-    const base = o.base ? renderBase(v, o.base, { labels: o.baseLabels }) : '';
+    let base = o.base ? renderBase(v, o.base, { labels: o.baseLabels, color: o.color }) : '';
+    if (o.color && !base) base = `<rect x="0" y="0" width="${W}" height="${H}" fill="var(--mu-land-street, #f3efe0)"/>`;
     if (o.outline && !o.base) lines += `<path d="${OUTLINE.map((c, i) => { const p = project(v, c[0], c[1]); return (i ? 'L' : 'M') + f(p[0]) + ',' + f(p[1]); }).join('')}Z" fill="var(--color-on-surface-variant, #5f6368)" fill-opacity=".07" stroke="var(--color-on-surface-variant, #5f6368)" stroke-opacity=".5" stroke-width="1.5" stroke-linejoin="round"><title>קו מתאר מקורב</title></path>`;
     const inView = (x, y, m) => x > -m && x < W + m && y > -m && y < H + m;
     if (area && o.streets !== false) {
@@ -324,8 +327,8 @@
     }
     const north = o.chrome === false ? '' : `<g transform="translate(${W - 20},30) rotate(${f(v.rot)})"><path d="M0,-12 L6,7 L0,3 L-6,7Z" fill="var(--color-on-surface)" stroke="var(--color-surface)" stroke-width="1.5"/><text y="-15" text-anchor="middle" font-size="11" fill="var(--color-on-surface)" paint-order="stroke" stroke="var(--color-surface)" stroke-width="3">צ N</text></g>`;
     // טקסט עברי מתיישר מימין: מעוגן ב-rtl ליד חץ הצפון, ומתפרש שמאלה (כמו בכיוון תפילה)
-    const scale = o.chrome === false ? '' : `<text x="${W - 14}" y="46" direction="rtl" text-anchor="start" font-size="11" paint-order="stroke" stroke="var(--color-surface)" stroke-width="3" stroke-linejoin="round" fill="var(--color-on-surface-variant, #5f6368)">${widthLabel(v.hw * 2)} לרוחב</text>`;
-    const attr = o.chrome !== false && area && o.streets !== false ? `<text x="${W - 14}" y="${H - 62}" direction="ltr" text-anchor="end" font-size="9" paint-order="stroke" stroke="var(--color-surface)" stroke-width="3" stroke-linejoin="round" fill="var(--color-on-surface-variant, #5f6368)">© OpenStreetMap contributors${area.d ? ' · ' + esc(area.d) : ''}</text>` : '';
+    const scale = o.chrome === false ? '' : `<text x="${W - 38}" y="18" direction="rtl" text-anchor="start" font-size="12" fill="var(--color-on-surface-variant, #5f6368)">${widthLabel(v.hw * 2)} לרוחב</text>`;
+    const attr = o.chrome !== false && area && o.streets !== false ? `<text x="8" y="${H - 8}" direction="ltr" font-size="10" fill="var(--color-on-surface-variant, #5f6368)">© OpenStreetMap contributors${area.d ? ' · ' + esc(area.d) : ''}</text>` : '';
     return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img">${base}${lines}${sel}${labels}${syn}${pts}${me}${north}${scale}${attr}</svg>`;
   }
 
@@ -333,34 +336,82 @@
   // צומת = נקודה בקואורדינטות זהות (כך ב-OSM מתחברים רחובות). Dijkstra עם ערימה בינארית.
   function walkRoute(area, from, to) {
     if (!area || !area.w) return null;
-    const id = new Map(), xy = [], adj = [];
+    const id = new Map(), xy = [], adj = [];   // adj: [שכן, מרחק, מספר הרחוב] לכל קשת (2.1: לשם הרחוב בהוראות)
     const node = (la, lo) => { const k = la.toFixed(6) + ',' + lo.toFixed(6); let i = id.get(k); if (i === undefined) { i = xy.length; id.set(k, i); xy.push([la, lo]); adj.push([]); } return i; };
-    for (const [, hw, g] of area.w) {
-      if (hw === 'building' || /^motorway/.test(hw)) continue;
+    area.w.forEach(([, hw, g], wi) => {
+      if (hw === 'building' || /^motorway/.test(hw)) return;
       let prev = -1;
       for (let k = 0; k < g.length; k += 2) {
         const n = node(g[k], g[k + 1]);
-        if (prev >= 0 && prev !== n) { const d = distM(xy[prev], xy[n]); adj[prev].push(n, d); adj[n].push(prev, d); }
+        if (prev >= 0 && prev !== n) { const d = distM(xy[prev], xy[n]); adj[prev].push(n, d, wi); adj[n].push(prev, d, wi); }
         prev = n;
       }
-    }
+    });
     if (!xy.length) return null;
     const near = p => { let b = -1, bd = Infinity; for (let i = 0; i < xy.length; i++) { const d = distM(p, xy[i]); if (d < bd) { bd = d; b = i; } } return [b, bd]; };
     const [s, ds] = near(from), [t, dt] = near(to);
     if (ds > 600 || dt > 600) return null;
-    const dist = new Float64Array(xy.length).fill(Infinity), back = new Int32Array(xy.length).fill(-1), h = [];
+    const dist = new Float64Array(xy.length).fill(Infinity), back = new Int32Array(xy.length).fill(-1), bw = new Int32Array(xy.length).fill(-1), h = [];
     const push = (d, n) => { h.push([d, n]); let i = h.length - 1; while (i) { const p = (i - 1) >> 1; if (h[p][0] <= h[i][0]) break; [h[p], h[i]] = [h[i], h[p]]; i = p; } };
     const pop = () => { const top = h[0], last = h.pop(); if (h.length) { h[0] = last; let i = 0; for (;;) { const l = 2 * i + 1, r = l + 1; let m = i; if (l < h.length && h[l][0] < h[m][0]) m = l; if (r < h.length && h[r][0] < h[m][0]) m = r; if (m === i) break; [h[m], h[i]] = [h[i], h[m]]; i = m; } } return top; };
     dist[s] = 0; push(0, s);
     while (h.length) {
       const [d, n] = pop(); if (d > dist[n]) continue; if (n === t) break;
-      const a = adj[n]; for (let j = 0; j < a.length; j += 2) { const nd = d + a[j + 1]; if (nd < dist[a[j]]) { dist[a[j]] = nd; back[a[j]] = n; push(nd, a[j]); } }
+      const a = adj[n]; for (let j = 0; j < a.length; j += 3) { const nd = d + a[j + 1]; if (nd < dist[a[j]]) { dist[a[j]] = nd; back[a[j]] = n; bw[a[j]] = a[j + 2]; push(nd, a[j]); } }
     }
     if (dist[t] === Infinity) return null;
-    const path = []; for (let n = t; n >= 0; n = back[n]) path.push(xy[n]); path.reverse();
-    return { coords: [from, ...path, to], m: Math.round(dist[t] + ds + dt) };
+    const path = [], ways = []; for (let n = t; n >= 0; n = back[n]) { path.push(xy[n]); if (back[n] >= 0) ways.push(bw[n]); } path.reverse(); ways.reverse();
+    return { coords: [from, ...path, to], m: Math.round(dist[t] + ds + dt), steps: routeSteps(area, path, ways, ds, dt) };
   }
 
-  return { walkRoute, distM, decodeArea, compactOverpass, findCover, normName, normHe, expandAliases, findWays, searchStreet, findCorner, nearestStreets, placeLabel,
+  /* 2.1: הוראות הליכה מהמסלול — קבוצת קשתות באותו רחוב היא שלב אחד; בין שלבים: ימינה/שמאלה/ישר לפי שינוי הכיוון */
+  const bearing = (a, b) => { const y = (b[1] - a[1]) * mLon(a[0]), x = (b[0] - a[0]) * M_LAT; return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360; };
+  const TURN = d => { const a = Math.abs(d); if (a < 25) return 'straight'; if (a > 150) return 'back'; return (d > 0 ? (a < 55 ? 'slight-right' : 'right') : (a < 55 ? 'slight-left' : 'left')); };
+  const TURN_HE = { straight: 'המשיכו ישר', 'slight-right': 'פנו מעט ימינה', right: 'פנו ימינה', 'slight-left': 'פנו מעט שמאלה', left: 'פנו שמאלה', back: 'הסתובבו לאחור' };
+  const DIR_HE = b => ['צפונה', 'צפון-מזרחה', 'מזרחה', 'דרום-מזרחה', 'דרומה', 'דרום-מערבה', 'מערבה', 'צפון-מערבה'][Math.round(b / 45) % 8];
+  function routeSteps(area, path, ways, ds, dt) {
+    const nameOf = wi => (wi >= 0 && area.w[wi] && area.w[wi][0]) || '';
+    const out = [];
+    for (let i = 0; i < ways.length; i++) {
+      const nm = nameOf(ways[i]), m = distM(path[i], path[i + 1]), last = out[out.length - 1];
+      if (last && (last.name === nm || (!nm && !last.name))) { last.m += m; last.end = i + 1; continue; }
+      out.push({ name: nm, m, start: i, end: i + 1 });
+    }
+    out.forEach((st, k) => {
+      const a = path[st.start], b = path[Math.min(st.start + 1, path.length - 1)];
+      st.at = a; st.bear = bearing(a, b);
+      if (k === 0) { st.turn = 'start'; st.text = `צאו ${DIR_HE(st.bear)}${st.name ? ' ברחוב ' + st.name : ''}`; }
+      else {
+        const prev = out[k - 1], p0 = path[Math.max(prev.end - 1, 0)], p1 = path[prev.end];
+        let d = st.bear - bearing(p0, p1); d = ((d + 540) % 360) - 180;
+        st.turn = TURN(d); st.text = `${TURN_HE[st.turn]}${st.name ? (st.turn === 'straight' ? ' ברחוב ' : ' לרחוב ') + st.name : ''}`;
+      }
+      st.m = Math.round(st.m); st.text += ` · ${widthLabel(st.m)}`;
+    });
+    if (ds > 15 && out.length) out[0].text = `לכו ${widthLabel(ds)} עד הרחוב, ואז: ` + out[0].text;
+    out.push({ turn: 'arrive', text: 'הגעתם ליעד' + (dt > 15 ? ` (עוד ${widthLabel(dt)} מהרחוב)` : ''), m: Math.round(dt), at: path[path.length - 1] });
+    return out;
+  }
+
+  /* 2.1: הרחוב הקרוב לנקודה (לחיצה על רחוב במפה, כמו בכיוון תפילה). maxM — מרחק מקסימלי במטרים. */
+  function nearestWay(area, pt, maxM) {
+    if (!area || !area.w) return null;
+    const kx = mLon(pt[0]); let best = null;
+    area.w.forEach(([name, hw, g], i) => {
+      if (!name || hw === 'building') return;
+      for (let k = 0; k + 3 < g.length; k += 2) {
+        const ax = (g[k + 1] - pt[1]) * kx, ay = (g[k] - pt[0]) * M_LAT, bx = (g[k + 3] - pt[1]) * kx, by = (g[k + 2] - pt[0]) * M_LAT;
+        const dx = bx - ax, dy = by - ay, L = dx * dx + dy * dy, t = L ? Math.max(0, Math.min(1, -(ax * dx + ay * dy) / L)) : 0;
+        const d = Math.hypot(ax + t * dx, ay + t * dy);
+        if (!best || d < best.d) best = { d, i, k, name, hw, lat: g[k] + t * (g[k + 2] - g[k]), lon: g[k + 1] + t * (g[k + 3] - g[k + 1]) };
+      }
+    });
+    if (!best || best.d > (maxM || 40)) return null;
+    // אורך הרחוב (כל הקטעים באותו שם)
+    let len = 0; for (const [n, , g] of area.w) if (n === best.name) for (let k = 0; k + 3 < g.length; k += 2) len += distM([g[k], g[k + 1]], [g[k + 2], g[k + 3]]);
+    best.len = Math.round(len); return best;
+  }
+
+  return { walkRoute, routeSteps, nearestWay, distM, decodeArea, compactOverpass, findCover, normName, normHe, expandAliases, findWays, searchStreet, findCorner, nearestStreets, placeLabel,
     createView, project, unproject, renderBase, leafZoom, widthLabel, toLayer, toGeoJSON, renderSVG, overpassUrl };
 });

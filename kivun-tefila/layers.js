@@ -38,7 +38,7 @@
   };
 
   /* 3.0.5: כשההורדה חסומה באוצריא — קישור שמוריד ישירות (קובץ מצורף ל-Release), וטעינה מקובץ */
-  const DL = "https://github.com/Hadabadra/Prayer-pointA/releases/download/kivun-tefila-data/";
+  const DL = "https://github.com/Hadabadra/Prayer-pointA/releases/download/kivun-tefila-data/kivun-tefila-";
   $("lyLink").onclick = () => { const c = $("nsCountry").value; if (!c) return; const u = DL + "layers-" + c + ".json";
     (typeof copyText === "function" ? copyText(u) : Promise.resolve(false)).then(ok => say(ok ? "הקישור הועתק. הקובץ יורד בדפדפן לתיקיית ההורדות; אחר כך לחצו \"טען מקובץ\"." : "הקישור: " + u));
     let w = null; try { w = window.open(u, "_blank", "noopener") } catch (e) {} if (!w && O) O.call("app.openUrl", { url: u }).catch(() => {}) };

@@ -1,5 +1,5 @@
 /* כיוון תפילה — מצב טיסה: מיקום המטוס לפי מסלול המעגל הגדול והזמן, הכיוון לירושלים ביחס לכיוון הטיסה, וזמני היום בדרך.
-   החישוב משוער: מניח מסלול ישיר במהירות קבועה בין היציאה לנחיתה. */
+   החישוב משוער: מסלול משוער (נתיבי יציאה ונחיתה + מעגל גדול), טיפוס והנמכה איטיים ושיוט קבוע. */
 const FLY_AP = [["תל אביב – נתב״ג (TLV)", 32.0114, 34.8867], ["רמון – אילת (ETM)", 29.7237, 35.0114], ["ניו יורק – JFK", 40.6413, -73.7781], ["ניוארק (EWR)", 40.6895, -74.1745],
   ["לונדון – הית׳רו (LHR)", 51.47, -0.4543], ["לונדון – לוטון (LTN)", 51.8747, -0.3683], ["לונדון – סטנסטד (STN)", 51.885, 0.235], ["מנצ׳סטר (MAN)", 53.3537, -2.275],
   ["פריז – שארל דה גול (CDG)", 49.0097, 2.5479], ["פריז – אורלי (ORY)", 48.7262, 2.3652], ["בריסל (BRU)", 50.901, 4.4844], ["אמסטרדם (AMS)", 52.3105, 4.7683],
@@ -16,7 +16,32 @@ function flyPlace(v) {
   const f = FLY_AP.find(x => x[0] === v) || C.find(x => x[0] === v) || FLY_AP.find(x => x[0].includes(v)) || C.find(x => x[0].includes(v));
   return f ? [f[1], f[2], f[0]] : null;
 }
-const flyPos = t => { const f = Math.max(0, Math.min(1, (t - FLY.t0) / (FLY.t1 - FLY.t0))); return gc(FLY.a, FLY.b, f) };
+/* 3.8.0: מסלול טיסה משוער במקום הקו הקצר הישר: יציאה ונחיתה דרך נתיבי הים (בנתב״ג ממריאים ונוחתים מעל הים, ומזרחה דרך מסדרון הערבה),
+   ובאמצע — מעגל גדול. ההתקדמות לאורך המסלול לפי פרופיל: טיפוס כ-25 דק׳ והנמכה כ-30 דק׳ במהירות נמוכה, ושיוט בשאר הזמן. */
+function flyPath(a, b) {
+  const TLV = [32.0114, 34.8867], ETM = [29.7237, 35.0114], near = (p, q) => dist(p, q) < 80;
+  const out = (p, q) => { const br = bearing(p, q); if (br > 60 && br < 200) return [[30.2, 35.25], [29.4, 36.2]]; return [[32.25, 34.45], [32.6, 33.4]] };
+  const pts = [a];
+  if (near(a, TLV) || near(a, ETM)) pts.push(...out(a, b));
+  const tail = []; if (near(b, TLV) || near(b, ETM)) tail.push(...out(b, a).reverse());
+  pts.push(...tail, b);
+  const P = [pts[0]]; for (let i = 1; i < pts.length; i++) { const n = Math.max(2, Math.ceil(dist(pts[i - 1], pts[i]) / 150)); for (let k = 1; k <= n; k++) P.push(gc(pts[i - 1], pts[i], k / n)) }
+  const S = [0]; for (let i = 1; i < P.length; i++) S.push(S[i - 1] + dist(P[i - 1], P[i]));
+  return { P, S, L: S[S.length - 1] };
+}
+function flyAlong(path, s) {
+  const { P, S } = path; if (s <= 0) return P[0]; if (s >= path.L) return P[P.length - 1];
+  let i = 1; while (S[i] < s) i++; const f = (s - S[i - 1]) / ((S[i] - S[i - 1]) || 1); return gc(P[i - 1], P[i], f);
+}
+/* מרחק לאורך המסלול ברגע t: טיפוס והנמכה במהירות ממוצעת ~450 קמ״ש, שיוט במהירות שממלאת את שאר הזמן */
+function flyS(t) {
+  const W = FLY.path, s0 = FLY.s0 || 0, L = W.L - s0, T = (FLY.t1 - FLY.t0) / 6e4, m = Math.max(0, Math.min(T, (t - FLY.t0) / 6e4));
+  if (FLY.re || T < 70) return s0 + L * (T ? m / T : 1);
+  const dc = Math.min(L * .2, 450 * 25 / 60), dd = Math.min(L * .2, 450 * 30 / 60), Tc = T - 55, Lc = L - dc - dd;
+  if (m <= 25) return s0 + dc * m / 25; if (m >= T - 30) return s0 + L - dd * (T - m) / 30; return s0 + dc + Lc * (m - 25) / Tc;
+}
+const flyPos = t => { if (!FLY.path) { const f = Math.max(0, Math.min(1, (t - FLY.t0) / (FLY.t1 - FLY.t0))); return gc(FLY.a, FLY.b, f) } return flyAlong(FLY.path, flyS(t)) };
+const flyRoutePts = () => FLY.path ? FLY.path.P : (() => { const r = []; for (let i = 0; i <= 80; i++) r.push(gc(FLY.A0, FLY.b, i / 80)); return r })();
 const flyHead = t => { const p = flyPos(Math.min(t, FLY.t1 - 6e4)), q = flyPos(Math.min(t, FLY.t1 - 6e4) + 6e4); return bearing(p, q) };
 const flyTm = t => { const d = new Date(t), n = new Date(), k = Math.round((new Date(d).setHours(0, 0, 0, 0) - new Date(n).setHours(0, 0, 0, 0)) / 864e5);
   return (k === -1 ? "אתמול " : k === 1 ? "מחר " : k ? d.toLocaleDateString("he-IL") + " " : "") + d.toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" }) };
@@ -113,7 +138,7 @@ function flyDraw() {
     + `<p class="flybig">ירושלים: ${flyRel(bj - hd)}</p><p>מהצפון: ${Math.round(bj)}° · ${nm(bj)}. מרחק: ${Math.round(dist(p, J)).toLocaleString("he-IL")} ק״מ.</p>`
     + `<h3>זמני היום במיקום הנוכחי</h3>` + (here.length ? `<table class="halt">${here.map(row).join("")}</table>` : "<p>אין שינוי בשעות הקרובות.</p>")
     + `<h3>לאורך הטיסה${FLY.re ? " (מהעדכון האחרון)" : ""}</h3>` + (route.length ? `<table class="halt">${route.map(row).join("")}</table>` : "<p>אין זריחה, שקיעה או צאת הכוכבים בזמן הטיסה.</p>")
-    + `<p><small>השעות לפי השעון במכשיר שלך. חישוב משוער (מסלול ישיר, מהירות קבועה), בדיוק של דקות ספורות. ${FLY.alt ? "הזריחה והשקיעה לפי גובה המטוס בכל רגע." : "הזריחה והשקיעה לפי גובה פני הקרקע שמתחת למטוס."} האם להתחשב בגובה המטוס, ובכלל הזמנים בטיסה, היא שאלה לרב.</small></p>`;
+    + `<p><small>השעות לפי השעון במכשיר שלך. חישוב משוער (מסלול משוער דרך נתיבי ההמראה והנחיתה, טיפוס והנמכה איטיים), בדיוק של דקות ספורות. ${FLY.alt ? "הזריחה והשקיעה לפי גובה המטוס בכל רגע." : "הזריחה והשקיעה לפי גובה פני הקרקע שמתחת למטוס."} האם להתחשב בגובה המטוס, ובכלל הזמנים בטיסה, היא שאלה לרב.</small></p>`;
   $("flyGlobe").innerHTML = flyGlobe(FLY.A0, FLY.b, f >= 0 && f <= 1 ? p : null);
   if (FLY.on && f >= 0) setPos(p, f > 1 ? "נחיתה: " + FLY.b[2] : "במטוס, בדרך ל" + FLY.b[2], null, false);
 }
@@ -129,7 +154,7 @@ function flyGlobe(a, b, p) {
   const pr = q => { const f = q[0] * R, l = q[1] * R - l0; return [r * Math.cos(f) * Math.sin(l), -r * (Math.cos(c0) * Math.sin(f) - Math.sin(c0) * Math.cos(f) * Math.cos(l)), Math.sin(c0) * Math.sin(f) + Math.cos(c0) * Math.cos(f) * Math.cos(l) > 0] };
   const line = pts => { let d = "", on = false; for (const q of pts) { const [x, y, v] = pr(q); if (v) { d += (on ? "L" : "M") + x.toFixed(1) + "," + y.toFixed(1); on = true } else on = false } return d };
   let land = ""; for (const g of flyRings()) land += line(g);
-  const rt = []; for (let i = 0; i <= 80; i++) rt.push(gc(a, b, i / 80));
+  const rt = flyPath(a, b).P;
   const dot = (q, c, s, t) => { const [x, y, v] = pr(q); return v ? `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${s}" class="${c}"/>` + (t ? `<text x="${x.toFixed(1)}" y="${(y - 5).toFixed(1)}" text-anchor="middle">${esc(t)}</text>` : "") : "" };
   return `<svg class="flyglobe" viewBox="-104 -104 208 208" role="img" aria-label="מסלול הטיסה על כדור הארץ"><circle r="100" class="sea"/><path class="gl" d="${land}"/><path class="rt" d="${line(rt)}"/>${dot(a, "pa", 2.5)}${dot(b, "pa", 2.5)}${dot(J, "pj", 3, "ירושלים")}${p ? dot(p, "pp", 4) : ""}</svg>`;
 }
@@ -148,7 +173,7 @@ function flyStart() {
   if (!a || !b) { m.textContent = "לא זוהה מקום היציאה או הנחיתה. בחר מהרשימה, או הקלד קואורדינטות (למשל 40.64, -73.78)."; return }
   if (!(t1 > t0)) { m.textContent = "שעת הנחיתה צריכה להיות אחרי שעת היציאה."; return }
   if (t1 - t0 > 22 * 36e5) { m.textContent = "טיסה ארוכה מ-22 שעות? כדאי לבדוק את התאריכים."; return }
-  m.textContent = ""; Object.assign(FLY, { a, b, A0: a, t0, t1, T0: t0, on: true, alt: $("flyAlt").checked, altKm: null, altAt: 0, re: false }); flyReadAlt();
+  m.textContent = ""; Object.assign(FLY, { a, b, A0: a, t0, t1, T0: t0, path: flyPath(a, b), s0: 0, on: true, alt: $("flyAlt").checked, altKm: null, altAt: 0, re: false }); flyReadAlt();
   try { const v = JSON.stringify({ a: $("flyA").value, b: $("flyB").value, t0: $("flyT0").value, t1: $("flyT1").value, alt: FLY.alt, h: $("flyH").value, hu: $("flyHU").value }); O ? O.call("storage.set", { key: "kivun-fly", value: v }).catch(() => {}) : localStorage.setItem("kivun-fly", v) } catch (e) {}
   if (!FLY.on0) FLY.prevMode = $("mapMode").value; FLY.on0 = true; flyChip(true);
   $("mapMode").value = "globe"; if (typeof map === "function") map(); flyDraw(); clearInterval(FLY.T); FLY.T = setInterval(flyDraw, 60000); $("flyStop").hidden = false;
@@ -160,7 +185,7 @@ function flyUpdate() {
   const m = $("flyMsg"), t1 = Date.parse($("flyT1").value), now = Date.now();
   if (!FLY.a) { flyStart(); return }
   if (!(t1 > now)) { m.textContent = "שעת הנחיתה המעודכנת צריכה להיות מאוחרת מעכשיו."; return }
-  if (now > FLY.t0 && now < FLY.t1) { const p = flyPos(now); FLY.a = [p[0], p[1], "המיקום בעדכון"]; FLY.t0 = now; FLY.re = true }
+  if (now > FLY.t0 && now < FLY.t1) { const p = flyPos(now); if (FLY.path) FLY.s0 = flyS(now); FLY.a = [p[0], p[1], "המיקום בעדכון"]; FLY.t0 = now; FLY.re = true }
   FLY.t1 = t1; FLY.alt = $("flyAlt").checked; flyReadAlt(); m.textContent = "עודכן."; flyDraw();
 }
 /* ״המראנו עכשיו״: שעת ההמראה = עכשיו, ושעת הנחיתה זזה באותו הפרש */
@@ -176,12 +201,12 @@ function flyText() { const S = flySheet(); if (!S) return "";
   const head = `טיסה מ${FLY.A0[2]} ל${FLY.b[2]} · המראה ${flyTm(FLY.T0)} · נחיתה ${flyTm(FLY.t1)} (שעון המכשיר)`;
   return [head, "", "זמני היום לאורך הטיסה:", ...(S.L.route.length ? S.L.route.map(e => `${flyTm(e[0])}  ${e[1]}  (${flyLL(e[2])})`) : ["אין זריחה, שקיעה או צאת הכוכבים בזמן הטיסה."]),
     "", "כיוון ירושלים כל חצי שעה:", ...S.rows.map(r => `${flyTm(r[0])}  ${flyLL(r[1])}  ירושלים ${r[2]} (${r[3]}° מהצפון)`),
-    "", "חישוב משוער (מסלול ישיר, מהירות קבועה). בשאלה מעשית יש לשאול רב. — כיוון תפילה, אוצריא"].join("\n") }
+    "", "חישוב משוער (מסלול משוער דרך נתיבי ההמראה והנחיתה, טיפוס והנמכה איטיים). בשאלה מעשית יש לשאול רב. — כיוון תפילה, אוצריא"].join("\n") }
 function flyPrintHead() { const S = flySheet(); if (!S) return false; const row = r => `<tr>${r.map(x => `<td>${x}</td>`).join("")}</tr>`;
   $("printHead").innerHTML = `<h1>זמני היום וכיוון התפילה בטיסה</h1><p><b>${esc(FLY.A0[2])} ← ${esc(FLY.b[2])}</b> · המראה ${flyTm(FLY.T0)} · נחיתה ${flyTm(FLY.t1)}</p>`
     + `<h2>זמני היום לאורך הטיסה</h2><table class="halt">${S.L.route.length ? S.L.route.map(e => row([flyTm(e[0]), esc(e[1]), flyLL(e[2])])).join("") : "<tr><td>אין זריחה, שקיעה או צאת הכוכבים בזמן הטיסה.</td></tr>"}</table>`
     + `<h2>כיוון ירושלים כל חצי שעה</h2><table class="halt">${S.rows.map(r => row([flyTm(r[0]), flyLL(r[1]), "ירושלים " + r[2], r[3] + "°"])).join("")}</table>`
-    + `<p><small>השעות לפי השעון במכשיר. חישוב משוער (מסלול ישיר, מהירות קבועה). בשאלה מעשית יש לשאול רב. מתוך התוסף "כיוון תפילה" לאוצריא: <a href="https://otzaria.org/plugins/6ac80057bd083fcc18562fa0">חנות התוספים</a> · <a href="https://github.com/Hadabadra/Prayer-pointA/releases">GitHub</a></small></p>`;
+    + `<p><small>השעות לפי השעון במכשיר. חישוב משוער (מסלול משוער דרך נתיבי ההמראה והנחיתה, טיפוס והנמכה איטיים). בשאלה מעשית יש לשאול רב. מתוך התוסף "כיוון תפילה" לאוצריא: <a href="https://otzaria.org/plugins/6ac80057bd083fcc18562fa0">חנות התוספים</a> · <a href="https://github.com/Hadabadra/Prayer-pointA/releases">GitHub</a></small></p>`;
   return true }
 function flyPrint() { if (!flyPrintHead()) return;
   document.body.classList.add("printfly"); try { window.print() } catch (e) {} setTimeout(() => document.body.classList.remove("printfly"), 1500) }
