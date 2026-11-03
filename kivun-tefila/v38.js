@@ -8,7 +8,7 @@
    7. דיווח קריסה: הרכיב המשותף shared/report (feedback.report, סוג crash; אוצריא תמיד מבקשת אישור). */
 (function () {
   const $ = id => document.getElementById(id), O = window.Otzaria;
-  const VER = "3.8.0";
+  const VER = (typeof window.VER === "string" && window.VER) || "3.8.1";
   const dat = r => r && typeof r === "object" && "data" in r ? r.data : r;
   const ls = { get: k => { try { return localStorage.getItem(k) } catch (e) { return null } }, set: (k, v) => { try { localStorage.setItem(k, v) } catch (e) {} } };
   const sget = async k => { const l = ls.get(k); if (!O) return l; try { const r = await O.call("storage.get", { key: k }); const v = r && (r.value ?? (r.data && (r.data.value ?? r.data))); return typeof v === "string" ? v : l } catch (e) { return l } };
@@ -149,5 +149,42 @@
   /* ---------- 7. דיווח קריסה — הרכיב המשותף shared/report/crash-report.js (מקור: Hadabadra/Mikvaot/shared/report) ---------- */
   if (window.CrashReport && O) {
     try { CrashReport.init({ call: (m, p) => O.call(m, p), plugin: "כיוון תפילה", version: VER }) } catch (e) {}
+  }
+
+  /* ---------- 8. #21: הקטבים על הכדור ---------- */
+  if (typeof globeMap === "function") {
+    const og = globeMap;
+    globeMap = function () {
+      og();
+      try {
+        const svg = $("map"), vb = svg.viewBox.baseVal, W = vb && vb.width || 400, Hh = vb && vb.height || 320, cx = (vb ? vb.x : 0) + W / 2, cy = (vb ? vb.y : 0) + Hh / 2;
+        const m = gc(pos, J, .5), c0 = Math.max(-89, Math.min(89, m[0] + GL.dla)) * R, l0 = (m[1] + GL.dlo) * R, r = Math.min(W, Hh) * .45 * (typeof zoom === "number" ? zoom : 1);
+        let h = "";
+        for (const [la, t] of [[90, "הקוטב הצפוני"], [-90, "הקוטב הדרומי"]]) {
+          const f = la * R, z = Math.sin(c0) * Math.sin(f); if (z <= 0) continue;
+          const x = cx, y = cy - r * Math.cos(c0) * Math.sin(f);
+          h += `<g pointer-events="none"><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.5" fill="var(--color-surface)" stroke="var(--color-on-surface)" stroke-width="1.2"/><text x="${x.toFixed(1)}" y="${(y + (la > 0 ? -7 : 15)).toFixed(1)}" text-anchor="middle" font-size="11" fill="var(--color-on-surface)" stroke="var(--color-surface)" stroke-width="3" paint-order="stroke">${t}</text></g>`;
+        }
+        svg.insertAdjacentHTML("beforeend", h);
+      } catch (e) {}
+    };
+  }
+
+  /* ---------- 9. #22: קובצי הנתונים השמורים נטענים בכל פתיחה ---------- */
+  if (O) {
+    const CK = "kivun-ns-country";
+    /* שמירה שנכשלה (למשל מכסה) — מודיעים, במקום להיכשל בשקט */
+    const oc = O.call.bind(O);
+    O.call = async (m, p) => { const r = await oc(m, p); if (m === "fs.writeFile" && r && r.success === false) oc("ui.showMessage", { message: "השמירה של " + (p && p.path) + " נכשלה: " + ((r.error && (r.error.message || r.error.code)) || "") }).catch(() => {}); return r };
+    (async () => {
+      try {
+        const l = dat(await oc("fs.listDir", { path: "" })); const names = ((l && l.entries) || []).map(e => e.name);
+        const lay = names.filter(n => /^layers-[A-Z]{3}\.json$/.test(n)).map(n => n.slice(7, 10)), rd = names.filter(n => /^roads-[A-Z]{3}\.json$/.test(n)).map(n => n.slice(6, 9));
+        try { const a = JSON.parse(ls.get("kivun-layers-isos") || "[]"); for (const c of lay) if (!a.includes(c)) a.push(c); ls.set("kivun-layers-isos", JSON.stringify(a)) } catch (e) {}
+        const host = $("allMsg"); if (host) host.textContent = "שמורים בתוסף: " + [names.includes("geo-names.json") ? "שמות" : "", names.includes("geo-extra.json") ? "נהרות" : "", rd.length ? "כבישים (" + rd.join(", ") + ")" : "", lay.length ? "שכבות (" + lay.join(", ") + ")" : ""].filter(Boolean).join(" · ") || "שמורים בתוסף: עדיין אין";
+        const sel = $("nsCountry"), last = await sget(CK);
+        if (sel) { sel.addEventListener("change", () => sset(CK, sel.value)); const c = last || rd[0] || lay[0]; if (c && !sel.value && [...sel.options].some(o => o.value === c)) { sel.value = c; sel.dispatchEvent(new Event("change")) } }
+      } catch (e) {}
+    })();
   }
 })();
