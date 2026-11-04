@@ -11,11 +11,11 @@
     + '<div class="row"><span>שכבות:</span><button id="dcLy" type="button">הורד</button><button id="dcLyImp" type="button">טען מקובץ</button><button id="dcLyLink" type="button">העתק קישור</button></div>'
     + '<small id="dcMsg" aria-live="polite"></small>';
   anchor.after(it);
-  const fill = () => { const v = $("dcC").value; $("dcC").innerHTML = [...src.options].filter(o => o.value).map(o => `<option value="${o.value}">${o.textContent}</option>`).join(""); if (v) $("dcC").value = v; else if ($("dcC").querySelector('option[value="ISR"]')) $("dcC").value = "ISR" };
+  const fill = () => { if (!$("dcC")) return; const v = $("dcC").value; $("dcC").innerHTML = [...src.options].filter(o => o.value).map(o => `<option value="${o.value}">${o.textContent}</option>`).join(""); if (v) $("dcC").value = v; else if ($("dcC").querySelector('option[value="ISR"]')) $("dcC").value = "ISR" };
   fill(); new MutationObserver(fill).observe(src, { childList: true });
   /* הודעות הכפתורים המקוריים מופיעות גם כאן */
-  const m = $("nsMsg"); if (m) new MutationObserver(() => { $("dcMsg").textContent = m.textContent }).observe(m, { childList: true, characterData: true, subtree: true });
-  const run = id => () => { const c = $("dcC").value; if (!c) return; src.value = c; src.dispatchEvent(new Event("change", { bubbles: true })); const b = $(id); if (b) b.click(); else $("dcMsg").textContent = "לא זמין לגרסה זו." };
+  const m = $("nsMsg"); if (m) new MutationObserver(() => { const d = $("dcMsg"); if (d) d.textContent = m.textContent }).observe(m, { childList: true, characterData: true, subtree: true });
+  const run = id => () => { const c = $("dcC").value; if (!c) return; src.value = c; src.dispatchEvent(new Event("change", { bubbles: true })); const b = $(id); if (b) b.click(); else { const d = $("dcMsg"); if (d) d.textContent = "לא זמין לגרסה זו." } };
   $("dcRd").onclick = run("rdDl"); $("dcRdImp").onclick = run("rdImp"); $("dcRdLink").onclick = run("rdLink");
   $("dcLy").onclick = run("lyDl"); $("dcLyImp").onclick = run("lyImp"); $("dcLyLink").onclick = run("lyLink");
   /* "כל קבצי הנתונים" — לדף שמוריד ישירות */
