@@ -9,6 +9,9 @@
 - [x] 4. "מה חדש" 3.9.0 ב-index.html וב-README.
 - [x] 5. kivun-tefila-3.9.0.otzplugin נארז ב-uv Python 3.12 (zlib רגיל), זהה לאריזת pack.py; ה-CI יוצר את kivun-tefila-v3.9.0; חנות דרך kivun-tefila-store.yml.
 
+- [x] 6. שוחרר ובחנות (05.11): Release kivun-tefila-v3.9.0; kivun-tefila-store.yml (הרצה 41989388227) — "העדכון פורסם בחנות בגרסה 3.9.0" (3.8.1 ← 3.9.0).
+  - בדיקת ה-CI שונתה (באישור המפתחת) מהשוואת בייטים להשוואת תוכן (שם קובץ + CRC + גודל): ה-zlib של ה-runner השתנה ואף 3.8.1 נכשל.
+
 ## פתוח
 - מחיקה ידנית של הענף access-check-2026-11-04.
 - PLAN-3.0 שלב 8: החלפת המנוע הישן במפה המאוחדת — רק אחרי בדיקה באוצריא (Prayer-pointA#23).
