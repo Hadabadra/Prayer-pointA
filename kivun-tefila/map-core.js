@@ -28,6 +28,20 @@
     return [q1[0] + u * dx, q1[1] + u * dy];
   }
 
+  function inPoly(p, ring) {                  // 3.1: נקודה [lat, lon] בתוך מצולע [[lat, lon], ...] (ray casting)
+    let inside = false;
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      const a = ring[i], b = ring[j];
+      if ((a[0] > p[0]) !== (b[0] > p[0]) && p[1] < (b[1] - a[1]) * (p[0] - a[0]) / (b[0] - a[0]) + a[1]) inside = !inside;
+    }
+    return inside;
+  }
+  function distToRing(p, ring) {             // מרחק במטרים מנקודה לקו המצולע
+    const k = [M_LAT, mLon(p[0])], P = [p[0] * k[0], p[1] * k[1]]; let best = Infinity;
+    for (let i = 0; i < ring.length; i++) { const a = ring[i], b = ring[(i + 1) % ring.length]; const q = nearOnSegment(P, [a[0] * k[0], a[1] * k[1]], [b[0] * k[0], b[1] * k[1]]); best = Math.min(best, Math.hypot(q[0] - P[0], q[1] - P[1])); }
+    return best;
+  }
+
   /* ── נתוני אזור ── */
   function decodeArea(a) {
     if (!a || a.z !== 2) return a;
@@ -171,18 +185,59 @@
   /* view: { lat, lon (מרכז), zoom (1 = חצי רוחב של 300 מ'), rot (מעלות בכיוון השעון), width, height } */
   function createView(o) {
     const v = Object.assign({ zoom: 1, rot: 0, width: 400, height: 320 }, o);
+    if (v.proj === 'globe') {   // 3.0: כדור — הטלה אורתוגרפית. v.gz = גודל הכדור (1 = ממלא את המסגרת)
+      v.globe = true; v.gz = v.gz || 1;
+      v.rad = Math.min(v.width, v.height) * .46 * v.gz;
+      v.scale = v.rad / 6371000; v.hw = (v.width / 2) / v.scale; v.zoom = 300 / v.hw;
+      v.kx = mLon(v.lat);
+      return v;
+    }
     v.kx = mLon(v.lat); v.hw = 300 / v.zoom; v.scale = (v.width / 2) / v.hw;
     return v;
   }
+  // כדור: [x, y, cosc] — cosc < 0 = הנקודה בצד הנסתר
+  function globeXY(v, lat, lon) {
+    const f = lat * R, l = (lon - v.lon) * R, f0 = v.lat * R;
+    const cosc = Math.sin(f0) * Math.sin(f) + Math.cos(f0) * Math.cos(f) * Math.cos(l);
+    let x = Math.cos(f) * Math.sin(l), y = Math.cos(f0) * Math.sin(f) - Math.sin(f0) * Math.cos(f) * Math.cos(l);
+    const c = Math.cos(v.rot * R), s = Math.sin(v.rot * R), xr = x * c + y * s, yr = -x * s + y * c;
+    return [v.width / 2 + xr * v.rad, v.height / 2 - yr * v.rad, cosc];
+  }
   function project(v, lat, lon) {
+    if (v.globe) { const p = globeXY(v, lat, lon); return p[2] < 0 ? [-1e5, -1e5, p[2]] : p; }
     const dx = (lon - v.lon) * v.kx, dy = (lat - v.lat) * M_LAT, c = Math.cos(v.rot * R), s = Math.sin(v.rot * R);
     const x = dx * c + dy * s, y = -dx * s + dy * c;
     return [v.width / 2 + x * v.scale, v.height / 2 - y * v.scale];
   }
   function unproject(v, px, py) {
+    if (v.globe) {
+      const xr = (px - v.width / 2) / v.rad, yr = (v.height / 2 - py) / v.rad, c = Math.cos(v.rot * R), s = Math.sin(v.rot * R);
+      const x = xr * c - yr * s, y = xr * s + yr * c, rho = Math.hypot(x, y);
+      if (rho > 1) return null;
+      const cc = Math.asin(rho), f0 = v.lat * R;
+      if (rho < 1e-12) return [v.lat, v.lon];
+      const lat = Math.asin(Math.cos(cc) * Math.sin(f0) + y * Math.sin(cc) * Math.cos(f0) / rho) / R;
+      const lon = v.lon + Math.atan2(x * Math.sin(cc), rho * Math.cos(cc) * Math.cos(f0) - y * Math.sin(cc) * Math.sin(f0)) / R;
+      return [+lat.toFixed(6), +(((lon + 540) % 360) - 180).toFixed(6)];
+    }
     const x = (px - v.width / 2) / v.scale, y = (v.height / 2 - py) / v.scale, c = Math.cos(v.rot * R), s = Math.sin(v.rot * R);
     const dx = x * c - y * s, dy = x * s + y * c;
     return [+(v.lat + dy / M_LAT).toFixed(6), +(v.lon + dx / v.kx).toFixed(6)];
+  }
+  // קו גדול-מעגל בין שתי נקודות (לקו לירושלים בכדור ובמפת העולם)
+  function greatCircle(a, b, n) {
+    n = n || 64; const p1 = [a[0] * R, a[1] * R], p2 = [b[0] * R, b[1] * R];
+    const d = 2 * Math.asin(Math.sqrt(Math.sin((p2[0] - p1[0]) / 2) ** 2 + Math.cos(p1[0]) * Math.cos(p2[0]) * Math.sin((p2[1] - p1[1]) / 2) ** 2));
+    if (!d) return [a, b];
+    const out = [];
+    for (let i = 0; i <= n; i++) {
+      const t = i / n, A = Math.sin((1 - t) * d) / Math.sin(d), B = Math.sin(t * d) / Math.sin(d);
+      const x = A * Math.cos(p1[0]) * Math.cos(p1[1]) + B * Math.cos(p2[0]) * Math.cos(p2[1]);
+      const y = A * Math.cos(p1[0]) * Math.sin(p1[1]) + B * Math.cos(p2[0]) * Math.sin(p2[1]);
+      const z = A * Math.sin(p1[0]) + B * Math.sin(p2[0]);
+      out.push([Math.atan2(z, Math.hypot(x, y)) / R, Math.atan2(y, x) / R]);
+    }
+    return out;
   }
 
   /* כתובת Overpass להורדת רחובות (ובתי כנסת) סביב נקודה. פותחים בדפדפן, שומרים את הקובץ וטוענים בתוסף. */
@@ -225,10 +280,22 @@
   function geoPath(v, rings, close) {
     let d = '';
     for (const ring of rings) {
+      if (v.globe) {   // 3.0: פוליגון — נקודות נסתרות מוצמדות לאופק; קו — נקטע בצד הנסתר
+        let pen = false, any = false, s2 = '';
+        for (const c of ring) {
+          const p = globeXY(v, c[1], c[0]), cx = v.width / 2, cy = v.height / 2;
+          if (p[2] < 0) {
+            if (!close) { pen = false; continue; }
+            const dx = p[0] - cx, dy = p[1] - cy, L = Math.hypot(dx, dy) || 1; p[0] = cx + dx / L * v.rad; p[1] = cy + dy / L * v.rad;
+          } else any = true;
+          s2 += (pen ? 'L' : 'M') + p[0].toFixed(1) + ',' + p[1].toFixed(1); pen = true;
+        }
+        if (any) d += s2 + (close ? 'Z' : '');
+        continue;
+      }
       let prev = null;
       for (let i = 0; i < ring.length; i++) {
         const c = ring[i];
-        if (prev && Math.abs(c[0] - prev[0]) > 180) { d += ''; }   // קפיצת קו התאריך
         const p = project(v, c[1], c[0]);
         d += (i && !(prev && Math.abs(c[0] - prev[0]) > 180) ? 'L' : 'M') + p[0].toFixed(1) + ',' + p[1].toFixed(1);
         prev = c;
@@ -249,19 +316,22 @@
   function renderBase(v, NE, o) {
     if (!NE) return '';
     o = o || {};
-    const lz = leafZoom(v), f = n => n.toFixed(1);
+    const lz = leafZoom(v) + (v.globe ? 1 : 0), f = n => n.toFixed(1);   // 3.0: בכדור — שמות הארצות כבר בגודל המלא
     const fc = x => (x && x.features ? x.features.map(t => t.geometry) : x ? [x] : []);
     let s = '';
     // ים כרקע, יבשה מעליו. כל פוליגון בנתיב משלו (כיווני הטבעות בעולם ובאזור הפוכים, ובנתיב אחד נוצרים "חורים").
     // 2.1: o.color — מפה צבעונית (ים כחול, כל ארץ בצבע משלה, כמו בעינים למקרא). הצבעים כאסימוני :root (--mu-sea, --mu-land1..6) ב-map-ui.
-    const col = !!o.color;
-    s += col ? `<rect x="0" y="0" width="${v.width}" height="${v.height}" fill="var(--mu-sea, #a9cdea)"/>` : `<rect x="0" y="0" width="${v.width}" height="${v.height}" fill="var(--color-primary)" fill-opacity=".07"/>`;
+    // 3.0: o.style — 'eyes' (צבעוני כמו עינים למקרא), 'countries' (כל ארץ בצבע), 'plain' (חום-לבן כמו כיוון תפילה)
+    const st = o.style || (o.color ? 'countries' : 'plain'), col = st !== 'plain', ey = st === 'eyes';
+    const sea = ey ? 'var(--mu-e-sea, #9fbcc8)' : 'var(--mu-sea, #a9cdea)';
+    const bg = col ? `fill="${sea}"` : 'fill="var(--color-primary)" fill-opacity=".07"';
+    s += v.globe ? `<circle cx="${v.width / 2}" cy="${v.height / 2}" r="${v.rad.toFixed(1)}" ${bg} stroke="var(--color-outline, #888)" stroke-width="1"/>` : `<rect x="0" y="0" width="${v.width}" height="${v.height}" ${bg}/>`;
     const land = lz >= 5 && NE.region ? [...fc(NE.world), ...fc(NE.region)] : fc(NE.world);
-    s += land.map((g, i) => `<path d="${geoPath(v, geomRings(g), true)}" fill="${col ? `var(--mu-land${(i * 7) % 6 + 1}, #e8e2c8)` : 'var(--color-surface, #fff)'}" fill-rule="evenodd" stroke="${col ? 'var(--mu-coast, #6b8fae)' : 'none'}" stroke-width=".5"/>`).join('');
+    s += land.map((g, i) => `<path d="${geoPath(v, geomRings(g), true)}" fill="${ey ? 'var(--mu-e-land, #e6d8b0)' : col ? `var(--mu-land${(i * 7) % 6 + 1}, #e8e2c8)` : 'var(--color-surface, #fff)'}" fill-rule="evenodd" stroke="${ey ? 'var(--mu-e-coast, #7796a3)' : col ? 'var(--mu-coast, #6b8fae)' : 'none'}" stroke-width=".5"/>`).join('');
     const bl = lz >= 5 && NE.regionlines ? NE.regionlines : NE.worldlines;
-    if (bl) s += `<path d="${geomRings(bl).map(r => geoPath(v, [r], false)).join('')}" fill="none" stroke="var(--color-outline, #888)" stroke-opacity=".55" stroke-width=".8" stroke-dasharray="3 2"/>`;
-    if (NE.lakes) s += `<path d="${fc(NE.lakes).map(g => geoPath(v, geomRings(g), true)).join('')}" fill="${col ? 'var(--mu-sea, #a9cdea)' : 'var(--color-primary)'}" fill-opacity="${col ? 1 : .14}" stroke="none"/>`;
-    if (NE.rivers && lz >= 4) s += `<path d="${fc(NE.rivers).map(g => geoPath(v, geomRings(g), false)).join('')}" fill="none" stroke="${col ? 'var(--mu-river, #4f8fcf)' : 'var(--color-primary)'}" stroke-opacity="${col ? .9 : .4}" stroke-width="${col ? 1.3 : 1}"/>`;
+    if (bl) s += `<path d="${geomRings(bl).map(r => geoPath(v, [r], false)).join('')}" fill="none" stroke="${ey ? 'var(--mu-e-line, #a08d5f)' : 'var(--color-outline, #888)'}" stroke-opacity="${ey ? .8 : .55}" stroke-width="${ey ? .9 : .8}"${ey ? '' : ' stroke-dasharray="3 2"'}/>`;
+    if (NE.lakes) s += `<path d="${fc(NE.lakes).map(g => geoPath(v, geomRings(g), true)).join('')}" fill="${col ? sea : 'var(--color-primary)'}" fill-opacity="${col ? 1 : .14}" stroke="none"/>`;
+    if (NE.rivers && lz >= 4) s += `<path d="${fc(NE.rivers).map(g => geoPath(v, geomRings(g), false)).join('')}" fill="none" stroke="${ey ? 'var(--mu-e-river, #7796a3)' : col ? 'var(--mu-river, #4f8fcf)' : 'var(--color-primary)'}" stroke-opacity="${col ? .9 : .4}" stroke-width="${col ? 1.3 : 1}"/>`;
     if (o.labels !== false) for (const L of NE.labels || []) {
       if ((L.z || 0) > lz + .5) continue;
       const p = project(v, L.lat, L.lng);
@@ -276,9 +346,10 @@
   /* ── ציור SVG (מחרוזת). צבעים כמשתני CSS של אוצריא, כמו בכיוון תפילה. ── */
   const widthLabel = m => m >= 2000 ? (m >= 20000 ? Math.round(m / 1000) : (m / 1000).toFixed(1)) + ' ק"מ' : Math.round(m) + " מ'";
   function renderSVG(o) {
+    if (o.view && o.view.globe) o = Object.assign({}, o, { area: null });   // 3.0: אין רחובות על הכדור
     const v = o.view, area = o.area, f = n => n.toFixed(1), W = v.width, H = v.height;
     let lines = '', labels = '', pts = '';
-    let base = o.base ? renderBase(v, o.base, { labels: o.baseLabels, color: o.color }) : '';
+    let base = o.base ? renderBase(v, o.base, { labels: o.baseLabels, color: o.color, style: o.style }) : '';
     if (o.color && !base) base = `<rect x="0" y="0" width="${W}" height="${H}" fill="var(--mu-land-street, #f3efe0)"/>`;
     if (o.outline && !o.base) lines += `<path d="${OUTLINE.map((c, i) => { const p = project(v, c[0], c[1]); return (i ? 'L' : 'M') + f(p[0]) + ',' + f(p[1]); }).join('')}Z" fill="var(--color-on-surface-variant, #5f6368)" fill-opacity=".07" stroke="var(--color-on-surface-variant, #5f6368)" stroke-opacity=".5" stroke-width="1.5" stroke-linejoin="round"><title>קו מתאר מקורב</title></path>`;
     const inView = (x, y, m) => x > -m && x < W + m && y > -m && y < H + m;
@@ -302,9 +373,11 @@
     }
     for (const layer of o.layers || []) {
       for (const ln of layer.lines || []) {   // קווים ופוליגונים (למשל גבול עירוב)
-        const d = ln.coords.map((c, i) => { const p = project(v, c[0], c[1]); return (i ? 'L' : 'M') + f(p[0]) + ',' + f(p[1]); }).join('') + (ln.closed ? 'Z' : '');
-        const solid = ln.style === 'route';
-        lines += `<path d="${d}" fill="${ln.closed ? 'var(--color-primary)' : 'none'}" fill-opacity=".08" stroke="var(--color-primary)" stroke-width="${solid ? 5 : 2.5}"${solid ? ' stroke-opacity=".85" stroke-linecap="round"' : ' stroke-dasharray="7 4"'} stroke-linejoin="round"><title>${esc(ln.label || layer.id)}</title></path>`;
+        const cs = v.globe && ln.coords.length === 2 && !ln.closed ? greatCircle(ln.coords[0], ln.coords[1]) : ln.coords;
+        let pen = false; const d = cs.map(c => { const p = project(v, c[0], c[1]); if (p[2] < 0) { pen = false; return ''; } const r = (pen ? 'L' : 'M') + f(p[0]) + ',' + f(p[1]); pen = true; return r; }).join('') + (ln.closed && !v.globe ? 'Z' : '');
+        const solid = ln.style === 'route', col = ln.color || 'var(--color-primary)';   // 3.1: צבע לקו (עט, קווי עירוב) וקו רציף
+        if (ln.color && ln.halo !== false) lines += `<path d="${d}" fill="none" stroke="var(--color-surface, #fff)" stroke-opacity=".75" stroke-width="${ln.solid ? 6 : 5}" stroke-linejoin="round"/>`;
+        lines += `<path d="${d}" fill="${ln.closed ? col : 'none'}" fill-opacity="${ln.color ? .12 : .08}" stroke="${col}" stroke-width="${solid ? 5 : ln.solid ? 3.2 : 2.5}"${solid ? ' stroke-opacity=".85" stroke-linecap="round"' : ln.solid ? ' stroke-linecap="round"' : ' stroke-dasharray="7 4"'} stroke-linejoin="round"><title>${esc(ln.label || layer.id)}</title></path>`;
       }
       for (const pt of layer.points || []) {
         const p = project(v, pt.lat, pt.lon); if (!inView(p[0], p[1], 20)) continue;
@@ -412,6 +485,6 @@
     best.len = Math.round(len); return best;
   }
 
-  return { walkRoute, routeSteps, nearestWay, distM, decodeArea, compactOverpass, findCover, normName, normHe, expandAliases, findWays, searchStreet, findCorner, nearestStreets, placeLabel,
+  return { inPoly, distToRing, greatCircle, globeXY, walkRoute, routeSteps, nearestWay, distM, decodeArea, compactOverpass, findCover, normName, normHe, expandAliases, findWays, searchStreet, findCorner, nearestStreets, placeLabel,
     createView, project, unproject, renderBase, leafZoom, widthLabel, toLayer, toGeoJSON, renderSVG, overpassUrl };
 });

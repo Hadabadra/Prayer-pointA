@@ -25,3 +25,6 @@
 
 /* 1.1.0 */
 .ap-by{margin:.1em 0 0;font-size:.8em;color:var(--color-on-surface-variant)}
+
+/* 1.2.0 */
+.ap-happy { margin: .3em 0; font-weight: 700; color: var(--color-primary); }
