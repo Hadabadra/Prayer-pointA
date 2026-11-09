@@ -24,7 +24,7 @@
   }
   const sunAlt = (s, q) => Math.sin(s[0] * R) * Math.sin(q[0] * R) + Math.cos(s[0] * R) * Math.cos(q[0] * R) * Math.cos((q[1] - s[1]) * R);
   const flyOn = () => typeof FLY !== "undefined" && FLY.on && FLY.A0;
-  let pickT = null;
+  let pickT = null, lastPr = null, planeXY = null;
 
   if (typeof globeMap === "function") {
     const orig = globeMap;
@@ -51,6 +51,7 @@
       if (flyOn()) {
         [...svg.querySelectorAll("text")].forEach(x => { if (x.textContent === "✈") x.remove() });
         const tt = Math.max(FLY.t0, Math.min(FLY.t1, t)), p = flyPos(tt), a = pr(p), b = pr(flyPos(Math.min(tt + 6e5, FLY.t1 + 6e5)) );
+        lastPr = pr; planeXY = a[2] ? a : null;
         if (a[2]) {
           let ang = Math.atan2(b[1] - a[1], b[0] - a[0]) / R + 90; if (!isFinite(ang) || (b[0] === a[0] && b[1] === a[1])) ang = flyHead(tt);
           h += `<g transform="translate(${a[0].toFixed(1)},${a[1].toFixed(1)}) rotate(${ang.toFixed(1)})" pointer-events="none"><path d="M0,-11 L2,-4 L10,1 L10,3 L2,1 L1.5,7 L4,9 L4,10.5 L0,9.5 L-4,10.5 L-4,9 L-1.5,7 L-2,1 L-10,3 L-10,1 L-2,-4 Z" fill="var(--color-on-surface)" stroke="var(--color-surface)" stroke-width="1"/></g>`;
@@ -60,6 +61,30 @@
       svg.insertAdjacentHTML("beforeend", h);
     };
   }
+
+  /* 4.0.0 (#30): גרירת המטוס על הכדור — המטוס זז לאורך המסלול והשעה מתעדכנת */
+  (function () {
+    let drag = false;
+    const svgPt = e => { const svg = $("map"), m = svg.getScreenCTM(); if (!m) return null; const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; const q = p.matrixTransform(m.inverse()); return [q.x, q.y] };
+    const onGlobe = e => flyOn() && $("mapMode") && $("mapMode").value === "globe" && e.target.closest && e.target.closest("#map");
+    function nearestT(q) {
+      if (!lastPr) return null; let best = null;
+      for (let i = 0; i <= 300; i++) { const t = FLY.t0 + (FLY.t1 - FLY.t0) * i / 300, a = lastPr(flyPos(t)); if (!a[2]) continue; const d = Math.hypot(a[0] - q[0], a[1] - q[1]); if (!best || d < best[1]) best = [t, d] }
+      return best && best[0];
+    }
+    document.addEventListener("pointerdown", e => {
+      if (!onGlobe(e) || !planeXY) return; const q = svgPt(e); if (!q || Math.hypot(q[0] - planeXY[0], q[1] - planeXY[1]) > 16) return;
+      drag = true; e.preventDefault(); e.stopImmediatePropagation(); try { $("map").setPointerCapture(e.pointerId) } catch (x) {}
+    }, true);
+    document.addEventListener("pointermove", e => {
+      if (!drag) return; e.preventDefault(); e.stopImmediatePropagation(); const q = svgPt(e), t = q && nearestT(q); if (t == null) return;
+      pickT = t; const out = $("flyOut"); if (out) out.querySelectorAll("tr.pick").forEach(x => x.classList.remove("pick"));
+      const st = $("flyDragT"); if (st) st.textContent = "המטוס בשעה " + flyTm(t);
+      map();
+    }, true);
+    const end = e => { if (!drag) return; drag = false; e.preventDefault(); e.stopImmediatePropagation() };
+    document.addEventListener("pointerup", end, true); document.addEventListener("pointercancel", end, true);
+  })();
 
   /* 4. לחיצה על שעה בטבלאות הטיסה */
   const out = $("flyOut");

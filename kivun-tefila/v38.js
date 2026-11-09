@@ -8,7 +8,7 @@
    7. דיווח קריסה: הרכיב המשותף shared/report (feedback.report, סוג crash; אוצריא תמיד מבקשת אישור). */
 (function () {
   const $ = id => document.getElementById(id), O = window.Otzaria;
-  const VER = (typeof window.VER === "string" && window.VER) || "3.8.1";
+  const VER = (typeof window.VER === "string" && window.VER) || (typeof window.KT_VER === "string" && window.KT_VER) || "?";
   const dat = r => r && typeof r === "object" && "data" in r ? r.data : r;
   const ls = { get: k => { try { return localStorage.getItem(k) } catch (e) { return null } }, set: (k, v) => { try { localStorage.setItem(k, v) } catch (e) {} } };
   const sget = async k => { const l = ls.get(k); if (!O) return l; try { const r = await O.call("storage.get", { key: k }); const v = r && (r.value ?? (r.data && (r.data.value ?? r.data))); return typeof v === "string" ? v : l } catch (e) { return l } };

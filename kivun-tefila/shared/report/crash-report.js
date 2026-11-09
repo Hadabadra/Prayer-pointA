@@ -1,4 +1,4 @@
-/* דיווח תקלות אוטומטי לתוספי אוצריא — רכיב משותף (גרסה 1.0.0, 03.11.2026).
+/* דיווח תקלות אוטומטי לתוספי אוצריא — רכיב משותף (גרסה 1.1.0, 09.11.2026 — הצעה אחת בלבד בכל הפעלה, ו-setEnabled/isEnabled למתג בהגדרות; כמו לשון הקודש 2.7.0).
    המקור היחיד: Hadabadra/Mikvaot shared/report/. כל תוסף מעתיק את הקובץ כמו שהוא (tools/sync-shared.sh).
    מה עושה: תופס שגיאות JS שלא טופלו (error / unhandledrejection) ומציע למשתמש בהודעה קטנה לשלוח דיווח קריסה
    דרך מערכת הדיווחים של אוצריא (feedback.report, reportType: "crash"). אוצריא מציגה תמיד דיאלוג אישור — אין שליחה בלי הסכמה
@@ -8,7 +8,7 @@
 (function (root) {
   'use strict';
   const KEY = 'crashReportOff', seen = new Set();
-  let cfg = null, off = false, box = null, pending = null;
+  let cfg = null, off = false, box = null, pending = null, offered = false;
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   // פרטים אישיים לא נשלחים: נתיבי משתמש מוסתרים
   const clean = s => String(s || '').replace(/[A-Za-z]:\\Users\\[^\\\s]+/g, 'C:\\Users\\…').replace(/\/(home|Users)\/[^\/\s]+/g, '/$1/…').slice(0, 1800);
@@ -24,10 +24,10 @@
   }
   function hide() { if (box) box.remove(); box = null; }
   function offer(kind, msg, stack) {
-    if (off || !cfg) return;
+    if (off || !cfg || offered) return;   // 1.1.0: פעם אחת בהפעלה
     const sig = kind + ':' + String(msg).slice(0, 160); if (seen.has(sig)) return; seen.add(sig);
     pending = { kind, msg: clean(msg), stack: clean(stack) };
-    if (box) return;   // הודעה אחת בכל פעם
+    if (box) return; offered = true;   // הודעה אחת בכל פעם
     css(); box = document.createElement('aside'); box.className = 'cr-toast'; box.setAttribute('role', 'alert');
     box.innerHTML = `<b>אירעה תקלה ב${esc(cfg.plugin)}</b><small>${esc(pending.msg)}</small><div class="cr-acts"><button class="cr-pri" data-cr="send">שליחת דיווח למפתח</button><button data-cr="close">לא עכשיו</button><button class="cr-link" data-cr="never">לא להציע שוב</button></div>`;
     box.addEventListener('click', async e => {
@@ -49,7 +49,11 @@
     return st;
   }
   const CrashReport = {
-    VERSION: '1.0.0',
+    VERSION: '1.1.0',
+    /* מתג בהגדרות התוסף: false = לא להציע דיווח (נשמר ב-storage) */
+    setEnabled(v) { off = !v; hide(); if (cfg) call('storage.set', { key: KEY, value: !v }); },
+    isEnabled: () => !off,
+    ready: () => cfg ? call('storage.get', { key: KEY }).then(r => { const v = r && (r.data !== undefined ? r.data : r.value); off = v === true; return !off; }) : Promise.resolve(false),
     init(o) {
       cfg = Object.assign({ plugin: 'התוסף' }, o || {}); if (typeof cfg.call !== 'function') return CrashReport;
       call('storage.get', { key: KEY }).then(r => { const v = r && (r.data !== undefined ? r.data : r.value); if (v === true) off = true; });

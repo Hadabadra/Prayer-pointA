@@ -1,12 +1,12 @@
 {
   "id": "com.shiachrina.kivuntefila",
   "name": "כיוון תפילה",
-  "version": "3.9.0",
-  "description": "הכיוון לירושלים לפי מיקום, עיר או רחוב: חוגה, מצפן, מפות וכדור הארץ בלי אינטרנט, מצב טיסה, הלכות עם מקורות, וממשק באנגלית.",
+  "version": "4.0.0",
+  "description": "הכיוון לירושלים מכל מקום: חוגה, מצפן, מפות רחובות, כדור הארץ, מצב טיסה והלכות הכותל. עובד בלי אינטרנט — צריך רשת רק להורדת התוסף.",
   "author": "שיח רינה-עמודי שש",
   "schemaVersion": 1,
   "sdkVersion": "1.x",
-  "stability": "beta",
+  "stability": "stable",
   "minAppVersion": "0.9.98.3",
   "entrypoint": "index.html",
   "permissions": [
@@ -27,7 +27,9 @@
     "app.startup_contributions",
     "library.books.provide",
     "published_data.write",
-    "search.field_actions"
+    "search.field_actions",
+    "search.dialog",
+    "tools.read"
   ],
   "network": {
     "enabled": true,
@@ -76,6 +78,19 @@
           "icon": "compass_northwest_24_regular",
           "libraryOnlyIcon": "book_24_regular",
           "mode": "providerBooksFilter"
+        }
+      ],
+      "searchDialogItems": [
+        {
+          "id": "kivun-place",
+          "type": "switch",
+          "title": "כיוון תפילה: הכיוון לירושלים מהמקום שחיפשתי",
+          "defaultValue": false,
+          "persist": false,
+          "resultsAction": "הכיוון לירושלים מהמקום שחיפשת",
+          "visibleInModes": [
+            "exact"
+          ]
         }
       ]
     }

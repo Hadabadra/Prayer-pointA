@@ -37,11 +37,12 @@
 
   /* ---------- 1. המפה המאוחדת ---------- */
   let box = null;
+  let baseP = null;   /* 4.0.0 (#38): טעינה אחת בלבד — לחיצה כפולה טענה את world-basemap.js פעמיים ("NE_DATA has already been declared") */
   function loadBase() {
-    return new Promise(res => {
+    return baseP || (baseP = new Promise(res => {
       if (window.NE_DATA) return res();
       const s = document.createElement("script"); s.src = "world-basemap.js"; s.onload = () => res(); s.onerror = () => res(); document.head.append(s);
-    });
+    }));
   }
   async function openUnified() {
     if (!window.MapUI || !MapUI.mount) return;
@@ -103,6 +104,7 @@
     const q = $("stQ"); if (q) { q.value = t; if (typeof stFind === "function") stFind() }
   }
 
+  window.__ktFromField = t => fromField(t);   /* 4.0.0: לשימוש searchDialogItems (v40.js) */
   function init() {
     addButton();
     const mm = $("mapMode"); if (mm) mm.addEventListener("change", saveView);
