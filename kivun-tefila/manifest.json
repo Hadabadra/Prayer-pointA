@@ -1,7 +1,7 @@
 {
   "id": "com.shiachrina.kivuntefila",
   "name": "כיוון תפילה",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "הכיוון לירושלים מכל מקום: חוגה, מצפן, מפות רחובות, כדור הארץ, מצב טיסה והלכות הכותל. עובד בלי אינטרנט — צריך רשת רק להורדת התוסף.",
   "author": "שיח רינה-עמודי שש",
   "schemaVersion": 1,
@@ -87,6 +87,7 @@
           "title": "כיוון תפילה: הכיוון לירושלים מהמקום שחיפשתי",
           "defaultValue": false,
           "persist": false,
+          "openPluginOnSubmit": true,
           "resultsAction": "הכיוון לירושלים מהמקום שחיפשת",
           "visibleInModes": [
             "exact"
