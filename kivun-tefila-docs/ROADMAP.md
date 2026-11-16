@@ -13,3 +13,11 @@
 - `shared/report/crash-report.js` עודכן כאן ל-**1.1.0** (הצעה אחת בהפעלה, `setEnabled`/`isEnabled`/`ready` למתג בהגדרות). המקור היחיד הוא Hadabadra/Mikvaot `shared/report` — בסבב של מקוואות להעתיק את 1.1.0 לשם, אחרת `sync-shared.sh` ידרוס.
 - `searchDialogItems` (id `kivun-place`, `resultsAction`) + `tools.biographies`/`tools.dictionary` — `v40.js`.
 - פיצ'רי SDK שנבדקו ולא מתאימים כרגע: `network.fetchFile` (קובצי הנתונים צריכים להישמר לצמיתות — נשאר `fs.writeFile`), `ui.printFile`/`reader.printRange` (אין PDF או ספר להדפסה), `events.setOptions` (התוסף לא מאזין ל-`reader.selection_changed`), `app.getDivineNamesDisplay` (טקסט הפסוקים מגיע מהספרייה, שכבר מסננת לפי בחירת המשתמש).
+
+## נשאר פתוח אחרי 4.1.0 (16.11.2026, מושהה עד ~מאי 2027)
+- #47 תצוגת מפות Google — רישיון Google אוסר אריחים בתוסף; יש קישור חיצוני "פתח במפות Google" כשיש אינטרנט.
+- #48 מצב טיסה: כמה מעלות לנטות מחרטום המטוס, עם חץ, גם בזמן גרירת המטוס לאורך המסלול.
+- #49 הדפסה: לציין בהדפסה לפי איזו שיטת חישוב, ואפשרות להציג/להדפיס את שתי השיטות יחד (להראות את הפער).
+- #50 בחירת נקודה מדויקת ברחוב (ובצומת) במקום כל קטע הרחוב.
+- #52 "קובץ ההורדות המלא לא נטען" — חסר פירוט (איזה קובץ, הודעת שגיאה). לבדוק גודל הקובץ ונתיב הטעינה.
+- תמיכה בקובצי מפות לא מקוונים — תכנון ב-Hadabadra/Mikvaot shared/MAP-FILES-PLAN.md.

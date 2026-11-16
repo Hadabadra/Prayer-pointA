@@ -18,3 +18,9 @@
 
 ## לקח (4.0.1)
 אוצריא דוחה בהתקנה `searchDialogItems` שיש בו `resultsAction` בלי `openPluginOnSubmit: true` ("resultsAction requires openPluginOnSubmit"), למרות שהתיעוד לא מציין זאת. לבדוק כל שינוי ב-manifest בהתקנה אמיתית לפני שחרור.
+
+## 4.1.0 — 16.11.2026 (סבב סיום 7/7)
+- קריעה: kotel-full-ui.js — תוספת הב"ח (`.kvadd`), "ברוך דין אמת" (`.vsm`), מזמור עט כקישור; CSS קטן ב-index.html (`@media (max-width:40em)`).
+- זכר לחורבן: kotel-full.js נבנה מחדש מהקובץ המורחב (`kivun-tefila-docs/זכר לחורבן - דור המלקטים (מורחב 16.11.2026).docx`) ב-kotel_docx.py (מצב חדש: "סימן תקס – …", נושאים "א] …"; רק שורות "שם (מקום)" — טקסט חופשי לא נכנס).
+- ערכת סיום (`hb-final*.js`, whatsNew כבוי — יש כבר "מה חדש" משלו); author: Hadabadra.
+- פרסום לחנות: kivun-tefila-store.yml ב-Hadabadra/madaei-hatanach (כל 3 שעות / dispatch).

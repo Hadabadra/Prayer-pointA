@@ -37,8 +37,31 @@ def main(src, dst):
     d = docx.Document(src)
     paras = [p.text.strip() for p in d.paragraphs if p.style.name != 'footnote text']
     data, cur, topics, in_toc, topic = [], None, set(), False, None
+    # 4.1.0: מבנה הקובץ המורחב (16.11.2026): "סימן תקס – זכר לחורבן", שורת ביבליוגרפיה, נושאים "א] ..." בלי תוכן עניינים
+    NEW = any(re.match(r'^סימן תק\S*\s*[–-]', x) for x in paras)
     for t in paras:
         if not t or t == 'זכר לחורבן':
+            continue
+        if NEW:
+            m = re.match(r'^סימן (תק\S*)\s*[–-]\s*(.*)$', t)
+            if m:
+                sa = m.group(1).replace('"', '')
+                cur = {'siman': 'סימן ' + (sa[:-1] + '"' + sa[-1]) + ' – ' + m.group(2), 'sa': sa, 'topics': []}; data.append(cur); topic = None; continue
+            if cur is None: continue
+            if t.startswith('דור המלקטים') and 'biblio' not in cur:
+                cur['biblio'] = [n.strip() for n in re.split(r'\),\s*', t.split('-', 1)[-1]) if n.strip()]; continue
+            if re.match(r'^[א-ת]{1,2}\]\s', t):
+                topic = {'t': t, 'lines': []}; cur['topics'].append(topic); continue
+            if topic is None:
+                topic = {'t': 'כללי', 'lines': []}; cur['topics'].append(topic)
+            s = strip_quotes(t)
+            if not s: continue
+            r = refs_of(s)
+            if len(s) < 60 and re.match(r'^([א-ת]\.|\d+\.|[א-ת]\))\s', s) and not r:
+                topic['lines'].append(['h', s]); continue
+            if not r: continue                      # טקסט חופשי (ציטוטים, הסברים) — לא נכנס, לפי בקשת המפתחת
+            num = re.match(r'^(\d+\.|[א-ת]\)|[א-ת]\.)\s', s)
+            topic['lines'].append(['s', (num.group(1) + ' ' if num else '') + ', '.join('%s (%s)' % (n, x) for n, x in r), r])
             continue
         if t in SIMAN_SA:
             cur = {'siman': t, 'sa': SIMAN_SA[t], 'topics': []}; data.append(cur)

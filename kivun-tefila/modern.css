@@ -106,7 +106,7 @@ details.sd,details.box,.hsec,.dlitem,details.way{border-color:var(--color-outlin
   body.printkria #kria{display:block !important;position:relative;inset:auto;box-shadow:none;border:0;min-height:96vh;overflow:visible;padding:2em 1.5em;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   body.printkria #kria .kwall{opacity:.2}
   body.printkria #kria .zx,body.printkria #kria .kprt,body.printkria #kria .kshort,body.printkria #kria .kvsrc{display:none !important}
-  body.printkria #kria .kria::after{content:"ישעיהו סד, ט–י · מועד קטן כו ע\"א · שולחן ערוך אורח חיים סימן תקסא";display:block;margin-top:1em;font-size:.85em;opacity:.75}
+  body.printkria #kria .kria::after{content:"ישעיהו סד, ט–י · מועד קטן כו ע\"א · שולחן ערוך אורח חיים סימן תקסא · תהלים עט";display:block;margin-top:1em;font-size:.85em;opacity:.75}
   body.printkria #kria .kria{background:none;box-shadow:none}
 }
 #fly .setrow label{flex-wrap:wrap}

@@ -63,7 +63,7 @@
     const d = document.createElement("details");
     d.className = "sd"; d.id = "about";
     d.innerHTML = '<summary><b>אודות וכלים</b></summary>'
-      + '<p>כיוון תפילה <span id="aboutVer"></span> · שיח רינה-עמודי שש</p>'
+      + '<p>כיוון תפילה <span id="aboutVer"></span> · Hadabadra</p>'
       + '<div class="row"><button id="bHome" type="button">דף התוסף ב-GitHub</button><button id="bShortcut" type="button">צור קיצור דרך בשולחן העבודה</button><button id="bPdf" type="button">ייצוא דף כיוון ל-PDF</button></div>'
       + '<p id="aboutMsg" aria-live="polite" style="min-height:1.2em"></p>';
     set.appendChild(d);
@@ -86,7 +86,7 @@
   }
 
   /* פתיחת חלקי התוסף דרך מסך הספרייה של אוצריא (library.setProviderBooks + library.providerBook.openRequested) */
-  const AUTH = "שיח רינה-עמודי שש";
+  const AUTH = "Hadabadra";
   const PARTS = [
     { id: 1, title: "כיוון תפילה: חוגה וכיוון לירושלים", author: AUTH },
     { id: 2, title: "כיוון תפילה: הלכות כיוון התפילה", author: AUTH },

@@ -1,4 +1,4 @@
-# כיוון תפילה — שיח רינה-עמודי שש
+# כיוון תפילה — Hadabadra (חד בדרא)
 
 ## הורדה
 - **כיוון תפילה 4.0.1 (יציבה):** [kivun-tefila-4.0.1.otzplugin](https://github.com/Hadabadra/Prayer-pointA/raw/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/kivun-tefila-4.0.1.otzplugin) · או מחנות התוספים של אוצריא. זמין גם בחנות התוספים של אוצריא. קבצי המקור נמצאים בתיקייה [kivun-tefila](kivun-tefila).
