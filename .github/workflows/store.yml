@@ -1,0 +1,52 @@
+name: פרסום לחנות אוצריא
+
+# מפרסם את "ברכת המזון" (com.chadbedera.siach-rina) לחנות אוצריא.
+# רץ בכל דחיפה לענף ברכת-המזון (ב-Hadabadra/Prayer-pointA) שמשנה את src/manifest.json, וגם ידנית מלשונית Actions.
+# גרסה שכבר קיימת בחנות לא מתפרסמת שוב (publish: auto). סודות: OTZARIA_USER / OTZARIA_PASSWORD.
+
+on:
+  push:
+    branches: ['ברכת-המזון']
+    paths: ['src/manifest.json', '.github/workflows/store.yml']
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'לפרסם גם אם הגרסה כבר קיימת'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: store-brachat
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: תיקיית התוסף בלבד
+        run: |
+          mkdir -p dist/plugin
+          cp -r src/. dist/plugin/
+          node -p "'ברכת המזון ' + require('./dist/plugin/manifest.json').version"
+      - name: ולידציה, קיפול ופרסום
+        timeout-minutes: 6
+        uses: Otzaria/otzaria-plugin-validator@v1
+        with:
+          path: dist/plugin
+          otzaria-user: ${{ secrets.OTZARIA_USER }}
+          otzaria-password: ${{ secrets.OTZARIA_PASSWORD }}
+          publish: 'auto'
+          force: ${{ github.event.inputs.force || false }}
+          reports-consent: 'true'
+      - name: Release בגיטהאב
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          V=$(node -p "require('./src/manifest.json').version")
+          cd src && zip -qr -X "../brachat-hamazon-$V.otzplugin" . && cd ..
+          gh release view "brachat-v$V" >/dev/null 2>&1 || gh release create "brachat-v$V" "brachat-hamazon-$V.otzplugin" --target "ברכת-המזון" --latest=false -t "ברכת המזון $V" -n "ראו docs/CHANGELOG.md בענף ברכת-המזון."

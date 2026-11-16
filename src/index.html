@@ -1,0 +1,94 @@
+<!DOCTYPE html><html lang="he" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ברכת המזון – שיח רינה</title><link rel="stylesheet" href="css/style.css"></head>
+<body>
+<!-- עמוד כניסה -->
+<section id="welcome" class="welcome hid">
+  <div class="wcard">
+    <img class="wlogo" src="img/makhon.png" alt="מכון שיח רינה">
+    <h1>סדר ברכת המזון <b>שיח רינה</b></h1>
+    <p class="wsub" id="wEdition"></p>
+    <button class="wtoday" id="wToday" title="מה מוסיפים היום בברכת המזון"></button>
+    <div class="wbtns">
+      <button class="pri" id="wStart"><i class="oi" data-i="book"></i>פתיחת הספר</button>
+      <button class="ton hid" id="wResume"><i class="oi" data-i="resume"></i><span></span></button>
+      <button class="ton" id="wBentch"><i class="oi" data-i="cup"></i>לברכת המזון</button>
+      <button class="ton" id="wToc"><i class="oi" data-i="list"></i>תוכן העניינים</button>
+    </div>
+    <label class="wskip"><input type="checkbox" id="wSkip"> מעכשיו לפתוח ישר את הספר</label>
+    <p class="wfoot"><button class="lnk" id="wContact">יצירת קשר עם המכון</button> · <button class="lnk" id="wAbout">אודות</button></p>
+  </div>
+</section>
+
+<!-- הקורא -->
+<div id="app" class="hid">
+  <header id="bar">
+    <div class="row">
+      <div class="grp"><button class="ib" id="bHome" title="עמוד הכניסה"><i class="oi" data-i="home"></i></button>
+      <button class="ib" id="bToc" title="תוכן העניינים"><i class="oi" data-i="list"></i></button>
+      <button class="ib" id="bToday" title="ברכת המזון היום"><i class="oi" data-i="cal"></i></button></div>
+      <button class="pill" id="bFocus2" title="ברכה במסך מלא"><i class="oi" data-i="expand"></i><span>מסך מלא</span></button>
+      <button class="pill" id="bForgot" title="שכחתי להוסיף…"><i class="oi" data-i="forgot"></i><span>שכחתי</span></button>
+      <div class="quick" id="quick"></div>
+      <span class="sp"></span>
+      <div class="pager">
+        <button class="ib" id="bPrev" title="עמוד קודם"><i class="oi" data-i="right"></i></button>
+        <input id="pg" type="text" title="עמוד (אפשר להקליד באותיות או בספרות)" autocomplete="off"><span id="pgOf"></span>
+        <button class="ib" id="bNext" title="עמוד הבא"><i class="oi" data-i="left"></i></button>
+      </div>
+      <span class="sp"></span>
+      <div class="grp"><button class="ib" id="bSearch" title="חיפוש בספר (Ctrl+F)"><i class="oi" data-i="search"></i></button>
+      <button class="ib" id="bMark" title="סימניה לעמוד זה"><i class="oi" data-i="mark"></i></button>
+      <button class="ib" id="bNote" title="הוספת הערה לעמוד זה"><i class="oi" data-i="note"></i></button>
+      <button class="ib" id="bView" title="אופן התצוגה"><i class="oi" data-i="view"></i></button>
+      <button class="ib" id="bPrint" title="הדפסה / שמירה כ-PDF"><i class="oi" data-i="print"></i></button>
+      <button class="ib" id="bCopyRef" title="העתקת מראה מקום לעמוד זה"><i class="oi" data-i="copy"></i></button>
+      <button class="ib" id="bAbout" title="אודות התוסף ומה חדש"><i class="oi" data-i="info"></i></button>
+      <button class="ib" id="bContact" title="המחבר ויצירת קשר"><i class="oi" data-i="mail"></i></button></div>
+    </div>
+  </header>
+
+  <div id="body">
+    <aside id="side" class="hid">
+      <div class="shead"><nav class="tabs" id="tabs">
+        <button data-t="short" class="on">מקוצר</button><button data-t="full">מורחב</button><button data-t="marks">סימניות</button><button data-t="find">חיפוש</button>
+      </nav><button class="ib" id="sClose" title="סגור"><i class="oi" data-i="x"></i></button></div>
+      <div id="findBox" class="hid"><input id="q" type="search" placeholder="חיפוש בספר…" autocomplete="off"><small id="qInfo"></small></div>
+      <div id="sList" class="slist"></div>
+    </aside>
+    <main id="view"><div id="pages"></div></main>
+  </div>
+
+  <div id="menuView" class="menu hid">
+    <div class="mt">אופן הקריאה</div>
+    <button data-mode="scroll"><i class="oi" data-i="scroll"></i>גלילה רציפה (אנכית)</button>
+    <button data-mode="single"><i class="oi" data-i="page"></i>דף אחר דף (דפדוף)</button>
+    <button data-mode="spread"><i class="oi" data-i="spread"></i>שני עמודים זה מול זה</button>
+    <div class="mt">גודל</div>
+    <div class="zrow"><button id="zOut" title="הקטנה">−</button><span id="zLbl"></span><button id="zIn" title="הגדלה">+</button></div>
+    <button data-fit="width"><i class="oi" data-i="fitw"></i>התאמה לרוחב</button>
+    <button data-fit="page"><i class="oi" data-i="fitp"></i>עמוד שלם במסך</button>
+    <div class="mt">תצוגה</div>
+    <button id="bNight"><i class="oi" data-i="moon"></i><span>מצב לילה</span></button>
+  </div>
+  <div id="menuForgot" class="menu hid">
+    <div class="mt">שכחתי בברכת המזון…</div>
+    <button data-go="50"><i class="oi" data-i="forgot"></i>רצה והחליצנו / יעלה ויבוא — הדינים והברכות</button>
+    <button data-go="60"><i class="oi" data-i="forgot"></i>על הניסים — הרחמן לשוכח</button>
+    <button data-go="51"><i class="oi" data-i="forgot"></i>שכח גם רצה וגם יעלה ויבוא</button>
+  </div>
+</div>
+
+<!-- חלונות -->
+<div id="dlg" class="scrim hid"><div class="dlg" role="dialog"><button class="ib dx" id="dX"><i class="oi" data-i="x"></i></button><div id="dBody"></div></div></div>
+<div id="toast" class="toast hid"></div>
+<div id="focusBar"><button id="fPrev" title="עמוד קודם"><i class="oi" data-i="right"></i></button><button id="fExit" title="יציאה ממסך מלא (Esc)"><i class="oi" data-i="x"></i></button><button id="fNext" title="עמוד הבא"><i class="oi" data-i="left"></i></button></div>
+<div id="selTool" class="seltool hid"><button data-a="lib"><i class="oi" data-i="search"></i>חיפוש בספריית אוצריא</button><button data-a="copy"><i class="oi" data-i="copy"></i>העתקה עם מראה מקום</button></div>
+<div id="printArea"></div>
+
+<script src="vendor/pdf.min.js"></script>
+<script src="js/icons.js"></script><script src="js/today.js"></script><script src="js/toc.js"></script>
+<script src="data/fonts.js"></script><script src="data/text.js"></script><script src="data/book.js"></script>
+<script src="js/divine.js"></script>
+<script src="js/app.js"></script>
+<script src="js/hb-final.js"></script><script src="js/hb-final-data.js"></script><script>window.HBFinal&&HBFinal.init(window.HB_FINAL_DATA,{mount:null});</script>
+</body></html>

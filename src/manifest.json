@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "id": "com.chadbedera.siach-rina",
+  "name": "ברכת המזון",
+  "version": "2.1.0",
+  "stability": "stable",
+  "author": "Hadabadra",
+  "description": "סדר ברכת המזון \"שיח רינה\" עם הלכות: ברכת המזון היום, תוכן, חיפוש, דפדוף כספר וסימניות. פועל ללא אינטרנט",
+  "homepage": "https://github.com/Hadabadra/siach-rina",
+  "entrypoint": "index.html",
+  "minAppVersion": "0.9.98.3",
+  "sdkVersion": "1.x",
+  "icon": "icon/icon.png",
+  "permissions": [
+    "plugin.storage.read",
+    "plugin.storage.write",
+    "feedback.send_email",
+    "app.open_url",
+    "app.startup_contributions",
+    "library.books.provide",
+    "search.dialog",
+    "reader.open",
+    "search.field_actions",
+    "ui.feedback"
+  ],
+  "contributes": {
+    "toolTab": {
+      "title": "ברכת המזון",
+      "order": 320,
+      "defaultPinned": true,
+      "iconName": "book_open_24_regular"
+    },
+    "startup": {
+      "libraryBooks": [
+        {
+          "id": "siach-rina",
+          "provider": "siach-rina",
+          "title": "ברכת המזון שיח רינה",
+          "icon": "book_open_24_regular"
+        }
+      ],
+      "searchDialogItems": [
+        {
+          "id": "sr-search",
+          "type": "checkbox",
+          "title": "חפש גם בברכת המזון \"שיח רינה\"",
+          "defaultValue": false,
+          "openPluginOnSubmit": true,
+          "visibleInModes": [
+            "exact",
+            "advanced"
+          ],
+          "persist": false,
+          "resultsAction": "חיפוש בברכת המזון \"שיח רינה\"",
+          "when": {
+            "not": {
+              "storage": {
+                "key": "hb.hide.sr-search",
+                "equals": true
+              }
+            }
+          }
+        }
+      ],
+      "searchFieldActions": [
+        {
+          "id": "sr-books-filter",
+          "title": "ספרי ברכת המזון / ספרי הספרייה",
+          "icon": "library_24_regular",
+          "activeIcon": "library_24_filled",
+          "libraryOnlyIcon": "book_24_regular",
+          "mode": "providerBooksFilter"
+        }
+      ]
+    }
+  }
+}
