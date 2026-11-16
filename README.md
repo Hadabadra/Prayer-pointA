@@ -1,5 +1,8 @@
 # כיוון תפילה — Hadabadra (חד בדרא)
 
+> **⏸ הפיתוח מושהה (מ-16.11.2026 עד ~מאי 2027).** לא יוצאות גרסאות חדשות בתקופה הזו. אפשר להמשיך לשלוח דיווחים ובקשות לפיצ'רים — הם נשמרים ב-Issues ויטופלו בחזרה.
+> **מחכים למי שרוצה להמשיך בפיתוח!** קוד המקור: https://github.com/Hadabadra/Prayer-pointA/tree/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94 · בקשת הצטרפות לפיתוח: https://github.com/Hadabadra/Prayer-pointA/issues/new?title=%D7%91%D7%A7%D7%A9%D7%AA%20%D7%94%D7%A6%D7%98%D7%A8%D7%A4%D7%95%D7%AA%20%D7%9C%D7%A4%D7%99%D7%AA%D7%95%D7%97
+
 ## הורדה
 - **כיוון תפילה 4.0.1 (יציבה):** [kivun-tefila-4.0.1.otzplugin](https://github.com/Hadabadra/Prayer-pointA/raw/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/kivun-tefila-4.0.1.otzplugin) · או מחנות התוספים של אוצריא. זמין גם בחנות התוספים של אוצריא. קבצי המקור נמצאים בתיקייה [kivun-tefila](kivun-tefila).
 - **סידורון 3.7.2 התואם** (כפתור לפתיחת כיוון תפילה, ושליחת התפילה הפתוחה לבקשתו; התוסף של Y-PLONI, נערך באישורו): [com.moshenahari.siduron-3.7.2.otzplugin](https://github.com/Hadabadra/Prayer-pointA/raw/%D7%9B%D7%99%D7%95%D7%95%D7%9F-%D7%AA%D7%A4%D7%99%D7%9C%D7%94/siduron/com.moshenahari.siduron-3.7.2.otzplugin). הוגש כבקשת מיזוג לריפו שלו: [Y-PLONI/siduron_plugin#1](https://github.com/Y-PLONI/siduron_plugin/pull/1). פירוט השינויים בתיקיית [siduron](siduron).
