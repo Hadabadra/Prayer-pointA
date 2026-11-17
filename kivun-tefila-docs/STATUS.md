@@ -1,6 +1,6 @@
 # כיוון תפילה — מצב (STATUS)
 
-**מושהה עד ~מאי 2027.** גרסה יציבה: **4.0.1** (10.11.2026, `stability: stable`), Release `kivun-tefila-v4.0.1`.
+**מושהה.** גרסה יציבה: **4.0.1** (10.11.2026, `stability: stable`), Release `kivun-tefila-v4.0.1`.
 
 - ענף: `כיוון-תפילה` ב-Hadabadra/Prayer-pointA. קוד: `kivun-tefila/`, בנייה: `kivun-tefila-build/` (`pack.py`), תיעוד: `kivun-tefila-docs/`.
 - שחרור: דחיפה לענף עם גרסה חדשה ב-manifest וקובץ `kivun-tefila-<v>.otzplugin` תואם (CI בודק שם+CRC) → `kivun-release.yml` יוצר Release.

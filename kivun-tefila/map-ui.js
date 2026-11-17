@@ -22,7 +22,7 @@
   else root.MapUI = factory(root.MapCore);
 })(this, function (MC) {
   'use strict';
-  const VERSION = '3.1.0';
+  const VERSION = '3.2.0';
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const W = 400, ZMIN = 0.00004, ZMAX = 10;
   const JERUSALEM = [31.7767, 35.2345];
@@ -355,13 +355,13 @@
           <div class="mu-grp mu-glass"><button type="button" class="mu-ib" data-mu="layers" id="mu-lb" title="שכבות" aria-label="שכבות" aria-expanded="false">${ic('layers')}</button></div>
         </div>
         <div class="mu-pop mu-glass" id="mu-pop" hidden role="dialog" aria-label="שכבות"></div>
-        <div class="mu-addpop mu-glass" id="mu-add" hidden role="menu" aria-label="הוספת קובץ"><button class="mu" data-mu="load" role="menuitem">טעינת רחובות מקובץ</button><button class="mu" data-mu="loadgeo" role="menuitem">טעינת שכבה מקובץ (GeoJSON)</button>${o.draw ? '<button class="mu" data-mu="draw" role="menuitem">שרטוט קו או שטח (עט)</button>' : ''}${off || o.builtinStreets ? '' : '<button class="mu" data-mu="url" role="menuitem">הורדת רחובות לאזור (דפדפן)</button>'}</div>
+        <div class="mu-addpop mu-glass" id="mu-add" hidden role="menu" aria-label="הוספת קובץ"><button class="mu" data-mu="load" role="menuitem">טעינת רחובות מקובץ</button><button class="mu" data-mu="loadgeo" role="menuitem">טעינת קובץ מפות (כל הסוגים)</button>${o.draw ? '<button class="mu" data-mu="draw" role="menuitem">שרטוט קו או שטח (עט)</button>' : ''}${off || o.builtinStreets ? '' : '<button class="mu" data-mu="url" role="menuitem">הורדת רחובות לאזור (דפדפן)</button>'}</div>
         <div class="mu-scale mu-glass" id="mu-scale"></div>
         <div class="mu-card mu-glass" id="mu-sel" hidden></div>
         <div class="mu-toast mu-glass" id="mu-msg" hidden role="status"></div>
         <div class="mu-drawbar mu-glass" id="mu-draw" hidden role="toolbar" aria-label="עט"></div>
         <div class="mu-info mu-glass" id="mu-info" hidden role="dialog" aria-label="רחובות, נתונים ועזרה"><button type="button" class="mu-ib mu-x" data-mu="infox" title="סגירה" aria-label="סגירה">✕</button><h4>רחובות, נתונים ועזרה</h4>
-        <div class="bar">${off || o.builtinStreets ? '' : '<button class="mu" data-mu="dl" id="mu-dl">הורדת רחובות לעיר</button>'}<button class="mu" data-mu="load">טעינת רחובות מקובץ</button><button class="mu" data-mu="loadgeo">טעינת שכבה מקובץ (GeoJSON)</button></div>
+        <div class="bar">${off || o.builtinStreets ? '' : '<button class="mu" data-mu="dl" id="mu-dl">הורדת רחובות לעיר</button>'}<button class="mu" data-mu="load">טעינת רחובות מקובץ</button><button class="mu" data-mu="loadgeo">טעינת קובץ מפות (כל הסוגים)</button></div>
         ${o.builtinStreets ? `<p class="msg">הרחובות של ${Object.keys((typeof window !== 'undefined' && window.STREET_CITIES) || {}).length || 76} ערים מובנים בתוסף ונטענים לבד כשמתקרבים לעיר בזום, בלי אינטרנט. לעיר אחרת: טעינת קובץ רחובות.</p>` : off ? '<p class="msg">אוצריא במצב "ללא גישה לאינטרנט": אפשר לטעון קובץ רחובות שכבר שמור במחשב.</p>' : `<p class="msg">מורידים את קובץ העיר (נפתח בדפדפן), ואז "טעינת רחובות מקובץ". <button class="mu" data-mu="url">מקור חלופי 1</button> <button class="mu" data-mu="url2">מקור חלופי 2</button></p>`}
         <p class="msg">חיפוש כתובת עם מספר בית (למשל: <em>רבי עקיבא 12, בני ברק</em>): ${off ? 'במצב מנותק מוצג הרחוב.' : 'המיקום המדויק נמצא ברשת (OpenStreetMap); בלי רשת מוצג הרחוב.'} פינה: <em>הרצל פינת בן יהודה</em>.</p>
         <h4>על המפה המשותפת</h4>
@@ -424,9 +424,16 @@
       if (S.draw && S.draw.pts.length) layers.push({ id: 'draw', glyph: '•', points: S.draw.pts.map((c, i) => ({ lat: c[0], lon: c[1], id: '__d' + i, label: '' })), lines: S.draw.pts.length > 1 ? [{ coords: S.draw.closed ? [...S.draw.pts, S.draw.pts[0]] : S.draw.pts, closed: S.draw.closed, label: 'שרטוט', solid: true, color: `var(--mu-pen${S.draw.col}, ${['', '#c62828', '#1565c0', '#2e7d32', '#ef6c00', '#6a1b9a'][S.draw.col]})` }] : [] });
       if (S.mark) layers.push({ id: 'mark', glyph: '★', points: [{ lat: S.mark.lat, lon: S.mark.lon, label: S.mark.label, id: '__mark' }], lines: [] });
       if (S.show.pts) layers.push(ptsLayer());
+      const tilesOn = !glb && S.tiles && S.show.tiles && window.MapFiles;
+      let under = '';
+      if (tilesOn) {
+        const rw = (view.getBoundingClientRect().width || W), mpp = (1 / v.scale) * (W / rw) / (window.devicePixelRatio || 1);
+        const cs = [[0, 0], [W, 0], [0, H], [W, H]].map(p => MC.unproject(v, p[0], p[1])).filter(Boolean);
+        under = window.MapFiles.tilesSVG(S.tiles, (la, lo) => MC.project(v, la, lo), cs, mpp, S.lat, tileCache, draw);
+      }
       const base = NE() && (glb || (S.show.base && (!S.area || S.zoom < 0.35))) ? NE() : null;
       view.innerHTML = MC.renderSVG({ area: S.area, view: v, layers, streets: S.show.streets, syn: S.show.syn, me: o.me, hl: S.sel, selected: S.street, color: S.style !== 'plain', style: S.style,
-        labels: !glb && S.zoom >= 2, outline: !S.area && !base, base, chrome: false });
+        labels: !glb && S.zoom >= 2, outline: !S.area && !base && !tilesOn, base, under, chrome: false });
       view._v = v;
       $('mu-north').innerHTML = compass(S.rot);
       // סרגל קנה מידה: אורך עגול שמתאים ל-~70 פיקסלים
@@ -522,6 +529,8 @@ ${svg ? `<figure>${svg}</figure>` : ''}
         + row('streets', '═', 'רחובות', S.area ? S.areaName || 'נטענו' : 'מתקרבים לעיר בזום', S.show.streets, !S.area)
         + row('syn', '✡', 'בתי כנסת', '', S.show.syn, !S.area)
         + (NE() ? row('base', '◍', 'מפת העולם', 'יבשות, ארצות, ערים ונהרות', S.show.base) : '')
+        + (S.tiles ? row('tiles', '▦', 'מפת רקע מקובץ', (S.tilesName || '') + ' · ' + S.tiles.format, S.show.tiles) + `<div class="bar"><button class="mu" data-mu="tilesoff">הסרת מפת הרקע</button></div>` : '')
+        + `<div class="bar"><button class="mu" data-mu="loadgeo">טעינת קובץ מפות…</button></div><p class="msg">נתמכים: MBTiles, PMTiles, sqlitedb, ZIP של אריחים, GeoJSON, KML/KMZ, GPX, CSV. מפות Windows מוצפנות ואי אפשר להציג אותן.</p>`
         + `<h5 style="margin-top:.6em">סגנון המפה</h5><div class="mu-styles">${STYLES.map(([k, t, d]) => `<button class="mu" data-mu-style="${k}" title="${esc(d)}" aria-pressed="${S.style === k}">${esc(t)}</button>`).join('')}</div>`
         + (S.route ? row('route', '↝', 'מסלול הליכה', MC.widthLabel(S.route.m), S.show.route) : '')
         + `<h5 style="margin-top:.7em">שכבות מתוספים אחרים</h5>${otherRows(o.self)}`
@@ -569,6 +578,44 @@ ${svg ? `<figure>${svg}</figure>` : ''}
         if (all.length) { const keep = pts.slice(); fit(all); void keep; }
         saveUser(); say('השכבה נטענה ונשמרה — תיטען לבד גם בפתיחה הבאה.'); refresh(); if (!pop.hidden) pop.innerHTML = popHTML();
       } catch (e) { say('הקובץ לא נקרא'); }
+    }
+
+    // 3.2: קובץ מפות מכל סוג (shared/map-files): שכבה (GeoJSON, KML, KMZ, GPX, CSV, TopoJSON) או מפת רקע (MBTiles, PMTiles, sqlitedb, ZIP)
+    const TKEY = 'mapuiTiles', tileCache = new Map();
+    function useTiles(res) {
+      S.tiles = res.source; S.tilesName = res.name; S.show.tiles = true; tileCache.clear();
+      const c = res.source.center; if (c && !isNaN(c[0])) { S.mode = 'map'; S.lat = c[0]; S.lon = c[1]; S.zoom = Math.max(S.zoom, Math.pow(2, (c[2] || 12) - 16.4) * 1.2); }
+    }
+    async function loadMap() {
+      if (!window.MapFiles) return loadGeo();
+      if (!o.call) { say('טעינה מקובץ זמינה בתוך אוצריא.'); return; }
+      say('טוען את קובץ המפות…');
+      try {
+        const res = await window.MapFiles.pick(o.call); if (!res) { say(''); return; }
+        if (res.kind === 'tiles') {
+          useTiles(res);
+          try { o.call('storage.set', { key: TKEY, value: { token: res.token, name: res.name } }); } catch (e) {}
+          say(`מפת הרקע נטענה (${res.source.format}, זום ${res.source.minzoom}–${res.source.maxzoom}) ותיטען לבד גם בפתיחה הבאה.`);
+        } else {
+          const L = MC.toLayer(res.geojson, 'file-' + Date.now().toString(36), '◆');
+          if (!L.points.length && !L.lines.length) return say('בקובץ אין נקודות או קווים');
+          extra.push({ id: L.id, name: res.name || 'שכבה מקובץ', sub: L.points.length + ' נקודות · ' + L.lines.length + ' קווים', glyph: '◆', points: L.points, lines: L.lines, on: true });
+          S.show['x-' + L.id] = true;
+          const all = [...L.points, ...L.lines.flatMap(l => l.coords.map(c => ({ lat: c[0], lon: c[1] })))];
+          if (all.length) fit(all);
+          saveUser(); say('השכבה נטענה ונשמרה — תיטען לבד גם בפתיחה הבאה.');
+        }
+        refresh(); if (!pop.hidden) pop.innerHTML = popHTML();
+      } catch (e) { say((e && e.message) || 'הקובץ לא נקרא'); }
+    }
+    async function restoreTiles() {
+      if (!o.call || !window.MapFiles) return;
+      try {
+        const r = await o.call('storage.get', { key: TKEY }); const d = r && r.success !== false ? (r.data !== undefined ? r.data : r) : null;
+        if (!d || !d.token) return;
+        const res = await window.MapFiles.reopen(o.call, d.token, d.name); if (!res || res.kind !== 'tiles') return;
+        S.tiles = res.source; S.tilesName = res.name; S.show.tiles = true; refresh();
+      } catch (e) {}
     }
 
     // ── חיפוש והצעות ──
@@ -835,7 +882,8 @@ ${more}
       else if (a === 'info' || a === 'infox') { const ip = $('mu-info'); ip.hidden = a === 'infox' ? true : !ip.hidden; $('mu-infob').setAttribute('aria-expanded', String(!ip.hidden)); }
       else if (a === 'add') { const ap = $('mu-add'); ap.hidden = !ap.hidden; b.setAttribute('aria-expanded', String(!ap.hidden)); }
       else if (a === 'load') { $('mu-add').hidden = true; loadFile(); }
-      else if (a === 'loadgeo') { $('mu-add').hidden = true; loadGeo(); }
+      else if (a === 'loadgeo') { $('mu-add').hidden = true; loadMap(); }
+      else if (a === 'tilesoff') { S.tiles = null; tileCache.clear(); try { o.call && o.call('storage.set', { key: TKEY, value: null }); } catch (er) {} if (!pop.hidden) pop.innerHTML = popHTML(); draw(); }
       else if (a === 'dl') { const sl = b.dataset.slug; if (!sl) return say('אין קובץ רחובות מוכן לעיר הזו. אפשר לנסות מקור חלופי.'); say('ההורדה נפתחה בדפדפן. אחריה: "טעינת רחובות מקובץ".'); if (o.openLink) o.openLink((window.STREETS_BASE || '') + sl + '.json'); }
       else if (a === 'url' || a === 'url2') { $('mu-add').hidden = true; const u = MC.overpassUrl(S.lat, S.lon, 1500, a === 'url2' ? 1 : 0); say('נפתח בדפדפן. שומרים את הקובץ (Ctrl+S) ואז "טעינת רחובות מקובץ".'); if (o.openLink) o.openLink(u); }
       else if (a === 'route') { const p = selPt(); if (p) makeRoute([p.lat, p.lon], S.sel, p.name); }
@@ -852,7 +900,8 @@ ${more}
     if (typeof ResizeObserver !== 'undefined') new ResizeObserver(() => draw()).observe(view);
     refresh();
     restoreUser();
-    return { state: S, refresh, select: selectPt, goTo };
+    restoreTiles();
+    return { state: S, refresh, select: selectPt, goTo, loadMap };
   }
 
   return { mount, layersButton, onOpenMap, locate, PLUGINS, EN, CSS, VERSION, JERUSALEM };
