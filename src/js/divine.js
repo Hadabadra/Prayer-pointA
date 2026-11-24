@@ -31,9 +31,14 @@
   }
   function active() { return mode.holy !== 'asIs' || mode.other === 'substitute'; }
 
-  function sample(ctx, x, y, k) {
-    try { var d = ctx.getImageData(Math.max(0, x * k | 0), Math.max(0, y * k | 0), 1, 1).data; return 'rgb(' + d[0] + ',' + d[1] + ',' + d[2] + ')'; }
-    catch (e) { return null; }
+  /* צבע הנייר: הנקודה הבהירה ביותר מסביב למילה. דגימה בנקודה אחת נפלה לפעמים על אות סמוכה — ומזה הריבוע השחור */
+  function paper(ctx, x, y, w, h, k) {
+    var pts = [[x - 3, y + h / 2], [x + w + 3, y + h / 2], [x + w / 2, y - 2], [x + w / 2, y + h + 2], [x - 3, y - 2], [x + w + 3, y + h + 2], [x + w / 4, y - 3], [x + 3 * w / 4, y + h + 3]];
+    var best = -1, c = null;
+    pts.forEach(function (p) {
+      try { var d = ctx.getImageData(Math.max(0, p[0] * k | 0), Math.max(0, p[1] * k | 0), 1, 1).data, s = d[0] + d[1] + d[2]; if (d[3] > 0 && s > best) { best = s; c = d; } } catch (e) { }
+    });
+    return c && best > 300 ? 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')' : null;
   }
   function darkest(ctx, x, y, w, h, k) {
     try {
@@ -48,11 +53,12 @@
     k = k || 1;
     if (!active() || !tc || !tc.items) return 0;
     var n = 0;
-    tc.items.forEach(function (it) {
+    tc.items.forEach(function (it, idx) {
       var s = it.str || ''; if (s.length < 2) return;
-      var hits = [];
+      var hits = [], nx = (tc.items[idx + 1] && tc.items[idx + 1].str || '').charAt(0);
       if (mode.holy !== 'asIs') { HOLY.lastIndex = 0; var m; while ((m = HOLY.exec(s))) hits.push([m.index, m[0].length, SUB[mode.holy] || "ה'"]); }
-      if (mode.other === 'substitute') { OTHER.lastIndex = 0; var o; while ((o = OTHER.exec(s))) hits.push([o.index, o[0].length, otherSub(o[0])]); }
+      /* שם שנחתך בין שני פריטי טקסט ("אֱלֹהֵ" | "ינוּ"): בודקים גם את האות הראשונה של הפריט הבא */
+      if (mode.other === 'substitute') { var s2 = s + nx; OTHER.lastIndex = 0; var o; while ((o = OTHER.exec(s2))) if (o.index < s.length) hits.push([o.index, Math.min(o[0].length, s.length - o.index), otherSub(o[0])]); }
       if (!hits.length) return;
       var t = U.transform(vp.transform, it.transform), fh = Math.hypot(t[2], t[3]) || 10;
       var W = (it.width || 0) * vp.scale, L = s.length, x0 = t[4], base = t[5];
@@ -61,7 +67,7 @@
         var a = h[0] / L, b = (h[0] + h[1]) / L;
         var left = rtl ? x0 + W * (1 - b) : x0 + W * a, w = W * (b - a);
         var top = base - fh * 0.95, hh = fh * 1.25;
-        var bg = sample(ctx, left - 2, top + hh / 2, k) || sample(ctx, left + w + 2, top + hh / 2, k);
+        var bg = paper(ctx, left, top, w, hh, k);
         var fg = darkest(ctx, left, top, w, hh, k);
         ctx.save();
         ctx.fillStyle = bg || 'white'; ctx.fillRect(left - 1, top, w + 2, hh);
@@ -73,5 +79,12 @@
     });
     return n;
   }
-  g.SRDivine = { load: load, mask: mask, active: active, mode: function () { return mode; } };
+  /* אותה החלפה בטקסט רגיל (תוצאות החיפוש, העתקה) */
+  function text(s) {
+    s = String(s || '');
+    if (mode.holy !== 'asIs') s = s.replace(HOLY, SUB[mode.holy] || "ה'");
+    if (mode.other === 'substitute') s = s.replace(OTHER, function (m) { return otherSub(m); });
+    return s;
+  }
+  g.SRDivine = { load: load, mask: mask, active: active, text: text, mode: function () { return mode; } };
 })(window);

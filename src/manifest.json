@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "com.chadbedera.siach-rina",
   "name": "ברכת המזון",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "stability": "stable",
   "author": "שיח רינה-עמודי שש",
   "description": "סדר ברכת המזון \"שיח רינה\" עם הלכות: ברכת המזון היום, תוכן, חיפוש, דפדוף כספר וסימניות. פועל ללא אינטרנט",
