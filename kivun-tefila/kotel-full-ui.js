@@ -92,10 +92,13 @@
   kr.innerHTML = "<h3 class='kvh'>מה אומרים בשעת הקריעה</h3>";
   V.forEach(([w, v]) => { const p = document.createElement("p"); p.className = "kvp"; p.innerHTML = "<small></small><span class='vs'></span>"; p.firstChild.textContent = w + ", אומר:"; p.lastChild.textContent = v; kr.appendChild(p) });
   /* 4.1.0 (לפי הנוסח המורחב שצירפה המפתחת): תוספת הב"ח בסוגריים, "ברוך דין אמת" בשעת הקריעה, ומזמור עט — קישור לספרייה בלבד */
-  { const p = kr.lastElementChild; const ad = document.createElement("span"); ad.className = "kvadd"; ad.textContent = "(ולשריפת אש כלה ה' חמתו שפך חרון אפו ויצת אש בציון ותאכל יסודותיה. ב\"ח)"; p.appendChild(ad); }
-  { const p = document.createElement("p"); p.className = "kvp"; p.innerHTML = "<small></small><span class='vs'></span>"; p.firstChild.textContent = "וקורע. וכשקורע אומר:";
-    p.lastChild.textContent = "ברוך דין אמת כי כל משפטיו צדק ואמת, הצור תמים פעלו כי כל דרכיו משפט, אל אמונה ואין עול צדיק וישר הוא, ואתה צדיק על כל הבא עלינו כי אמת עשית ואנחנו הרשענו."; p.lastChild.classList.add("vsm"); kr.appendChild(p); }
-  { const p = document.createElement("p"); p.className = "kvp"; p.innerHTML = "<small>ואומר מזמור עט (\"מזמור לאסף, אלהים באו גוים בנחלתך\"):</small>"; p.appendChild(link("תהלים עט — פתיחה בספרייה", "תהלים", "עט")); kr.appendChild(p); }
+  { const p = kr.lastElementChild; const ad = document.createElement("span"); ad.className = "kvadd"; ad.textContent = "(ולשריפת אש כלה ה' חמתו שפך חרון אפו ויצת אש בציון ותאכל יסודותיה. ב\"ח, הובא במשנה ברורה תקסא)"; p.appendChild(ad); }
+  /* 5.1: תוספת הב"ח — אינה בשולחן ערוך עצמו, ולכן באותיות קטנות עם המקור (הובאה במשנה ברורה תקסא) */
+  { const p = document.createElement("div"); p.className = "kvnote";
+    const h = document.createElement("small"); h.className = "kvnh"; h.textContent = "תוספת מהב\"ח (הובאה במשנה ברורה, סימן תקסא) — אינה בשולחן ערוך עצמו:";
+    const t = document.createElement("p"); t.textContent = "חייב להשתחוות ולקרוע את בגדיו ולבכות ולהתאונן ולהתאבל על חורבן בית המקדש, ולקונן ולומר מזמור לאסף. וכשקורע מברך ואומר (בלי שם ומלכות): ברוך דיין אמת, כי כל משפטיו צדק ואמת, הצור תמים פעלו כי כל דרכיו משפט, אל אמונה ואין עול צדיק וישר הוא, ואתה צדיק על כל הבא עלינו וכו'.";
+    const l = document.createElement("p"); l.append(link("מזמור לאסף — תהלים עט, פתיחה בספרייה", "תהלים", "עט"), " · ", link("משנה ברורה, סימן תקסא", "משנה ברורה", "סימן תקסא"));
+    p.append(h, t, l); kr.appendChild(p); }
   const vs = document.createElement("p"); vs.className = "kvsrc"; vs.append(link("ישעיהו סד, ט–י", "ישעיהו", "סד ט"), " · ", link('גמרא, מו"ק כו ע"א', "מועד קטן", 'כו ע"א'), " · ", link('מעבר לשולחן ערוך — אורח חיים, סימן תקסא', "שולחן ערוך אורח חיים", "סימן תקסא")); kr.appendChild(vs);
   /* 3.1.0: "נקודות בקצרה" הוסרו (לא היו ברורות ומדויקות); במקומן הפניה להלכות המלאות בכפתור "זכר לחורבן" */
   const kn = document.createElement("p"); kn.className = "kshort";

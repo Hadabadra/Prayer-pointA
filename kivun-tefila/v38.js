@@ -64,7 +64,7 @@
       if (!books.length) { $("tfTitle").textContent = "תפילה"; x.innerHTML = "<p>לא נמצא סידור בספריית אוצריא. אפשר להוריד סידור לספרייה, או להתקין את סידורון.</p>"; return }
       const b = books[+bs.value] || books[0]; lib.pref = b.title;
       x.innerHTML = "<p>קורא את " + esc(lib.PRAY[+ps.value][0]) + " מתוך " + esc(b.title) + "…</p>";
-      try { const r = await lib.readPrayer(b, +ps.value); if (!r.text) throw 0; $("tfTitle").textContent = r.title; x.textContent = r.text; x.scrollTop = 0 }
+      try { const r = await lib.readPrayer(b, +ps.value); if (!r.text) throw 0; lib.show ? lib.show(r) : ($("tfTitle").textContent = r.title, x.textContent = r.text); x.scrollTop = 0 }
       catch (e) { x.innerHTML = "<p>לא נמצאה התפילה בסידור הזה. בחרו סידור אחר ברשימה למעלה.</p>" }
     }
     function fillBooks(books) {
