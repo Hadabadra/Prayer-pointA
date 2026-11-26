@@ -84,11 +84,35 @@
       $("tfPrev").onclick = () => fromLib((+$("tfPr").value + lib.PRAY.length - 1) % lib.PRAY.length);
       $("tfNext").onclick = () => fromLib((+$("tfPr").value + 1) % lib.PRAY.length);
       const sb = $("tfSid"); if (sb) sb.textContent = "📖 סידורון";
+      /* 5.2: רוחב העמודה לבחירה (נשמר) */
+      const W = [["46rem", "רגיל"], ["64rem", "רחב"], ["90rem", "רחב מאוד"], ["none", "כל המסך"]];
+      row.insertAdjacentHTML("beforeend", `<select id="tfW" aria-label="רוחב העמודה" title="רוחב העמודה">${W.map(w => `<option value="${w[0]}">↔ ${w[1]}</option>`).join("")}</select>`);
+      const setW = v => { document.documentElement.style.setProperty("--tf-w", v); try { localStorage.setItem("kivun-tf-w", v) } catch (e) {} };
+      let w0 = "46rem"; try { w0 = localStorage.getItem("kivun-tf-w") || w0 } catch (e) {}
+      $("tfW").value = w0; setW(w0); $("tfW").onchange = () => setW($("tfW").value);
+    }
+    /* 5.2: כשסידורון מותקן — שואלים מאיפה להציג (סידורון או הנוסח המובנה מהספרייה), עם אפשרות לזכור */
+    const SRC = "kivun-pray-src";
+    const getSrc = () => { try { return localStorage.getItem(SRC) || "ask" } catch (e) { return "ask" } };
+    function askSrc() {
+      return new Promise(res => {
+        const ov = $("tfila"), x = $("tfText"); ov.hidden = false; $("tfTitle").textContent = "תפילה";
+        x.innerHTML = '<div class="tfask"><p><b>מאיפה להציג את התפילה?</b></p><div class="row"><button type="button" data-s="lib">📚 הנוסח המובנה (מסידור בספריית אוצריא)</button><button type="button" data-s="sid">📖 מהתוסף סידורון</button></div><label><input type="checkbox" class="tfRem"> לזכור את הבחירה (אפשר לשנות בהגדרות)</label></div>';
+        x.querySelector(".tfask").onclick = e => { const b = e.target.closest("[data-s]"); if (!b) return; if (x.querySelector(".tfRem").checked) try { localStorage.setItem(SRC, b.dataset.s) } catch (er) {} res(b.dataset.s) };
+      });
     }
     setTimeout(bar, 0);
     if (tb && O) {
       const orig = tb.onclick;
-      tb.onclick = async e => { bar(); if (await hasSid()) return orig && orig.call(tb, e); fromLib() };
+      tb.onclick = async e => {
+        bar();
+        if (!(await hasSid())) return fromLib();
+        let src = getSrc(); if (src === "ask") src = await askSrc();
+        if (src === "sid") return orig && orig.call(tb, e);
+        fromLib();
+      };
+      /* בהגדרות: איפה להציג את התפילה */
+      try { const r = addSetRow('<label>מקור התפילה: <select id="tfSrcSet"><option value="ask">לשאול בכל פעם</option><option value="lib">הנוסח המובנה (ספריית אוצריא)</option><option value="sid">סידורון</option></select></label>', "tfSrcSet"); if (r) { const sl = $("tfSrcSet"); sl.value = getSrc(); sl.onchange = () => { try { localStorage.setItem(SRC, sl.value) } catch (er) {} } } } catch (er) {}
       /* סידורון לא החזיר תפילה (ההודעה "כדי להציג כאן תפילה") → מיד מהספרייה */
       const t = $("tfText"); let auto = 0;
       if (t) new MutationObserver(() => { if (/כדי להציג כאן תפילה/.test(t.textContent) && Date.now() - auto > 4000) { auto = Date.now(); fromLib() } }).observe(t, { childList: true });

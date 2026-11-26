@@ -21,7 +21,13 @@
   async function readPrayer(book, pi) {
     const bid = book.bookId || book.title, toc = D(await O.call("library.getBookToc", { bookId: bid })) || [];
     const flat = []; (function walk(a, lv) { for (const e of a || []) { flat.push({ t: strip(e.text || e.title || ""), lv: e.level ?? lv }); walk(e.children, lv + 1) } })(toc, 1);
-    const i = flat.findIndex(e => PRAY[pi][1].test(e.t)); if (i < 0) throw "toc";
+    /* 5.2: לא ההתאמה הראשונה — כותרת שמתחילה בשם התפילה ("ערבית", "תפילת ערבית", "סדר מעריב") ובדרגה הגבוהה ביותר.
+       WHY: בסידורים רבים "ערבית" מופיע קודם בתוך כותרת אחרת (למשל ספירת העומר אחרי ערבית), ואז לא נמצא כלום */
+    const nm = PRAY[pi][0], head = new RegExp("^(סדר |תפילת |תפלת )?(" + (pi === 2 ? "ערבית|מעריב" : pi === 1 ? "מנחה" : "שחרית|ברכות השחר") + ")"), cand = [];
+    flat.forEach((e, k) => { if (PRAY[pi][1].test(e.t)) cand.push({ k, sc: (head.test(e.t) ? 0 : 10) + e.lv }) });
+    cand.sort((a, b) => a.sc - b.sc || a.k - b.k);
+    if (!cand.length) throw "toc";
+    const i = cand[0].k;
     let end = flat.findIndex((e, k) => k > i && e.lv <= flat[i].lv && !PRAY[pi][1].test(e.t)); if (end < 0) end = flat.length;
     const parts = flat.slice(i, end), secs = [];
     for (let k = 0; k < parts.length && k < 120; k++) {

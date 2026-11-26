@@ -270,3 +270,9 @@ body.klabels #bar>button>.bl{display:block !important;font-size:.72em;white-spac
 /* 3.8.0: סרגל חלון התפילה */
 #tfBox .tfnav{display:inline-flex;gap:.3em;align-items:center;flex-wrap:wrap}
 #tfBox .tfnav select{max-width:14em}
+
+/* 5.2: הסרגל של חלון התפילה נשאר למעלה בגלילה; רוחב העמודה לבחירה */
+#tfBox{max-width:var(--tf-w,46rem)}
+#tfBox>.row{position:sticky;top:0;z-index:3;background:var(--color-surface);padding:.5em 0;margin-top:-.5em}
+#tfila .pr-nav{top:3.6em}
+.tfask{padding:1em 0}.tfask .row{display:flex;gap:.6em;flex-wrap:wrap;margin:.6em 0}.tfask button{padding:.6em 1em}
